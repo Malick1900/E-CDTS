@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(vendor/bin/pint*)",
+      "Bash(php artisan test*)",
+      "Bash(php artisan migrate*)",
+      "Bash(php artisan route:list*)",
+      "Bash(composer*)",
+      "Bash(npm run*)",
+      "Bash(npm ci)",
+      "Bash(npm install*)",
+      "Bash(npx playwright*)",
+      "Bash(git add*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git commit*)",
+      "Bash(git push*)",
+      "Bash(gh pr*)",
+      "Bash(glab mr*)"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Bash(php artisan migrate:fresh*)",
+      "Bash(php artisan db:wipe*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "vendor/bin/pint --dirty"
+          }
+        ]
+      }
+    ]
+  }
+}
