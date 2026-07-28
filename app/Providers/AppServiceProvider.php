@@ -2,9 +2,12 @@
 
 namespace App\Providers;
 
+use App\Enums\Profil;
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -24,6 +27,19 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureAuthorization();
+    }
+
+    /**
+     * Le rôle super-admin outrepasse toute vérification d'autorisation
+     * (rôle protégé, non modifiable/supprimable — ADR-0012). Renvoyer `null`
+     * pour les autres comptes laisse jouer les vérifications normales.
+     */
+    protected function configureAuthorization(): void
+    {
+        Gate::before(
+            fn (User $user, string $ability): ?bool => $user->hasRole(Profil::SuperAdmin->value) ? true : null,
+        );
     }
 
     /**

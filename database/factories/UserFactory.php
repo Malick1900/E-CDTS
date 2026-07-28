@@ -24,16 +24,31 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $firstName = fake()->firstName();
+        $lastName = fake()->lastName();
+
         return [
-            'name' => fake()->name(),
+            'name' => trim($firstName.' '.$lastName),
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'phone' => fake()->numerify('+241 0# ## ## ##'),
+            'job_title' => fake()->jobTitle(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
+            'is_active' => true,
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
-            'two_factor_secret' => null,
-            'two_factor_recovery_codes' => null,
-            'two_factor_confirmed_at' => null,
         ];
+    }
+
+    /**
+     * Compte désactivé (ne peut plus se connecter).
+     */
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_active' => false,
+        ]);
     }
 
     /**
@@ -43,18 +58,6 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
-        ]);
-    }
-
-    /**
-     * Indicate that the model has two-factor authentication configured.
-     */
-    public function withTwoFactor(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'two_factor_secret' => encrypt('secret'),
-            'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'])),
-            'two_factor_confirmed_at' => now(),
         ]);
     }
 }
