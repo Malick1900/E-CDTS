@@ -14,6 +14,12 @@ createInertiaApp({
         switch (true) {
             case name === 'welcome':
                 return null;
+            case name.startsWith('admin/'):
+                // Les écrans admin portent leur propre chrome plein écran (AdminShell).
+                return null;
+            case name === 'auth/login':
+                // La connexion porte son propre écran scindé plein page.
+                return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
             case name.startsWith('settings/'):

@@ -1,0 +1,49 @@
+/*
+ * Habillage e-CDTS — écrans d'administration.
+ * Reproduit fidèlement la maquette Claude Design (bleu marine institutionnel,
+ * police Public Sans). Portée limitée aux éléments sous « .ecdts-admin ».
+ * Ne touche pas au thème shadcn du reste de l'application.
+ */
+
+/* Animations des tiroirs / modales / toast */
+@keyframes ecdtsFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ecdtsPanel { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes ecdtsPop { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: scale(1); } }
+@keyframes ecdtsToast { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+/* Racine : police + placeholders + barre de défilement */
+.ecdts-admin {
+    font-family: 'Public Sans', system-ui, -apple-system, sans-serif;
+    color: #1a1f2e;
+}
+.ecdts-admin *,
+.ecdts-admin *::before,
+.ecdts-admin *::after { box-sizing: border-box; }
+.ecdts-admin input::placeholder,
+.ecdts-admin textarea::placeholder { color: #a6afc0; }
+.ecdts-admin input,
+.ecdts-admin select,
+.ecdts-admin button,
+.ecdts-admin textarea { font-family: inherit; }
+.ecdts-admin ::-webkit-scrollbar { width: 11px; height: 11px; }
+.ecdts-admin ::-webkit-scrollbar-thumb { background: #c6cdd9; border-radius: 6px; border: 3px solid #f5f7fa; }
+.ecdts-admin ::-webkit-scrollbar-thumb:hover { background: #a8b4ce; }
+
+/* États de survol (l'inline React ne gère pas :hover) */
+.ea-nav:hover { background: rgba(255, 255, 255, .10) !important; }
+.ea-backlink:hover { background: rgba(255, 255, 255, .10) !important; color: #fff !important; }
+.ea-tab:hover { color: #1d3e9c !important; }
+.ea-btn-primary:hover { background: #142c73 !important; }
+.ea-btn-ghost:hover { background: #f5f8fd !important; border-color: #1d3e9c !important; }
+.ea-icon-btn:hover { background: #f0f4fb !important; border-color: #1d3e9c !important; }
+.ea-icon-danger:hover { background: #fbeae7 !important; }
+.ea-row:hover { background: #f5f8fd !important; }
+.ea-close:hover { background: #e2e7f0 !important; }
+.ea-btn-cancel:hover { background: #f0f2f7 !important; }
+.ea-backbtn:hover { border-color: #1d3e9c !important; color: #1d3e9c !important; }
+.ea-btn-validate:hover { background: #268226 !important; }
+.ea-chip:hover { background: rgba(29, 62, 156, .07) !important; }
+.ea-iconbtn:hover { background: #f0f4fb !important; border-color: #1d3e9c !important; color: #1d3e9c !important; }
+.ea-chipbtn:hover { background: #eef2fb !important; }
+.ea-menuitem:hover { background: #f0f4fb !important; }
+.ea-menuitem-danger:hover { background: #fbeae7 !important; }
