@@ -2,32 +2,35 @@
 
 > Alimenté pendant le cadrage (`/grill`). Quand une réponse arrive, elle est reportée dans les docs concernés (BAREME-CDTS, WORKFLOWS-METIER, GLOSSARY, DECISIONS) et la question est cochée ici avec la date.
 
-## Barème / calcul
-- [ ] **Q1 — Notes de gestion du barème** : la transmission s'est interrompue après « Notes de gestion : ». Récupérer le texte complet des règles d'application.
-- [ ] **Q2 — Lignes régulières vs tramping (bois export)** : comment détermine-t-on qu'un navire est en ligne régulière (EXP11/EXP12) ou en tramping (EXP11B/EXP12B) ? Qui porte cette information ?
-- [ ] **Q3 — Exonérations, minimum de perception, arrondis** : existe-t-il des marchandises/clients exonérés, une facture minimale, des règles d'arrondi (au FCFA près, à la tonne/m³ supérieur…) ?
-- [ ] **Q4 — Où vit le calcul du montant CDTS ?** La facture est établie par la DAF hors application. e-CDTS doit-il quand même appliquer le barème et produire un montant (devis / montant liquidé sur le PV) transmis à la DAF ? Ou l'app s'arrête-t-elle aux quantités/catégories réconciliées, la DAF calculant elle-même ? **Point qui change fortement le périmètre.**
+## ✅ Répondues le 2026-07-03 (questionnaire CGC)
 
-## Workflows
-- [ ] **Q5 — BIETC** : signification exacte du sigle, et d'où vient la donnée « ce BL est couvert par un BIETC » ? (géré dans e-CDTS, saisi par un agent, ou interfacé avec un système tiers ?)
-- [ ] **Q6 — Correctifs de manifeste** : un consignataire peut-il corriger un manifeste déjà transmis (BL oublié, quantité erronée) ? Jusqu'à quel stade (avant validation ? avant PV ? avant clôture ?) et selon quel circuit (redépôt, avenant, intervention CGC) ?
-- [ ] **Q7 — Visibilité des agents consignataires** : confirmer la règle — un agent consignataire ne voit que les dossiers des armements qui lui sont affectés, le consignataire (compte maître) voit tout ce qui le concerne ?
-- [ ] **Q8 — PV de réconciliation** : contenu exact du document (quelles colonnes, montants inclus ou non), et qui le signe formellement ?
+- [x] **Q1 — Notes de gestion du barème** → couvertes par les réponses 1 et 4 du questionnaire : unité payante à l'avantage du CGC, pas d'exonérations/minimum/arrondis. _(Le texte officiel des notes reste bienvenu s'il existe, mais plus bloquant.)_
+- [x] **Q2 — Lignes régulières vs tramping** → la qualité (ligne régulière / tramping) est **précisée à l'enregistrement du navire** dans le référentiel. Reporté dans GLOSSARY et WORKFLOWS-METIER.
+- [x] **Q3 — Exonérations, minimum, arrondis** → **Non**, le barème s'applique tel quel. Reporté dans BAREME-CDTS.
+- [x] **Q4 — Où vit le calcul CDTS** → **Option A** : e-CDTS applique le barème aux quantités réconciliées et produit le **devis** ; la DAF établit la facture officielle dans son système et la téléverse dans e-CDTS. → **ADR-0006**.
+- [x] **Q6 — Correctifs de manifeste** → principe d'**addition de manifestes** : un dossier de traitement CDTS peut contenir **plusieurs manifestes du même numéro**, un nouveau dépôt corrigeant le précédent. _(Mécanique exacte en cours de précision — voir grilling.)_
+- [x] **Q8 — PV de réconciliation** → le consignataire **classifie lui-même** (il sait mieux que quiconque ce qui est sacherie, etc.) : sa déclaration fait office de dépouillement (**PV provisoire**), que le CGC **valide ou réfute** ; navette dans les deux sens jusqu'à **validation finale**. → **ADR-0007**.
+- [x] **Q10 — Référentiels navires/armements** → **Option A : le CGC gère les deux référentiels** ; les consignataires choisissent dans la liste.
+- [x] **Q11 — Plusieurs manifestes par escale** → oui, **plusieurs manifestes peuvent faire partie d'une même escale de navire**. _(Articulation dossier/escale en cours de précision — voir grilling.)_
+- [x] **Q14 — Nature du consignataire** → **Option A** : compte de connexion (humain derrière) qui **administre ET opère** (dossiers, manifestes, validations).
+- [x] **Q15 — Affectations** → un armement peut être affecté à **plusieurs agents** du même consignataire (N–N) ; et un même armement **peut être représenté par deux consignataires différents** (pas d'exclusivité).
+- [x] **Q16 — Liste des agents** → le consignataire **crée ses comptes agents dans l'application**, le **CGC valide** ensuite (avant activation) — le circuit laisse une trace opposable en cas de litige _(confirmé le 2026-07-12, ADR-0013)_.
+- [x] **(Catégorisation tarifaire)** → la **DOSI** et la **DEX** doivent faire des **simulations d'ici le 30/07/2026** pour préciser les règles. ADR-0004 nuancée par ADR-0007.
 
-## Consignataires, navires, escales (bloc WF1–WF3)
-- [ ] **Q10 — Référentiels navires et armements** : qui crée et maintient les listes de navires et d'armements dans e-CDTS ? (CGC seul ? le consignataire peut-il créer un navire manquant à l'ouverture d'un dossier ?)
-- [ ] **Q11 — Un ou plusieurs dossiers par escale ?** Pour un même navire/voyage, y a-t-il un seul dossier d'escale (consignataire titulaire) ou plusieurs consignataires peuvent-ils déposer chacun leur manifeste (co-chargeurs) ?
-- [ ] **Q12 — Circuit exact d'ouverture du dossier d'escale (WF3)** : qui l'ouvre précisément, à quel moment (avant l'arrivée ? après la conférence ?), avec quelles informations obligatoires ? Et ensuite : le rapprochement avec la situation portuaire (confirmation de la date à quai/sortie) est-il automatique par navire/voyage ou reporté à la main ?
-- [ ] **Q13 — Circuit de demande de compte consignataire** : comment la demande initiale arrive-t-elle au CGC (courrier, mail, formulaire papier) ? Quelles pièces justificatives ? L'Administrateur CGC saisit-il le formulaire dans l'app ?
-- [ ] **Q14 — Nature du « consignataire » dans l'application** — question structurante pour le modèle de données :
-    - Le consignataire est-il un **compte de connexion** (identifiant + mot de passe, un humain derrière — directeur d'agence, responsable des opérations ?) ou seulement une **entité société** enregistrée dans la base (ex. « SAGA »), représentée uniquement par ses agents ?
-    - S'il a un compte : peut-il **faire lui-même les opérations** (ouvrir un dossier d'escale, téléverser un manifeste, valider la nomenclature) ou uniquement **administrer** (transmettre la liste de ses agents, affecter les armements, activer/désactiver) ?
-    - Le WF1 dit qu'il « reçoit ses identifiants » — donc un login existe — mais son périmètre d'action n'est décrit nulle part.
-    - _Modélisation pressentie côté dev (à valider par le CGC) : une société Consignataire (entité) + des utilisateurs rattachés, dont un ou plusieurs comptes « administrateur consignataire » qui gèrent agents et affectations ; la question restante étant : ces comptes admin peuvent-ils aussi opérer ?_
-- [ ] **Q15 — Affectations armements ↔ agents** : un même armement peut-il être affecté à **plusieurs agents** du même consignataire (équipe, remplaçants) ? Et à l'inverse, un même armement peut-il être représenté par **deux consignataires différents** (sur le même port ou sur des ports différents), ou y a-t-il exclusivité ?
-- [ ] **Q16 — Transmission de la liste des agents** (WF1) : le consignataire transmet-il sa liste d'agents hors application (mail/courrier, puis saisie par l'Administrateur CGC) ou via un écran de l'application ?
+## ⏳ Toujours ouvertes
 
-## Statistiques
-- [ ] **Q9 — Liste des KPI** : quels indicateurs précis les directions veulent-elles suivre (trafic par port/catégorie/période, délais de traitement, taux de recouvrement…) ?
+- [ ] **Q5 — BIETC** : signification exacte du sigle, et d'où vient la donnée « ce BL est couvert par un BIETC » ? (géré dans e-CDTS, saisi par un agent, ou interfacé avec un système tiers ?) — _Constat 2026-07-09 sur manifestes réels : le n° BIETC/BESC apparaît **noyé dans la description marchandise** du XML (ex. `BIETC NO.: 0632858`), ce n'est pas un champ structuré ; s'il faut l'exploiter, il faudra le parser depuis le texte. Reste à confirmer l'usage métier attendu._
+- [ ] **Q7 — Visibilité des agents consignataires** : confirmer formellement — un agent ne voit que les dossiers des armements qui lui sont affectés ; le consignataire (compte maître) voit tout ce qui le concerne.
+- [ ] **Q9 — Liste des KPI** : quels indicateurs précis les directions veulent-elles suivre ?
+- [ ] **Q17 — Résultat des simulations DOSI/DEX** (attendu ~30/07/2026) : règles précises de passage manifeste → nomenclature CGC (livrable exact inconnu à ce jour).
+- [ ] **Q19 — Délai de déclaration CDTS** _(soulevé 2026-07-12)_ : existe-t-il une règle imposant au consignataire de faire sa CDTS **avant un certain délai** (ex. X jours après l'arrivée / le déchargement du navire) ? Si oui : est-il **contraignant** (verrou / retard / pénalité) ou **indicatif** (simple affichage, comme la mention « réclamations sous 2 semaines » du PV) ? Retrouver le passage exact du CDC. _Rien inscrit tant que non confirmé — ne pas inventer._
 
-## (les questions suivantes seront ajoutées au fil du cadrage)
+## ✅ Complément répondu le 2026-07-03 (grilling développeur)
+- [x] **Addition de manifestes** _(précisé)_ : avant validation du PV, correction **libre** par simple redépôt. L'additif (complément) / rectificatif (remplace des lignes) est la **procédure exceptionnelle post-validation** (dossier figé, voire facturé), réservée à un profil habilité CGC.
+- [x] **Escale ↔ dossiers** : un dossier **par consignataire** ; l'escale fédère plusieurs dossiers.
+- [x] **DOSI / DEX** : direction informatique (développement) / direction de l'exploitation (gestion de la plateforme).
+- [x] **Génération du devis** _(corrigé le 2026-07-03)_ : le chiffrage est **automatique et simultané** au passage à la nomenclature — les montants sont visibles en temps réel des deux côtés pendant la navette ; à la validation finale du PV, ils constituent le devis, sans déclenchement manuel. Le devis est **téléchargeable** (PDF).
+- [x] **Q18 — Transmission du devis à la DAF** : **hors application**. La DAF n'utilise pas e-CDTS : un agent CGC (agent de la DEX) télécharge le devis et le lui transmet ; la facture revient de la même façon (téléversée par l'agent CGC).
+- [x] **Q13 — Circuit de demande du compte consignataire initial** _(résolu 2026-07-08)_ : la demande passe **entièrement hors application** (démarche de la société auprès du CGC, hors e-CDTS). Rien à développer en amont : l'Administrateur CGC crée le compte dans l'app une fois la demande acceptée (cf. WF1).
+- [x] **Un dossier par sens** _(précisé 2026-07-08)_ : le dossier d'escale porte un sens **import ou export** ; import + export sur le même passage de navire = **deux dossiers distincts**, chacun avec son verrou (import → à quai, export → sorti).
+- [x] **Q12 — Situation portuaire ↔ dossier** _(résolu 2026-07-03)_ : le dossier crée sa propre escale (escales **indépendantes** entre consignataires, pas de rattachement automatique) ; la situation portuaire, saisie par le seul Agent DEX (lecture seule pour les consignataires), agit comme **verrou de transmission** (verrou **directionnel**, précisé 2026-07-08 : dossier **import** transmissible quand le navire est **à quai** avec date confirmée ; dossier **export** transmissible quand le navire est **au départ / sorti** avec date confirmée) ; le lien dossier ↔ mouvement navire est établi **à la clôture** (traçabilité). Statuts navire : Navire attendu / En rade / À quai / En zone d'exploitation / Sorti.

@@ -142,6 +142,24 @@ $this->renderable(function (DomainException $e, Request $request) {
 - **Query scopes** pour les filtres réutilisables (`scopeActive`, `scopeForTenant`).
 - **N+1 interdit** : eager loading (`with()`) par défaut. Détection via `Model::preventLazyLoading()` en local.
 
+## Autorisation (RBAC) — `spatie/laravel-permission`
+
+Modèle décidé par ADR-0012/0013/0015. Où vit quoi :
+
+| Élément | Emplacement | Rôle |
+|---|---|---|
+| **Catalogue de permissions** | `app/Enums/Permission.php` | Source **unique en code** (12 attributions). La valeur du cas = nom stocké en base + testé via `can()` / middleware `permission:`. |
+| **Profils par défaut** | `app/Enums/Profil.php` | Les 5 profils CGC + `super-admin`, avec leur composition **de départ** (éditable ensuite). |
+| **Seed** | `database/seeders/RolesAndPermissionsSeeder.php` | Idempotent (`findOrCreate` + `syncPermissions`). Pose permissions + rôles. |
+| **Bypass super-admin** | `AppServiceProvider::configureAuthorization()` | `Gate::before` : le rôle `super-admin` outrepasse tout (protégé, ADR-0012). |
+
+**Règles :**
+- **Ajouter une capacité = travail de code** : nouveau cas dans l'enum `Permission` + brancher un crochet d'autorisation (policy/`can`) + reseed. Jamais de permission créée depuis l'UI (elle ne contrôlerait rien).
+- **Recomposer les rôles = libre depuis l'admin** (matrice cochable, module 1) — c'est la *composition* qui est éditable, pas le vocabulaire.
+- **Permissions effectives = union des rôles** du compte. On assigne des **rôles**, jamais des permissions à la pièce.
+- **Portée (agent ↔ armements, Superviseur ↔ son équipe) = filtre de données**, jamais une permission (ADR-0009). À traiter en policy/scope.
+- **Garde-fous** (ADR-0012) : `super-admin` verrouillé ; un admin ne peut pas retirer sa propre capacité d'administration (anti-auto-blocage, à appliquer en policy côté module Utilisateurs) ; toute mutation de rôle/permission tracée au journal d'audit.
+
 ## Règles transverses
 
 - **Une classe = une responsabilité.** Si une méthode dépasse ~30 lignes ou fait « et… et… », extraire.
