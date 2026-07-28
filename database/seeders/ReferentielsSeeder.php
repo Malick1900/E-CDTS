@@ -8,10 +8,14 @@ use App\Models\TypeNavire;
 use Illuminate\Database\Seeder;
 
 /**
- * Amorce des référentiels : liste de pays (pavillons / origines fréquents dans
- * le trafic gabonais et grands pavillons de complaisance) + les deux ports
- * gérés par le CGC. Les types de navire, armements et navires sont créés depuis
- * l'UI et ne sont pas amorcés.
+ * Amorce des référentiels : pays (pavillons / origines fréquents dans le trafic
+ * gabonais et grands pavillons de complaisance), les deux ports gérés par le
+ * CGC, et les types de navire.
+ *
+ * Ce sont des DONNÉES MAÎTRES, pas de la démonstration : elles ont vocation à
+ * exister en production. Les armements et les navires, eux, appartiennent au
+ * client et se saisissent depuis l'UI — un jeu d'exemple séparé vit dans
+ * `DemoSeeder`, réservé au développement.
  *
  * Idempotent : `updateOrCreate` sur le `code` — relancer le seed ne duplique
  * rien et n'écrase pas l'état `actif` ajusté depuis l'admin.
@@ -38,6 +42,8 @@ class ReferentielsSeeder extends Seeder
             'MA' => 'Maroc',
             'FR' => 'France',
             'BE' => 'Belgique',
+            'DK' => 'Danemark',
+            'CH' => 'Suisse',
             'NL' => 'Pays-Bas',
             'DE' => 'Allemagne',
             'ES' => 'Espagne',
@@ -81,15 +87,26 @@ class ReferentielsSeeder extends Seeder
             );
         }
 
-        // Types de navire courants (référentiel extensible depuis l'UI).
+        // Types de navire (référentiel extensible depuis l'UI).
+        //
+        // La liste couvre volontairement des navires SANS lien CDTS — remorqueur,
+        // drague, centrale flottante : la situation portuaire les suit aussi, et
+        // le référentiel doit pouvoir les qualifier (CHAMPS-DONNEES.md §4).
         $typesNavire = [
+            // Navires de commerce
             'PC' => 'Porte-conteneurs',
             'VRAC' => 'Vraquier',
+            'MINE' => 'Minéralier',
             'RORO' => 'Roulier (Ro-Ro)',
             'GRUM' => 'Grumier (bois)',
             'CARG' => 'Cargo polyvalent',
             'CITE' => 'Pétrolier / chimiquier',
             'FRIG' => 'Navire frigorifique',
+            'CABO' => 'Caboteur',
+            // Navires non commerciaux (situation portuaire uniquement)
+            'REMO' => 'Remorqueur',
+            'DRAG' => 'Drague',
+            'CFLO' => 'Centrale flottante',
         ];
 
         foreach ($typesNavire as $code => $name) {

@@ -19,8 +19,11 @@ class DatabaseSeeder extends Seeder
         // Socle RBAC : permissions + 5 profils CGC + super-admin (ADR-0012/0015).
         $this->call(RolesAndPermissionsSeeder::class);
 
-        // Référentiels : pays (pavillons) + ports gérés par le CGC.
+        // Données maîtres : pays (pavillons), ports gérés par le CGC, types de
+        // navire. Vocation à exister en production.
         $this->call(ReferentielsSeeder::class);
+
+        // À partir d'ici : développement uniquement.
 
         // Compte de développement : profil Administrateur (toutes les
         // attributions CGC — accès réaliste, pas un bypass super-admin).
@@ -29,5 +32,9 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
         $test->assignRole(Profil::Administrateur->value);
+
+        // Armements et navires d'exemple, pour ne pas démarrer sur des écrans
+        // vides. Donnée du client en réalité — jamais amorcée en production.
+        $this->call(DemoSeeder::class);
     }
 }
