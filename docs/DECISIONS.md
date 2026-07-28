@@ -20,6 +20,33 @@
 
 ---
 
+## ADR-0022 — Armements administrés depuis Référentiels ; colonne « Consignataires » différée — 2026-07-28
+**Statut :** Acceptée (arbitrage du porteur, 2026-07-28).
+**Contexte :** l'onglet Armements affichait une colonne « Consignataires (N-N) » et une vue détail dépliant la relation — alimentées par des données factices. Or le modèle `Consignataire` n'existe pas : il arrive avec les comptes clients. Par ailleurs une note en pied de tableau annonçait que les armements se créaient « depuis le module Utilisateurs & habilitations », ce qui privait l'onglet de bouton d'ajout et rompait l'uniformité recherchée.
+**Décision :**
+- Les armements se **créent et se modifient dans Référentiels**, comme les quatre autres référentiels. La note renvoyant vers Utilisateurs est retirée.
+- La colonne « Consignataires » et la **vue détail N-N sont supprimées** jusqu'à l'arrivée du modèle `Consignataire`. Le tableau affiche ce qui existe réellement en base : nom, pays d'origine, pays d'immatriculation, nombre de navires, statut.
+- Les champs d'identité société (`sigle`, `gerant`, `rccm_nif`, `adresse`) sont **saisis dès maintenant** dans le tiroir, bien que leur usage aval ne soit pas encore arrêté.
+**Alternatives écartées :** *garder la colonne avec un placeholder « — »* — écarté : une colonne morte se lit comme une donnée manquante, pas comme une fonction à venir. *Créer le modèle `Consignataire` maintenant* — écarté : élargit la tranche bien au-delà des référentiels, et la relation N-N dépend de décisions non prises sur les comptes clients.
+**Conséquences :**
+- Il faudra **rétablir la colonne et la vue détail** au moment des comptes clients — c'est une dette assumée, tracée ici.
+- `prefixe_numerotation` (Port) est lui aussi saisissable alors que la règle de numérotation n'est pas figée : à confronter à ADR-0008 le jour où elle le sera.
+
+## ADR-0021 — Référentiels : structure d'onglet unifiée (socle partagé, pagination client, bouton « Ajouter » unique) — 2026-07-28
+**Statut :** Acceptée (arbitrage du porteur, 2026-07-28). **Amende ADR-0017.**
+**Contexte :** au câblage des cinq référentiels, `referentiels.tsx` atteignait 866 lignes et deux façons d'ajouter une ligne coexistaient : bouton primaire du bandeau pour Navires/Ports, ligne de saisie en **pied de tableau** pour Types/Pays. Il fallait descendre au bas de la liste pour créer un pays. Aucun tableau ne paginait, alors que le référentiel Pays approche les 200 lignes.
+**Décision :**
+- **Un seul geste d'ajout** : le bouton primaire de l'`AdminShell`, **en haut à droite**, sur les cinq onglets. Il ouvre le **tiroir latéral**, qui gère désormais création *et* modification. Les lignes de saisie en pied de tableau sont supprimées.
+- **Pagination côté client**, 25 lignes par page, sur les cinq onglets. Le serveur continue d'envoyer la liste complète — la recherche filtre donc *tout* le référentiel, pas seulement la page affichée.
+- **Socle de composants partagé** (`components/admin/referentiels/`) : `ReferentielCard` (barre de recherche, compteur, tableau, état vide, pagination), `Drawer` + primitives de champ, `ConfirmDialog`, `ui.tsx` (jetons de style, badges, actions de ligne) et le hook `useReferentiel` (recherche, pagination, tiroir, confirmation, mutations Inertia). Un onglet ne décrit plus que **ses colonnes et ses champs**.
+- Le hook exploite le fait que les cinq référentiels exposent **les mêmes trois écritures** — d'où l'unique paramètre `ressource` qui suffit à construire les URL.
+**Alternatives écartées :** *pagination serveur (`paginate()`)* — écarté : imposerait de basculer aussi la recherche côté serveur (sinon on ne cherche que dans la page visible) et un aller-retour Inertia à chaque frappe, pour des volumes qui tiennent en mémoire. *Paginer seulement Pays et Navires* — écarté : rompt l'uniformité, qui était l'objet même de la demande. *Une description abstraite de colonnes* — écarté : le rendu des cellules varie trop (badges, puces, icônes) ; chaque onglet garde son JSX de tableau, la coquille ne fournit que le cadre.
+**Conséquences :**
+- Le seuil de bascule vers la pagination serveur reste celui d'ADR-0017 : le premier écran à fort volume (le Manifeste).
+- Un référentiel supplémentaire se câble désormais en un fichier d'onglet + un contrôleur calqué sur `PaysController`.
+- Le compteur `signalCreation` relie le bouton (dans le shell) au tiroir (dans l'onglet) ; il est remis à 0 au changement d'onglet pour qu'un onglet fraîchement monté n'ouvre pas son tiroir.
+- **Correctif au passage :** les contrôleurs appelaient `Inertia::flash('toast', …)` mais **rien ne lisait ce flash** — créer un pays n'affichait aucune confirmation. Le flash est désormais déclaré dans les props partagées (`types/global.d.ts`) et consommé par la page.
+
 ## ADR-0020 — Module Utilisateurs CGC : identité détaillée, désactivation (jamais suppression) et anti-auto-blocage — 2026-07-28
 **Statut :** Acceptée (arbitrage du porteur, 2026-07-28) — **implémente la Phase 2**, applique ADR-0012 (comptes créés par un admin), ADR-0015 (profils par défaut) et [[mode-exploitation-navire-escale]] hors sujet ici.
 **Contexte :** premier module admin réellement câblé (les autres restent en `Route::inertia` factice). Il fallait un CRUD des comptes **internes CGC** avec affectation de rôles cumulables, sans réintroduire l'inscription publique. Le porteur a précisé les champs métier attendus et le mode de retrait d'un compte.
@@ -61,7 +88,7 @@
 - Réinitialisation de mot de passe **inchangée** (feature Fortify conservée). *(Point mis à jour : passkeys et 2FA finalement retirés — voir **ADR-0019**.)*
 
 ## ADR-0017 — Stratégie tableaux : rendu natif pour le référentiel, TanStack Table + pagination serveur pour les écrans à fort volume — 2026-07-28
-**Statut :** Acceptée (arbitrage du porteur, 2026-07-28).
+**Statut :** Acceptée (arbitrage du porteur, 2026-07-28). **Amendée par ADR-0021** sur un seul point : le référentiel reçoit une pagination *client*. Le reste — rendu natif, pas de librairie, TanStack Table réservé aux écrans à fort volume — tient toujours.
 **Contexte :** l'app comporte beaucoup de tableaux, de tailles très inégales : référentiels de quelques lignes (Ports, Types) d'un côté, et des écrans potentiellement volumineux de l'autre (lignes de cargaison d'un manifeste ASYCUDA — centaines à milliers de lignes —, journal d'audit, dossiers d'escale). Question posée : faut-il une librairie de tableaux dès maintenant ?
 **Précision de vocabulaire :** *TanStack **Start*** (méta-framework full-stack React) est **hors sujet et incompatible** — il occuperait la même case que Laravel + Inertia (routeur + pont serveur→React). La décision porte sur *TanStack **Table*** (ex-React Table), lib **headless** qui gère la logique d'un tableau (tri, filtre, pagination, sélection, virtualisation via TanStack Virtual) et laisse 100 % du rendu au développeur — donc **compatible avec les styles inline de la maquette**.
 **Décision :**
@@ -70,7 +97,7 @@
 - **Déclencheur :** on introduit TanStack Table **au moment où le premier écran volumineux est développé** (probablement le Manifeste), **pas par anticipation**.
 **Alternatives écartées :** *TanStack Start* — incompatible avec la stack (voir ci-dessus). *Adopter TanStack Table partout tout de suite* — écarté (principe 5 : aucune abstraction pour un cas qui n'existe pas encore ; alourdit le référentiel sans bénéfice). *Tout gérer côté client sur les gros écrans* — écarté : ne passe pas à l'échelle sur un manifeste de milliers de lignes ; la pagination serveur reste la base.
 **Conséquences :**
-- Le tableau natif du référentiel (`referentiels.tsx`) reste tel quel.
+- ~~Le tableau natif du référentiel (`referentiels.tsx`) reste tel quel.~~ → **amendé par ADR-0021** : rendu toujours natif, mais avec pagination client et socle de composants partagé.
 - Le jour du Manifeste : trancher d'abord **client vs serveur** (réponse par défaut : **serveur**), puis brancher TanStack Table en mode manual par-dessus.
 - Continuité de stack : le **Data Table de shadcn/ui est bâti sur TanStack Table** — l'adoption se fera dans la ligne de l'existant, pas comme une pièce exotique.
 

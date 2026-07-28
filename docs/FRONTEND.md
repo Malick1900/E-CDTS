@@ -54,6 +54,15 @@ Le succès n'a **pas besoin d'exposer une donnée en sortie** : une **confirmati
 - Nommage explicite, dossier par feature plutôt que par type technique.
 - Pas de logique métier dans le front : elle vit côté Laravel. Le front **présente** et **valide l'ergonomie**, il ne décide pas des règles de gestion.
 
+### Motif « module d'administration » (référence : Référentiels)
+Quand plusieurs écrans d'un module sont **structurellement le même écran** (ici : recherche → tableau → tiroir → confirmation, cinq fois), on extrait le squelette **une seule fois** et chaque écran ne décrit plus que ce qui lui est propre. Voir `components/admin/referentiels/` (ADR-0021) :
+- **Page hôte mince** (`pages/admin/*.tsx`) : choisit l'onglet, prépare les listes déroulantes partagées, route le bouton primaire du bandeau. Pas de tableau, pas de formulaire.
+- **Une coquille de tableau** qui possède barre de recherche, compteur, état vide et pagination. Elle reçoit le `<tr>` d'en-tête et les `<tr>` du corps — **pas une description abstraite de colonnes** : le rendu des cellules varie trop pour être décrit en données.
+- **Un hook** pour la mécanique (recherche, pagination, état du tiroir, mutations Inertia), **des composants** pour le rendu.
+- Les fonctions passées au hook (`filtre`, `depuis`, `valide`…) se déclarent **au niveau module**, pas dans le composant : leurs références restent stables et les dépendances de hooks ne s'invalident pas à chaque rendu.
+- **Pagination** : côté client tant que le serveur peut envoyer la liste entière — la recherche filtre alors tout le jeu, pas la page visible. Bascule serveur au premier écran à fort volume (ADR-0017).
+- **Réagir à une prop qui change** (ex. un bouton hors du composant qui doit ouvrir un tiroir) : ajuster l'état **pendant le rendu**, pas dans un `useEffect` — un effet provoque un rendu en cascade et fait clignoter l'UI.
+
 ## Style
 - **Tailwind** utilitaire ; extraire en composant quand une classe se répète, pas de `@apply` dilué partout.
 - Design system : espacements, couleurs, typographies **tokenisés** (pas de valeurs magiques dispersées).
