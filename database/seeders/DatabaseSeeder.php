@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Profil;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -15,11 +16,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Socle RBAC : permissions + 5 profils CGC + super-admin (ADR-0012/0015).
+        $this->call(RolesAndPermissionsSeeder::class);
 
-        User::factory()->create([
+        // Référentiels : pays (pavillons) + ports gérés par le CGC.
+        $this->call(ReferentielsSeeder::class);
+
+        // Compte de développement : profil Administrateur (toutes les
+        // attributions CGC — accès réaliste, pas un bypass super-admin).
+        $test = User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+        $test->assignRole(Profil::Administrateur->value);
     }
 }
