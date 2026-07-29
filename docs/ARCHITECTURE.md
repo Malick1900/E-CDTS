@@ -148,17 +148,21 @@ Modèle décidé par ADR-0012/0013/0015. Où vit quoi :
 
 | Élément | Emplacement | Rôle |
 |---|---|---|
-| **Catalogue de permissions** | `app/Enums/Permission.php` | Source **unique en code** (12 attributions). La valeur du cas = nom stocké en base + testé via `can()` / middleware `permission:`. |
-| **Profils par défaut** | `app/Enums/Profil.php` | Les 5 profils CGC + `super-admin`, avec leur composition **de départ** (éditable ensuite). |
+| **Catalogue de permissions** | `app/Enums/Permission.php` | Source **unique en code** (13 attributions). La valeur du cas = nom stocké en base + testé via `can()` / middleware `permission:`. `domaine()` ne sert qu'à grouper l'affichage de la matrice. |
+| **Profils par défaut** | `app/Enums/Profil.php` | Les 5 profils CGC + `super-admin`, avec leur composition **de départ** (éditable ensuite). `estRecomposable()` = liste blanche des rôles que la matrice peut modifier. |
 | **Seed** | `database/seeders/RolesAndPermissionsSeeder.php` | Idempotent (`findOrCreate` + `syncPermissions`). Pose permissions + rôles. |
 | **Bypass super-admin** | `AppServiceProvider::configureAuthorization()` | `Gate::before` : le rôle `super-admin` outrepasse tout (protégé, ADR-0012). |
+| **Recomposition** | `Admin/Users/RoleController` + `RoleUpdateRequest` | `syncPermissions()` sous `can:roles.gerer`. Le FormRequest refuse les rôles non recomposables — le front n'est pas la barrière. |
+| **Refus expliqué** | `bootstrap/app.php` → `pages/errors/403.tsx` | Tout 403 web est rendu en page Inertia explicative (hors tests, qui assertent le statut brut). |
 
 **Règles :**
 - **Ajouter une capacité = travail de code** : nouveau cas dans l'enum `Permission` + brancher un crochet d'autorisation (policy/`can`) + reseed. Jamais de permission créée depuis l'UI (elle ne contrôlerait rien).
 - **Recomposer les rôles = libre depuis l'admin** (matrice cochable, module 1) — c'est la *composition* qui est éditable, pas le vocabulaire.
 - **Permissions effectives = union des rôles** du compte. On assigne des **rôles**, jamais des permissions à la pièce.
 - **Portée (agent ↔ armements, Superviseur ↔ son équipe) = filtre de données**, jamais une permission (ADR-0009). À traiter en policy/scope.
-- **Garde-fous** (ADR-0012) : `super-admin` verrouillé ; un admin ne peut pas retirer sa propre capacité d'administration (anti-auto-blocage, à appliquer en policy côté module Utilisateurs) ; toute mutation de rôle/permission tracée au journal d'audit.
+- **Garde-fous** (ADR-0012, précisés par ADR-0025) : `super-admin` verrouillé et **absent de la matrice** ; `Administrateur` y figure mais **figé** (il porte le catalogue complet) — c'est ce gel qui rend l'auto-blocage impossible **par construction**, sans code de garde. L'anti-auto-blocage écrit subsiste ailleurs, sur l'attribution des rôles à son propre compte (`UserController::syncRolesGuarded`).
+- **Une permission d'accès ≠ une permission d'écriture** : `/admin/utilisateurs` est ouvert à `utilisateurs.gerer`, mais le volet client s'écrit sous `comptes-clients.gerer` et la matrice sous `roles.gerer`. Un écran mixte projette donc des **drapeaux de capacité** (`peutGererClients`, `matriceRoles` nul) plutôt que d'afficher des actions vouées au refus.
+- **Journalisation** : toute mutation de rôle/permission devra être tracée au journal d'audit — **non implémenté** à ce jour, assumé par ADR-0025.
 
 ## Règles transverses
 

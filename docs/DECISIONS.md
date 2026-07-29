@@ -20,6 +20,104 @@
 
 ---
 
+## ADR-0028 — Les décisions sur les comptes clients sont notifiées par courriel ; le mot de passe ne circule jamais — 2026-07-29
+**Statut :** Acceptée (arbitrage du porteur, 2026-07-29) — **complète ADR-0013, ADR-0024 et ADR-0027**.
+**Contexte :** rien ne sortait de l'application. Un titulaire dont le CGC venait d'ouvrir le compte ne l'apprenait que si un agent l'appelait, et le mot de passe initial — saisi par le CGC — circulait hors de tout canal maîtrisé. De même, une société dont un agent était validé ou refusé n'en savait rien : le motif de refus, pourtant obligatoire, ne quittait pas la base.
+**Décision :**
+- **Ouverture d'un compte titulaire** → courriel à l'intéressé portant un **lien de définition de mot de passe** (jeton du flux de réinitialisation existant). Le champ mot de passe disparaît du tiroir : le CGC pose un secret jetable qu'il ne connaît pas et qui ne sert jamais. Le lien expire au bout d'une heure, d'où le rappel explicite du recours « mot de passe oublié ».
+- **Validation et refus d'un compte agent** → courriel à **trois destinataires** : l'agent, le titulaire du compte de sa société, et l'adresse de la société. Dédoublonné par adresse — dans les petites structures le titulaire est aussi le contact, et deux courriels identiques donneraient à croire à deux décisions. Un destinataire manquant (société sans adresse, titulaire non désigné) n'empêche pas les autres d'être prévenus.
+- **Le refus porte son motif.** C'est la contrepartie de son caractère obligatoire (ADR-0024) : sans lui, la société ne sait pas quoi corriger avant de soumettre à nouveau.
+- **Envoi après commit, jamais pendant.** Un courriel parti sur une transaction qui échoue annoncerait un compte qui n'existe pas.
+- **Textes en français indépendamment de la locale de l'instance** (`->locale('fr')` sur chaque notification) : les destinataires sont des sociétés gabonaises. `lang/fr.json` traduit les quelques chaînes du gabarit Laravel.
+**Alternatives écartées :** *mot de passe transmis dans le courriel* — proscrit : un secret en clair dans une boîte de réception, et le CGC détiendrait les identifiants de ses assujettis. *L'administrateur saisit le mot de passe et le communique de vive voix* — écarté par le porteur au profit du lien : le secret circulait encore. *Notifications en file d'attente (`ShouldQueue`)* — écartées pour l'instant : sans exécutant actif rien ne partirait, et l'échec serait silencieux ; le volume (quelques comptes par mois) ne justifie pas cette infrastructure.
+**Conséquences :** l'instance doit être dotée d'un SMTP réel — `MAIL_MAILER` vaut `log` en développement, les messages n'y quittent pas les journaux. L'expéditeur par défaut devient institutionnel (`ne-pas-repondre@cgc.ga`, « e-CDTS — Conseil Gabonais des Chargeurs ») et non plus `hello@example.com`. Un échec d'envoi remonte aujourd'hui comme une erreur de requête : à revoir si le SMTP se révèle instable en production.
+
+## ADR-0027 — Le titulaire s'ouvre depuis la fiche société, actif d'emblée, et déclare comme les autres — 2026-07-29
+**Statut :** Acceptée (arbitrage du porteur, 2026-07-29) — **complète ADR-0023**, **applique ADR-0010**.
+**Contexte :** ADR-0023 a tranché la *modélisation* du titulaire (un `User` désigné par `consignataires.titulaire_user_id`), mais aucun écran ne le renseignait : la colonne restait nulle pour toutes les sociétés. Or c'est lui qui crée les comptes de ses agents (WF1) — sans titulaire, le portail consignataire n'a personne pour s'y connecter. Restait à décider *où* on le saisit, *comment* il s'active, et *ce qu'il peut faire*.
+**Décision :**
+- **Il se saisit sur la fiche société**, dans le même tiroir et la même transaction. ADR-0010 confie au module 1 « la création des consignataires (comptes maîtres) » : le compte maître naît avec la société, pas dans un écran séparé.
+- **Le bloc est facultatif.** Une fiche société peut exister avant que son titulaire ne soit désigné — c'était déjà l'hypothèse de `titulaire_user_id` nullable. Mais dès qu'une adresse e-mail est saisie, identité et mot de passe deviennent obligatoires : on n'ouvre pas un compte à moitié.
+- **Il est actif immédiatement, sans passer par le circuit de validation** d'ADR-0013. Ce circuit protège des comptes que la société ouvre elle-même ; ici c'est le CGC qui saisit — il n'a pas à se valider lui-même. La trace (`valide_par_user_id`, `valide_le`) est renseignée avec l'agent CGC qui a ouvert le compte, si bien que l'origine de tout compte client reste lisible.
+- **C'est un agent déclarant à part entière** : il figure dans l'onglet Agents, porte une portée d'armements (ADR-0009) et se suspend comme les autres. Sa qualité de titulaire est un **marqueur**, pas un statut à part — elle dit qu'il gère *en plus* les comptes de sa société.
+- **Modifier le bloc édite le compte existant**, il ne désigne pas quelqu'un d'autre. Changer de titulaire est un geste distinct, qui n'existe pas encore.
+**Alternatives écartées :** *un écran dédié à l'ouverture du compte maître* — rejeté : deux gestes pour un seul acte métier, et une fenêtre pendant laquelle la société existe sans personne pour l'administrer. *Soumettre le titulaire au circuit de validation* — rejeté : le CGC validerait ce qu'il vient lui-même de saisir. *Un titulaire purement gestionnaire, sans portée d'armements* — écarté par le porteur : dans les sociétés visées, celui qui gère les comptes déclare aussi.
+**Conséquences :** l'onglet Consignataires gagne une colonne « Titulaire du compte », qui affiche « À désigner » tant qu'il manque — l'absence devient visible plutôt que muette.
+
+**Complément du 2026-07-29 — le remplacement existe.** Le porteur a tranché : l'administrateur doit pouvoir confier la fonction à quelqu'un d'autre. Geste **distinct** de la modification de la fiche, sur sa propre route, avec deux chemins — désigner un agent **déjà validé de la société** (réorganisation interne) ou **ouvrir le compte d'une nouvelle personne** (le sortant est parti). Le sortant **reste agent déclarant** : il perd la gestion des comptes, pas son accès ni ses affectations ; le désactiver est le geste séparé de l'onglet Agents. L'entrant est prévenu par courriel (ADR-0028). Action sensible : **à inscrire au journal d'audit** quand ce module existera. La saisie du mot de passe par le CGC, elle, a disparu au profit du lien envoyé par courriel (ADR-0028).
+
+## ADR-0026 — Compte agent : la décision du CGC et l'activation sont deux colonnes distinctes ; le refus n'est pas définitif — 2026-07-29
+**Statut :** Acceptée (arbitrage du porteur, 2026-07-29) — **implémente ADR-0013 et ADR-0024**.
+**Contexte :** en câblant le circuit de validation des comptes agents (ADR-0013), il fallait décider comment stocker les quatre états de l'écran — actif, en attente, désactivé, refusé — sachant que `users.is_active` existait déjà et **conditionne seul la connexion** (garde du `FortifyServiceProvider`). Deux mécanismes d'activation dans la même table auraient été un piège : le jour où l'un dit oui et l'autre non, c'est le garde d'authentification qui tranche, pas l'écran.
+**Décision :**
+- **Deux colonnes, deux responsabilités.** `statut_validation` (`en_attente` / `valide` / `refuse`) porte la **décision du CGC** ; `is_active` reste la **seule vérité de la connexion**. Les quatre états affichés sont leur combinaison : `valide` + actif = actif, `valide` + inactif = désactivé. Rien à changer à l'authentification.
+- **Le compte agent vit dans `users`**, distingué par `consignataire_id` non nul. Une contrainte `CHECK` (PostgreSQL) impose que les deux colonnes soient nulles ensemble ou renseignées ensemble : un interne n'a pas de statut de validation.
+- **Le refus n'est pas définitif.** Une société dont l'agent est refusé peut soumettre à nouveau : le compte repasse en attente, **sans effacer la décision précédente** (qui, quand, motif), qui n'est remplacée que par la décision suivante. Conforme à ADR-0024 : le compte refusé reste en base comme trace opposable, sans devenir une impasse administrative.
+- **Le motif de refus est obligatoire.** C'est lui qui rend la décision opposable et qui indique à la société ce qu'elle doit corriger.
+- **Refuser ≠ désactiver.** Le refus tranche une demande (depuis `en_attente` seulement) ; la désactivation interrompt un accès déjà accordé (sur un compte `valide` seulement). Les transitions invalides sont rejetées, jamais absorbées en silence.
+- **La portée agent ↔ armements** (ADR-0009) est bornée aux armements représentés par sa société : un identifiant hors périmètre **fait échouer la requête**, il n'est pas filtré discrètement.
+- **Le décompte « comptes à valider » est une donnée partagée Inertia**, pas une prop de page : le badge vit dans le rail d'administration, donc s'affiche depuis n'importe quel module. Il vaut 0 pour qui ne détient pas `comptes-clients.gerer`.
+**Alternatives écartées :** *un seul enum à quatre valeurs remplaçant `is_active` pour les agents* — rejeté : deux mécanismes d'activation coexisteraient dans la même table et le garde de connexion devrait connaître les deux. *Une table `agents` séparée reliée 1-1 à `users`* — rejetée : une jointure systématique et un modèle de plus pour isoler ce qu'une colonne nullable distingue déjà. *Refus définitif* — écarté par le porteur : une erreur de manipulation deviendrait irréversible, alors que la trace est déjà assurée par la conservation du compte. *Prop de page pour le badge* — rejetée : elle n'alimenterait le rail que sur l'écran Utilisateurs.
+**Conséquences :** l'écran Agents est un écran de **décision**, sans création — la société crée ses agents depuis son portail, qui reste à construire ; d'ici là le jeu de démonstration alimente les quatre états. Le volet client (fiche société **et** comptes agents) passe entièrement sous `comptes-clients.gerer` (ADR-0025), ce qui solde l'incohérence des routes consignataires. Les contraintes `CHECK` ne sont posées que sur PostgreSQL, la suite de tests tournant sur SQLite.
+
+## ADR-0025 — Catalogue de rôles réservé aux internes ; matrice recomposable, ligne Administrateur figée — 2026-07-29
+**Statut :** Acceptée (grilling du porteur, 2026-07-29) — **précise ADR-0012 et ADR-0015**, **amende ADR-0012** sur la création de rôles.
+**Contexte :** avant de construire l'écran « Rôles & permissions », quatre zones d'ombre restaient : jusqu'où va le catalogue (les clients en font-ils partie ?), ce qu'on peut faire depuis l'écran, qui peut le faire, et comment le CGC est protégé de lui-même.
+**Décision :**
+- **Le catalogue ne sert que les internes CGC.** Les droits d'un compte client découlent de son **rattachement** (société consignataire, armements affectés), vérifiés par des policies dédiées — pas d'un rôle spatie.
+- **Tout le volet client est gardé par `comptes-clients.gerer`** — fiche société consignataire **et** validation des comptes agents — donc **Administrateur seul** (cohérent ADR-0013). Le Superviseur conserve `utilisateurs.gerer` pour les comptes internes uniquement.
+- **L'écran recompose, il ne crée pas.** On coche/décoche les permissions des rôles existants ; la création, le renommage et la suppression de rôles ne sont **pas** au périmètre.
+- **Nouvelle permission `roles.gerer`** (13e du catalogue), portée par l'Administrateur seul. Sans elle, un Superviseur détenteur de `utilisateurs.gerer` pouvait s'octroyer `bareme.modifier` — escalade de privilèges en deux clics.
+- **La ligne Administrateur est figée** : elle porte le catalogue complet par définition (ADR-0015, « peut tout faire côté CGC »), s'affiche tout cochée et non modifiable. Seuls Conférencier, Agent dépouilleur, Superviseur et Consultant sont recomposables.
+- **Le Superviseur voit l'onglet Consignataires en lecture seule** : la liste et les rattachements, sans bouton d'ajout ni actions de ligne. Même régime pour l'onglet Agents.
+- L'écran est le **4ᵉ onglet** de `/admin/utilisateurs`, visible pour les seuls détenteurs de `roles.gerer`.
+- **Aucune journalisation** de la recomposition pour l'instant : le module Journal d'audit définira son mécanisme et couvrira tous les gestes sensibles d'un coup.
+**Alternatives écartées :**
+- *Ajouter des rôles « Titulaire » et « Agent consignataire » au catalogue* — unifierait le contrôle d'accès derrière `can()`, mais exposerait des rôles qu'un administrateur pourrait vider par mégarde, retirant « déclarer » à tous les agents du pays. Le rattachement est de toute façon la source de vérité pour les clients (armements affectés) : un rôle n'aurait rien ajouté.
+- *CRUD complet des rôles*, comme l'annonçait ADR-0012 — écarté par proportionnalité : il faudrait traiter l'unicité des noms, le sort d'un rôle supprimé encore porté par des comptes, les rôles vides. Le besoin réel (« le Superviseur ne doit plus toucher au barème ») est couvert par la recomposition seule. **Réouvrable.**
+- *Garder l'écran sous `utilisateurs.gerer`* — laissait l'escalade ouverte, avec pour seul garde-fou un journal d'audit a posteriori qui n'existe pas encore.
+- *Anti-auto-blocage par contrôle à l'enregistrement* (refuser de retirer `roles.gerer` au dernier rôle qui la porte) — devenu **sans objet** : figer la ligne Administrateur rend le verrouillage impossible par construction, sans une ligne de code de garde.
+- *Journaliser dès maintenant* — écarté pour ne pas figer un format que le module Audit devrait ensuite reprendre ou migrer. Coût assumé : l'historique des premières recompositions est perdu.
+**Conséquences :**
+- ~~**Dette immédiate** : les trois routes consignataires de la phase 3 sont sous `utilisateurs.gerer` et doivent passer sous `comptes-clients.gerer`.~~ **Soldée** (phase 4) : tout le volet client, agents compris, est passé sous `comptes-clients.gerer`.
+- `Permission` gagne `roles.gerer` ; `Profil::permissionsParDefaut()` la donne à l'Administrateur (automatiquement, via `Permission::cases()`).
+- L'écran doit gérer un **état lecture seule**, nouveau dans le panneau d'administration : jusqu'ici un onglet était accessible ou absent.
+- Le rôle `super-admin` n'apparaît pas dans la matrice : protégé, il outrepasse via `Gate::before` et ne porte aucune permission explicite — l'afficher serait mensonger. Cohérent avec son exclusion déjà en place des rôles attribuables.
+- ADR-0012 reste vrai sur le fond (la composition est éditable) mais son « créer d'autres rôles » est **reporté**, pas acquis.
+
+**Mise en œuvre (2026-07-29)** — décision appliquée telle quelle, sans amendement :
+- `Permission::RolesGerer` est la 13ᵉ du catalogue ; `Permission::domaine()` groupe l'affichage en Exploitation / Administration / Consultation. `Profil::estRecomposable()` porte la liste blanche (tout sauf `Administrateur` et `super-admin`).
+- `PATCH admin/utilisateurs/roles/{role}` (`Admin\Users\RoleController`) sous `can:roles.gerer`. Le refus des rôles figés est **dans `RoleUpdateRequest::authorize()`**, pas dans l'UI : une requête forgée n'a pas d'interface à contourner.
+- La matrice n'est pas projetée du tout (`matriceRoles` nul) sans `roles.gerer` — la composition des rôles ne transite pas jusqu'au navigateur d'un Superviseur.
+- L'**état lecture seule** annoncé se matérialise par un `BandeauInfo` : les actions disparaissent *et* une phrase dit pourquoi, l'Administrateur étant nommé comme interlocuteur. Un écran amputé sans explication se lirait comme une panne. Même principe pour le refus serveur : tout 403 web rend `pages/errors/403.tsx` au lieu de la page nue de Laravel.
+- Couvert par `tests/Feature/Admin/RoleMatrixTest.php` (7 cas), dont le gel d'`Administrateur`, l'intouchabilité de `super-admin` et l'escalade fermée au Superviseur.
+
+## ADR-0024 — Un compte agent refusé est conservé en base comme trace opposable — 2026-07-28
+**Statut :** Acceptée (arbitrage du porteur, 2026-07-28) — **précise ADR-0013**.
+**Contexte :** ADR-0013 soumet l'ouverture d'un compte agent à la validation du CGC. Restait à trancher le sort d'une demande **refusée** : disparaît-elle, ou reste-t-elle en base ? La question n'est pas technique mais juridique — le CGC est une administration, et la déclaration douanière engage.
+**Décision :** le refus est un **état**, pas une suppression. Le compte refusé reste en base avec son statut `refusé` ; il ne peut pas se connecter, mais il est listé, consultable et réexaminable. Aucune purge : ni à la main, ni par le temps.
+**Alternatives écartées :**
+- **Supprimer la demande refusée.** Elle efface la preuve que le CGC a bien statué, et à quelle date. Une société pourrait soutenir qu'elle n'a jamais reçu de réponse ; l'administration n'aurait rien à opposer. C'est exactement ce que la non-répudiation d'ADR-0013 cherche à empêcher.
+- **Conserver la trace ailleurs (journal d'audit seul), en supprimant le compte.** La trace survivrait, mais l'écran de gestion ne montrerait plus rien : le gestionnaire ne saurait pas qu'une demande a déjà été refusée et pourrait rouvrir le même compte sans le savoir. La trace doit être là où la décision se prend.
+**Conséquences :**
+- Le statut d'un compte agent est un **cycle de vie** (`en attente` → `actif` | `refusé`, et `actif` ⇄ `désactivé`), pas un booléen. Cohérent avec ADR-0012 : on désactive, on ne supprime pas — ici on refuse, on ne supprime pas non plus.
+- Un même e-mail peut porter une demande refusée puis une demande réexaminée : l'unicité de `users.email` interdit un second compte, le réexamen agit donc **sur le compte existant**. C'est le comportement déjà esquissé par la démo (bouton « Réexaminer »).
+- **Reste à trancher, à l'implémentation des Agents :** faut-il enregistrer le **motif** du refus et l'**identité du valideur** ? Une trace opposable sans auteur ni motif est faible ; mais c'est une question de spec, pas de schéma, et elle n'est pas encore posée au porteur.
+
+## ADR-0023 — Le titulaire d'un consignataire est un compte `User` désigné par la société — 2026-07-28
+**Statut :** Acceptée (arbitrage du porteur, 2026-07-28) — **précise ADR-0014**.
+**Contexte :** ADR-0014 décrit le titulaire par ses attributs (nom, prénom, fonction, email pro, tél), ce qui laissait ouverte une question de modélisation : simples colonnes sur la fiche société, ou véritable compte ? Or le titulaire **se connecte**, **déclare** et **crée ses agents** — il lui faut donc de toute façon un compte authentifiable.
+**Décision :**
+- Le titulaire **est un `User`**. Ses attributs sont ceux du compte (`first_name`, `last_name`, `job_title`, `phone`, `email`), non des colonnes dupliquées sur `consignataires`.
+- La désignation se porte **du côté société** : `consignataires.titulaire_user_id`, nullable et **unique**. Nullable parce que le CGC crée la fiche société avant d'ouvrir le compte (WF1) ; unique parce qu'un compte ne peut être titulaire de deux sociétés.
+- `onDelete: set null` — supprimer un compte ne doit jamais emporter la société facturée.
+- Les deux relations multiples d'ADR-0014 deviennent des pivots : `armement_consignataire` (armements représentés) et `consignataire_port` (ports de rattachement), clé primaire composite, `cascade` explicite des deux côtés.
+**Alternatives écartées :** *colonnes plates `titulaire_nom`, `titulaire_email`… sur `consignataires`* — écarté : le titulaire se connecte, il aurait fallu un `User` en double et deux sources de vérité pour la même personne. *FK portée par l'utilisateur (`users.titulaire_consignataire_id`)* — écarté : c'est la société qui désigne son représentant, pas l'inverse ; et le rattachement **des agents** à leur société (ADR-0013) viendra plus tard côté `users`, où il ne se confondra pas avec la désignation du titulaire.
+**Conséquences :**
+- Un agent consignataire aura, lui, un rattachement **côté `users`** ; le titulaire portera donc les deux liens (son compte appartient à la société, et la société le désigne). Distinction voulue : « appartenir à » et « représenter » ne sont pas la même chose.
+- Le nom de la société est `name` (comme `armements.name`), pas `raison_sociale` : les deux fiches entreprise partagent la même colonne vertébrale d'identité (ADR-0014), autant qu'elles partagent le vocabulaire de colonnes.
+- Les FK des nouvelles tables sont **indexées explicitement** : PostgreSQL, contrairement à MySQL, n'indexe pas une clé étrangère automatiquement. Les tables `armements`, `navires` et `ports`, créées avant que le point ne soit relevé, ne le sont pas — dette mineure, à corriger le jour où un plan de requête le justifie.
+
 ## ADR-0022 — Armements administrés depuis Référentiels ; colonne « Consignataires » différée — 2026-07-28
 **Statut :** Acceptée (arbitrage du porteur, 2026-07-28).
 **Contexte :** l'onglet Armements affichait une colonne « Consignataires (N-N) » et une vue détail dépliant la relation — alimentées par des données factices. Or le modèle `Consignataire` n'existe pas : il arrive avec les comptes clients. Par ailleurs une note en pied de tableau annonçait que les armements se créaient « depuis le module Utilisateurs & habilitations », ce qui privait l'onglet de bouton d'ajout et rompait l'uniformité recherchée.
@@ -45,6 +143,7 @@
 - Le seuil de bascule vers la pagination serveur reste celui d'ADR-0017 : le premier écran à fort volume (le Manifeste).
 - Un référentiel supplémentaire se câble désormais en un fichier d'onglet + un contrôleur calqué sur `PaysController`.
 - Le compteur `signalCreation` relie le bouton (dans le shell) au tiroir (dans l'onglet) ; il est remis à 0 au changement d'onglet pour qu'un onglet fraîchement monté n'ouvre pas son tiroir.
+- *(2026-07-28, suite)* Le socle a été **remonté de `referentiels/` vers `components/admin/`** pour servir aussi le module Utilisateurs : `ReferentielCard` → `TableCard`, `useReferentiel` → `useCrudTab`, et le paramètre `ressource` (segment) devient `base` (racine REST complète, ex. `/admin/referentiels/pays`). Ce qui est maritime — `ShipIcon`, `PortIcon`, `ModeBadge`, les formes de lignes — reste dans `referentiels/`.
 - **Correctif au passage :** les contrôleurs appelaient `Inertia::flash('toast', …)` mais **rien ne lisait ce flash** — créer un pays n'affichait aucune confirmation. Le flash est désormais déclaré dans les props partagées (`types/global.d.ts`) et consommé par la page.
 
 ## ADR-0020 — Module Utilisateurs CGC : identité détaillée, désactivation (jamais suppression) et anti-auto-blocage — 2026-07-28
