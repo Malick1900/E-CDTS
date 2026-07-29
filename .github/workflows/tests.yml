@@ -22,7 +22,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php-version: ['8.3', '8.4', '8.5']
+        # 8.3 retiré : Symfony 8 (embarqué par Laravel 13) exige PHP >= 8.4.1,
+        # le projet ne s'installe donc plus sur 8.3 quoi qu'en dise composer.json.
+        php-version: ['8.4', '8.5']
 
     steps:
       - name: Checkout code
