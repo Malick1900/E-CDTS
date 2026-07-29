@@ -1,10 +1,11 @@
-import ConfirmDialog from './confirm-dialog';
-import { Drawer, Field, SelectField, TextField } from './drawer';
-import ReferentielCard from './referentiel-card';
-import { PAR_PAGE   } from './types';
-import type {ArmementRow, Option} from './types';
-import { fieldInput, RowActions, StatutBadge, Td, Th, Vide } from './ui';
-import { useReferentiel } from './use-referentiel';
+import ConfirmDialog from '@/components/admin/confirm-dialog';
+import { Drawer, Field, SelectField, TextField } from '@/components/admin/drawer';
+import TableCard from '@/components/admin/table-card';
+import { PAR_PAGE } from '@/components/admin/types';
+import type { Option } from '@/components/admin/types';
+import { fieldInput, RowActions, StatutBadge, Td, Th, Vide } from '@/components/admin/ui';
+import { useCrudTab } from '@/components/admin/use-crud-tab';
+import type { ArmementRow } from './types';
 
 /*
  * Référentiel Armements (= armateurs / compagnies maritimes, ADR-0014).
@@ -56,11 +57,11 @@ const bascule = (a: ArmementRow, prochain: boolean) => ({
 const initiales = (a: ArmementRow) => (a.sigle ?? a.name.slice(0, 3)).toUpperCase();
 
 export default function ArmementsTab({ armements, optionsPays, signalCreation }: { armements: ArmementRow[]; optionsPays: Option[]; signalCreation: number }) {
-    const ref = useReferentiel({ ressource: 'armements', lignes: armements, filtre, vierge: VIERGE, depuis, valide, bascule, signalCreation });
+    const ref = useCrudTab({ base: '/admin/referentiels/armements', lignes: armements, filtre, vierge: VIERGE, depuis, valide, bascule, signalCreation });
 
     return (
         <>
-            <ReferentielCard
+            <TableCard
                 recherche={ref.recherche}
                 onRecherche={ref.setRecherche}
                 placeholder="Rechercher un armement, un sigle…"
@@ -104,7 +105,7 @@ export default function ArmementsTab({ armements, optionsPays, signalCreation }:
                         <RowActions actif={a.actif} onEdit={() => ref.ouvrirEdition(a)} onToggle={() => ref.demanderBascule(a)} />
                     </tr>
                 ))}
-            </ReferentielCard>
+            </TableCard>
 
             {ref.mode && (
                 <Drawer

@@ -110,9 +110,14 @@ return [
     |
     */
 
+    /*
+     * Expéditeur institutionnel. Les courriels partent au nom du CGC, jamais au
+     * nom de l'agent qui a cliqué : le destinataire est un tiers du portail, il
+     * doit reconnaître l'institution et non une personne.
+     */
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
+        'address' => env('MAIL_FROM_ADDRESS', 'ne-pas-repondre@cgc.ga'),
+        'name' => env('MAIL_FROM_NAME', 'e-CDTS — Conseil Gabonais des Chargeurs'),
     ],
 
 ];

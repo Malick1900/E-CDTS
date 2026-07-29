@@ -8,6 +8,10 @@ use App\Http\Controllers\Admin\Referentiels\PaysController;
 use App\Http\Controllers\Admin\Referentiels\PortController;
 use App\Http\Controllers\Admin\Referentiels\TypeNavireController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\Users\AgentController;
+use App\Http\Controllers\Admin\Users\ConsignataireController;
+use App\Http\Controllers\Admin\Users\RoleController;
+use App\Http\Controllers\Admin\Users\TitulaireController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -51,9 +55,52 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Module Utilisateurs & habilitations (Phase 2, câblé).
         Route::middleware('can:'.Permission::UtilisateursGerer->value)->group(function () {
             Route::get('utilisateurs', [UserController::class, 'index'])->name('utilisateurs.index');
+
+            // Fiche d'une société cliente. En lecture ici et non sous
+            // `comptes-clients.gerer` : le Superviseur doit pouvoir consulter le
+            // dossier d'un client sans pouvoir l'engager (ADR-0025).
+            Route::get('utilisateurs/consignataires/{consignataire}', [ConsignataireController::class, 'show'])->name('utilisateurs.consignataires.show');
+
             Route::post('utilisateurs', [UserController::class, 'store'])->name('utilisateurs.store');
             Route::patch('utilisateurs/{utilisateur}', [UserController::class, 'update'])->name('utilisateurs.update');
             Route::patch('utilisateurs/{utilisateur}/activation', [UserController::class, 'toggleActive'])->name('utilisateurs.activation');
+        });
+
+        // Volet client du module — fiche société ET comptes de ses agents. Il
+        // relève d'une permission distincte (ADR-0025) : le Superviseur gère les
+        // comptes internes, mais seul l'Administrateur engage le CGC vis-à-vis
+        // d'un tiers. La page reste accessible aux deux ; ce sont les écritures
+        // qui sont réservées.
+        Route::middleware('can:'.Permission::ComptesClientsGerer->value)->group(function () {
+            // Sociétés consignataires : mêmes trois écritures que partout. Elles
+            // vivent sous `utilisateurs` et non sous `referentiels` parce que la
+            // société est un tiers du portail — c'est elle qui est facturée et
+            // qui portera les comptes de ses agents (ADR-0014).
+            Route::post('utilisateurs/consignataires', [ConsignataireController::class, 'store'])->name('utilisateurs.consignataires.store');
+            Route::patch('utilisateurs/consignataires/{consignataire}', [ConsignataireController::class, 'update'])->name('utilisateurs.consignataires.update');
+            Route::patch('utilisateurs/consignataires/{consignataire}/activation', [ConsignataireController::class, 'toggleActive'])->name('utilisateurs.consignataires.activation');
+
+            // Transfert de la fonction de titulaire — geste distinct de la
+            // modification de la fiche, parce qu'il déplace la capacité de créer
+            // des comptes d'une personne à une autre (ADR-0027).
+            Route::patch('utilisateurs/consignataires/{consignataire}/titulaire', [TitulaireController::class, 'update'])->name('utilisateurs.consignataires.titulaire');
+
+            // Comptes agents : le CGC ne les crée pas (la société s'en charge),
+            // il statue dessus (ADR-0013). D'où des routes de décision plutôt
+            // qu'un CRUD.
+            Route::patch('utilisateurs/agents/{agent}/validation', [AgentController::class, 'valider'])->name('utilisateurs.agents.validation');
+            Route::patch('utilisateurs/agents/{agent}/refus', [AgentController::class, 'refuser'])->name('utilisateurs.agents.refus');
+            Route::patch('utilisateurs/agents/{agent}/reexamen', [AgentController::class, 'reexaminer'])->name('utilisateurs.agents.reexamen');
+            Route::patch('utilisateurs/agents/{agent}/activation', [AgentController::class, 'toggleActive'])->name('utilisateurs.agents.activation');
+            Route::patch('utilisateurs/agents/{agent}/affectations', [AgentController::class, 'affectations'])->name('utilisateurs.agents.affectations');
+        });
+
+        // Recomposition des rôles (ADR-0025). Permission dédiée, et non
+        // `utilisateurs.gerer` : sans cette séparation, un Superviseur pouvait
+        // s'octroyer n'importe quelle permission en deux clics. On recompose des
+        // rôles existants — ni création, ni renommage, ni suppression.
+        Route::middleware('can:'.Permission::RolesGerer->value)->group(function () {
+            Route::patch('utilisateurs/roles/{role}', [RoleController::class, 'update'])->name('utilisateurs.roles.update');
         });
 
         Route::inertia('bareme', 'admin/bareme')->name('bareme');

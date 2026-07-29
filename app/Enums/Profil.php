@@ -32,6 +32,23 @@ enum Profil: string
     }
 
     /**
+     * Le profil accepte-t-il d'être recomposé depuis l'écran « Rôles &
+     * permissions » ? (ADR-0025)
+     *
+     * Deux exceptions, pour des raisons opposées : `super-admin` ne porte
+     * aucune permission explicite (il outrepasse via Gate::before) et
+     * `Administrateur` les porte toutes par définition. Les décocher n'aurait
+     * respectivement aucun effet et aucun sens — et c'est ce qui rend
+     * l'auto-blocage impossible par construction, sans garde à écrire.
+     *
+     * Liste blanche : un rôle absent de cet enum n'est pas recomposable.
+     */
+    public function estRecomposable(): bool
+    {
+        return ! $this->estProtege() && $this !== self::Administrateur;
+    }
+
+    /**
      * Composition d'attributions initiale du profil (matrice ENTITES.md §3).
      *
      * `super-admin` outrepasse via Gate::before → aucune permission explicite.

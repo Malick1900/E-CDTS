@@ -2,28 +2,31 @@ import { router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import type { ConfirmEtat } from './confirm-dialog';
 import { PAR_PAGE  } from './types';
-import type {LigneReferentiel} from './types';
+import type {LigneAdmin} from './types';
 
 /*
- * Mécanique commune aux cinq référentiels : recherche, pagination, tiroir de
- * saisie et confirmation d'activation.
+ * Mécanique commune aux onglets de gestion du panneau d'administration :
+ * recherche, pagination, tiroir de saisie et confirmation d'activation.
  *
- * Les cinq exposent EXACTEMENT les mêmes trois écritures — d'où l'unique
- * paramètre `ressource` qui suffit à construire les URL :
- *   POST   /admin/referentiels/{ressource}
- *   PATCH  /admin/referentiels/{ressource}/{id}
- *   PATCH  /admin/referentiels/{ressource}/{id}/activation
+ * Tous exposent EXACTEMENT les mêmes trois écritures — d'où l'unique paramètre
+ * `base`, la racine REST de la ressource, qui suffit à construire les URL :
+ *   POST   {base}
+ *   PATCH  {base}/{id}
+ *   PATCH  {base}/{id}/activation
  *
  * Ce que le hook ne fait PAS : décider des colonnes, des champs ou des mots.
  * Tout cela reste dans l'onglet, qui le lui passe en options.
  */
 
-/** Un formulaire de référentiel n'envoie que des scalaires. */
-export type Formulaire = Record<string, string | number | null>;
+/**
+ * Un formulaire d'administration n'envoie que des scalaires — plus, pour les
+ * rattachements N-N, une liste d'identifiants (`sync()` côté serveur).
+ */
+export type Formulaire = Record<string, string | number | null | number[]>;
 
-type Options<L extends LigneReferentiel, F extends Formulaire> = {
-    /** Segment d'URL du référentiel : `pays`, `ports`, `navires`… */
-    ressource: string;
+type Options<L extends LigneAdmin, F extends Formulaire> = {
+    /** Racine REST de la ressource, ex. `/admin/referentiels/pays`. */
+    base: string;
     lignes: L[];
     /** Vrai si la ligne correspond à la recherche (`q` est déjà rognée et en minuscules). */
     filtre: (ligne: L, q: string) => boolean;
@@ -43,8 +46,8 @@ type Options<L extends LigneReferentiel, F extends Formulaire> = {
     signalCreation: number;
 };
 
-export function useReferentiel<L extends LigneReferentiel, F extends Formulaire>({
-    ressource,
+export function useCrudTab<L extends LigneAdmin, F extends Formulaire>({
+    base,
     lignes,
     filtre,
     vierge,
@@ -142,9 +145,9 @@ export function useReferentiel<L extends LigneReferentiel, F extends Formulaire>
         };
 
         if (mode === 'creation') {
-            router.post(`/admin/referentiels/${ressource}`, form, options);
+            router.post(base, form, options);
         } else {
-            router.patch(`/admin/referentiels/${ressource}/${edite}`, form, options);
+            router.patch(`${base}/${edite}`, form, options);
         }
     };
 
@@ -158,7 +161,7 @@ export function useReferentiel<L extends LigneReferentiel, F extends Formulaire>
             danger: !prochain,
             onOk: () => {
                 setConfirm(null);
-                router.patch(`/admin/referentiels/${ressource}/${ligne.id}/activation`, {}, { preserveScroll: true, preserveState: true });
+                router.patch(`${base}/${ligne.id}/activation`, {}, { preserveScroll: true, preserveState: true });
             },
         });
     };
@@ -166,6 +169,8 @@ export function useReferentiel<L extends LigneReferentiel, F extends Formulaire>
     return {
         recherche,
         setRecherche: changerRecherche,
+        /** Identifiant de la ligne en cours d'édition, null en création. */
+        edite,
         page: pageCourante,
         setPage,
         lignesPage,

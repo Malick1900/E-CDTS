@@ -78,7 +78,13 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    /*
+     * Le portail s'adresse à des administrations et à des sociétés gabonaises :
+     * le français est la langue de travail, y compris pour les courriels
+     * envoyés aux consignataires. Le repli anglais reste en place pour les
+     * chaînes du framework qui ne sont pas encore traduites.
+     */
+    'locale' => env('APP_LOCALE', 'fr'),
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 

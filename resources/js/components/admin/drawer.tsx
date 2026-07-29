@@ -1,11 +1,11 @@
-import { useEffect  } from 'react';
+import { useEffect, useMemo, useState  } from 'react';
 import type {ReactNode} from 'react';
-import { fieldInput, fieldLabel, fieldSelect } from './ui';
+import { fieldInput, fieldLabel, fieldSelect, SearchIcon } from './ui';
 
 /*
  * Tiroir latéral de saisie — unique porte d'entrée pour créer ET modifier une
- * ligne, sur les cinq référentiels. Il ne fournit que la coquille et les
- * primitives de champ ; chaque onglet décrit ses propres champs.
+ * ligne, sur tous les écrans d'administration. Il ne fournit que la coquille et
+ * les primitives de champ ; chaque onglet décrit ses propres champs.
  */
 
 type DrawerProps = {
@@ -97,6 +97,20 @@ export function Field({ label, requis, aide, erreur, children }: { label: string
     );
 }
 
+/**
+ * Séparateur de rubrique dans un tiroir. Utile dès qu'un formulaire mêle deux
+ * objets distincts — la société et le compte de son titulaire, par exemple —
+ * pour que le lecteur voie où l'un finit et l'autre commence.
+ */
+export function Section({ titre, aide }: { titre: string; aide?: string }) {
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 6, borderTop: '1px solid #E7EBF2' }}>
+            <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.05em', color: '#8A93A6', textTransform: 'uppercase' }}>{titre}</span>
+            {aide ? <span style={{ fontSize: 11.5, color: '#5A6478', lineHeight: 1.45 }}>{aide}</span> : null}
+        </div>
+    );
+}
+
 type TextFieldProps = {
     label: string;
     valeur: string;
@@ -109,13 +123,17 @@ type TextFieldProps = {
     /** Codes et sigles : saisie affichée en majuscules (le serveur normalise). */
     majuscules?: boolean;
     chiffres?: boolean;
+    /** Nature de la saisie — pour le clavier mobile et le gestionnaire de mots de passe. */
+    type?: 'text' | 'email' | 'password';
+    autoComplete?: string;
 };
 
-export function TextField({ label, valeur, onChange, requis, erreur, aide, placeholder, maxLength, majuscules, chiffres }: TextFieldProps) {
+export function TextField({ label, valeur, onChange, requis, erreur, aide, placeholder, maxLength, majuscules, chiffres, type = 'text', autoComplete }: TextFieldProps) {
     return (
         <Field label={label} requis={requis} aide={aide} erreur={erreur}>
             <input
-                type="text"
+                type={type}
+                autoComplete={autoComplete}
                 value={valeur}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
@@ -141,9 +159,114 @@ type SelectFieldProps = {
     requis?: boolean;
     erreur?: string;
     aide?: string;
-    /** Libellé de l'option vide — les clés étrangères des référentiels sont toutes facultatives. */
+    /** Libellé de l'option vide — la plupart des rattachements sont facultatifs. */
     aucun?: string;
 };
+
+type MultiSelectFieldProps = {
+    label: string;
+    /** Identifiants cochés. L'ordre est indifférent : le serveur fait un `sync()`. */
+    valeurs: number[];
+    onChange: (valeurs: number[]) => void;
+    options: Array<{ value: number; label: string }>;
+    erreur?: string;
+    aide?: string;
+    /** Message affiché quand le référentiel source est vide. */
+    vide: string;
+    /** Singulier puis pluriel du décompte, ex. `['armement', 'armements']`. */
+    unite: [string, string];
+};
+
+/** Au-delà de ce nombre d'options, la liste ne se parcourt plus à l'œil. */
+const SEUIL_RECHERCHE = 8;
+
+/**
+ * Rattachement N-N : une liste de cases à cocher plutôt qu'un `<select multiple>`,
+ * dont la sélection multiple au clavier n'est comprise de personne.
+ *
+ * Deux aménagements pour les référentiels longs — le catalogue des armements en
+ * compte des dizaines, là où les ports tiennent sur une main :
+ * - les entrées déjà cochées remontent en tête, **dans l'ordre figé à
+ *   l'ouverture** : sans ce gel, cocher une case la ferait sauter sous le
+ *   curseur ;
+ * - un champ de recherche apparaît au-delà du seuil, pour ne pas imposer de
+ *   faire défiler une boîte de 190 pixels à la recherche d'une compagnie.
+ */
+export function MultiSelectField({ label, valeurs, onChange, options, erreur, aide, vide, unite }: MultiSelectFieldProps) {
+    // On ajoute en fin de liste sans réordonner : un identifiant rattaché à une
+    // entrée désactivée — donc absent des options — n'est jamais perdu au passage.
+    const basculer = (value: number) => {
+        onChange(valeurs.includes(value) ? valeurs.filter((v) => v !== value) : [...valeurs, value]);
+    };
+
+    const compte = valeurs.length;
+    const avecRecherche = options.length > SEUIL_RECHERCHE;
+
+    const [recherche, setRecherche] = useState('');
+
+    // Photographie de la sélection à l'ouverture : c'est elle qui fixe l'ordre,
+    // et non la sélection courante, qui change à chaque clic.
+    const [cochesInitiaux] = useState(() => new Set(valeurs));
+
+    const visibles = useMemo(() => {
+        // Le tri de JS est stable : l'ordre alphabétique reçu du serveur est
+        // conservé à l'intérieur de chaque groupe.
+        const ordonnees = [...options].sort((a, b) => Number(cochesInitiaux.has(b.value)) - Number(cochesInitiaux.has(a.value)));
+        const q = recherche.trim().toLowerCase();
+
+        return q === '' ? ordonnees : ordonnees.filter((o) => o.label.toLowerCase().includes(q));
+    }, [options, cochesInitiaux, recherche]);
+
+    return (
+        <Field label={label} aide={aide} erreur={erreur}>
+            {options.length === 0 ? (
+                <span style={{ fontSize: 12, color: '#8A93A6' }}>{vide}</span>
+            ) : (
+                <>
+                    {avecRecherche && (
+                        <div style={{ position: 'relative' }}>
+                            <SearchIcon />
+                            <input
+                                type="text"
+                                value={recherche}
+                                onChange={(e) => setRecherche(e.target.value)}
+                                placeholder={`Filtrer parmi ${options.length} ${unite[1]}…`}
+                                aria-label={`Filtrer ${label}`}
+                                style={{ ...fieldInput, height: 32, padding: '0 10px 0 30px' }}
+                            />
+                        </div>
+                    )}
+                    <div
+                        role="group"
+                        aria-label={label}
+                        style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 190, overflowY: 'auto', border: `1px solid ${erreur ? '#E0B4AD' : '#D8DEE9'}`, borderRadius: 6, padding: 8, background: '#fff' }}
+                    >
+                        {visibles.length === 0 ? (
+                            <span style={{ fontSize: 12, color: '#8A93A6', padding: '6px 8px' }}>Aucune entrée ne correspond.</span>
+                        ) : (
+                            visibles.map((o) => {
+                                const coche = valeurs.includes(o.value);
+
+                                return (
+                                    <label
+                                        key={o.value}
+                                        style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '6px 8px', borderRadius: 6, cursor: 'pointer', background: coche ? '#F5F8FD' : 'transparent', border: `1px solid ${coche ? '#C3D0F0' : 'transparent'}` }}
+                                    >
+                                        <input type="checkbox" checked={coche} onChange={() => basculer(o.value)} style={{ width: 15, height: 15, accentColor: '#1D3E9C', flex: 'none', cursor: 'pointer' }} />
+                                        <span style={{ fontSize: 12.5, color: '#1A1F2E' }}>{o.label}</span>
+                                    </label>
+                                );
+                            })
+                        )}
+                    </div>
+                    <span style={{ fontSize: 11, color: '#8A93A6', fontVariantNumeric: 'tabular-nums' }}>
+                        {compte} {compte > 1 ? unite[1] : unite[0]} sélectionné{compte > 1 ? 's' : ''}
+                    </span>
+                </>
+            )}
+        </Field>
+    );
+}
 
 export function SelectField({ label, valeur, onChange, options, requis, erreur, aide, aucun = '— Non renseigné —' }: SelectFieldProps) {
     return (

@@ -1,10 +1,10 @@
-import ConfirmDialog from './confirm-dialog';
-import { Drawer, TextField } from './drawer';
-import ReferentielCard from './referentiel-card';
-import { PAR_PAGE  } from './types';
-import type {TypeNavireRow} from './types';
-import { CodeChip, RowActions, StatutBadge, Td, Th, Vide } from './ui';
-import { useReferentiel } from './use-referentiel';
+import ConfirmDialog from '@/components/admin/confirm-dialog';
+import { Drawer, TextField } from '@/components/admin/drawer';
+import TableCard from '@/components/admin/table-card';
+import { PAR_PAGE } from '@/components/admin/types';
+import { CodeChip, RowActions, StatutBadge, Td, Th, Vide } from '@/components/admin/ui';
+import { useCrudTab } from '@/components/admin/use-crud-tab';
+import type { TypeNavireRow } from './types';
 
 /*
  * Référentiel Types de navire — alimente la qualification du navire, elle-même
@@ -31,11 +31,11 @@ const bascule = (t: TypeNavireRow, prochain: boolean) => ({
 });
 
 export default function TypesNavireTab({ typesNavire, signalCreation }: { typesNavire: TypeNavireRow[]; signalCreation: number }) {
-    const ref = useReferentiel({ ressource: 'types-navire', lignes: typesNavire, filtre, vierge: VIERGE, depuis, valide, bascule, signalCreation });
+    const ref = useCrudTab({ base: '/admin/referentiels/types-navire', lignes: typesNavire, filtre, vierge: VIERGE, depuis, valide, bascule, signalCreation });
 
     return (
         <>
-            <ReferentielCard
+            <TableCard
                 recherche={ref.recherche}
                 onRecherche={ref.setRecherche}
                 placeholder="Rechercher un type, un code…"
@@ -72,7 +72,7 @@ export default function TypesNavireTab({ typesNavire, signalCreation }: { typesN
                         <RowActions actif={t.actif} onEdit={() => ref.ouvrirEdition(t)} onToggle={() => ref.demanderBascule(t)} />
                     </tr>
                 ))}
-            </ReferentielCard>
+            </TableCard>
 
             {ref.mode && (
                 <Drawer

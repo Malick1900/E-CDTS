@@ -9,7 +9,7 @@ export type ConfirmEtat = {
     corps: string;
     /** Libellé du bouton d'action — « Désactiver » / « Réactiver ». */
     libelle: string;
-    /** Nom du référentiel, ex. « Port ». */
+    /** Nature de la ligne, ex. « Port ». */
     statLabel: string;
     /** Ligne concernée, ex. « Owendo · GAOWE ». */
     statValue: string;

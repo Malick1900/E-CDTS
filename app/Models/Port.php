@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -36,5 +37,15 @@ class Port extends Model
     public function pays(): BelongsTo
     {
         return $this->belongsTo(Pays::class);
+    }
+
+    /**
+     * Sociétés consignataires rattachées à ce port (ADR-0014).
+     *
+     * @return BelongsToMany<Consignataire, $this>
+     */
+    public function consignataires(): BelongsToMany
+    {
+        return $this->belongsToMany(Consignataire::class);
     }
 }

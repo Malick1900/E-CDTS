@@ -1,22 +1,19 @@
 /*
  * Onglet « Agents consignataires » du module Utilisateurs & habilitations.
- * Écran front-only : barre de recherche + filtres de statut segmentés, puis
- * table de tous les agents (toutes sociétés). Réutilise le tiroir d'affectation
- * et les actions d'agent définis dans consignataires-tab.
- * Toutes les actions modifient l'état local (démo cliquable, aucun back).
+ *
+ * Écran de décision, pas de saisie : la société crée ses agents depuis son
+ * portail, le CGC valide, refuse, réexamine, suspend et fixe la portée
+ * (ADR-0013). Rien ne se supprime — un compte refusé reste la trace opposable
+ * de la décision (ADR-0024).
  */
+import { router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
-import { AffectationDrawer, AgentActions, AgentArmBadges } from './consignataires-tab';
-import type { AgentActionHandlers } from './consignataires-tab';
-import {
-    AGENTS,
-    CONSIGNATAIRES,
-    STATUT_META,
-    armementsByIds,
-    avatarStyle,
-    initials,
-} from './fake-data';
-import type { Agent, AgentStatut } from './fake-data';
+import ConfirmDialog from '@/components/admin/confirm-dialog';
+import type { ConfirmEtat } from '@/components/admin/confirm-dialog';
+import { BandeauInfo } from '@/components/admin/ui';
+import { AffectationDrawer, AgentActions, AgentArmBadges, avatarStyle, initials, RefusDialog, STATUT_META } from './agents-ui';
+import type { AgentActionHandlers } from './agents-ui';
+import type { AgentRow, AgentStatut } from './types';
 
 type FiltreStatut = 'tous' | AgentStatut;
 
@@ -28,55 +25,92 @@ const CHIPS: { key: FiltreStatut; label: string }[] = [
     { key: 'refuse', label: 'Refusés' },
 ];
 
-export default function AgentsTab() {
-    // DONNÉES FACTICES — à câbler (phase ultérieure)
-    const [agents, setAgents] = useState<Agent[]>(AGENTS);
+const BASE = '/admin/utilisateurs/agents';
 
-    const [search, setSearch] = useState('');
+const DATE_COURTE = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+export default function AgentsTab({ agents, peutGerer, rechercheInitiale = '' }: { agents: AgentRow[]; peutGerer: boolean; rechercheInitiale?: string }) {
+    // Pré-remplie quand on arrive depuis la fiche d'une société : « traiter les
+    // comptes en attente » doit atterrir sur ses comptes, pas sur la liste
+    // entière (la recherche filtre déjà sur le nom de la société).
+    const [search, setSearch] = useState(rechercheInitiale);
     const [filtre, setFiltre] = useState<FiltreStatut>('tous');
-    const [affectAgentId, setAffectAgentId] = useState<string | null>(null);
+    const [enCours, setEnCours] = useState(false);
 
-    const consignById = useMemo(() => new Map(CONSIGNATAIRES.map((c) => [c.id, c])), []);
+    const [affectId, setAffectId] = useState<number | null>(null);
+    const [refusId, setRefusId] = useState<number | null>(null);
+    const [erreurRefus, setErreurRefus] = useState<string | undefined>(undefined);
+    const [confirm, setConfirm] = useState<ConfirmEtat | null>(null);
 
     const rows = useMemo(() => {
         const q = search.trim().toLowerCase();
 
         return agents.filter((a) => {
             const matchStatut = filtre === 'tous' || a.statut === filtre;
-            const consignName = consignById.get(a.consignataireId)?.name ?? '';
-            const matchSearch = q === '' || a.name.toLowerCase().includes(q) || a.email.toLowerCase().includes(q) || consignName.toLowerCase().includes(q);
+            const matchSearch =
+                q === '' ||
+                a.name.toLowerCase().includes(q) ||
+                a.email.toLowerCase().includes(q) ||
+                (a.consignataire_name ?? '').toLowerCase().includes(q);
 
             return matchStatut && matchSearch;
         });
-    }, [agents, filtre, search, consignById]);
+    }, [agents, filtre, search]);
 
-    const setAgentStatut = (agentId: string, statut: AgentStatut) => {
-        setAgents((cur) => cur.map((a) => (a.id === agentId ? { ...a, statut } : a)));
+    /** Toutes les décisions passent par le même PATCH ; seule l'URL change. */
+    const decider = (agent: AgentRow, action: string, donnees: Record<string, string | number[]> = {}, onOk?: () => void) => {
+        router.patch(`${BASE}/${agent.id}/${action}`, donnees, {
+            preserveScroll: true,
+            preserveState: true,
+            onStart: () => setEnCours(true),
+            onFinish: () => setEnCours(false),
+            onSuccess: () => onOk?.(),
+            onError: (e: Record<string, string>) => setErreurRefus(e.motif_refus ?? e.statut_validation),
+        });
     };
 
-    const handlersFor = (agent: Agent): AgentActionHandlers => ({
-        onValidate: () => setAgentStatut(agent.id, 'actif'),
-        onRefuse: () => setAgentStatut(agent.id, 'refuse'),
-        onToggle: () => setAgentStatut(agent.id, agent.statut === 'actif' ? 'desactive' : 'actif'),
-        onReexamine: () => setAgentStatut(agent.id, 'en_attente'),
-        onAffect: () => setAffectAgentId(agent.id),
+    const handlersFor = (agent: AgentRow): AgentActionHandlers => ({
+        onValidate: () => decider(agent, 'validation'),
+        onRefuse: () => {
+            setErreurRefus(undefined);
+            setRefusId(agent.id);
+        },
+        onReexamine: () => decider(agent, 'reexamen'),
+        onAffect: () => setAffectId(agent.id),
+        onToggle: () => {
+            const desactivation = agent.statut === 'actif';
+
+            setConfirm({
+                titre: desactivation ? 'Désactiver ce compte agent ?' : 'Réactiver ce compte agent ?',
+                corps: desactivation
+                    ? "L'agent ne pourra plus se connecter ni déclarer. Ses dossiers et ses affectations restent intacts."
+                    : "L'agent retrouve l'accès au portail, avec les armements qui lui sont affectés.",
+                libelle: desactivation ? 'Désactiver' : 'Réactiver',
+                statLabel: 'Agent',
+                statValue: `${agent.name} · ${agent.consignataire_name ?? '—'}`,
+                danger: desactivation,
+                onOk: () => {
+                    setConfirm(null);
+                    decider(agent, 'activation');
+                },
+            });
+        },
     });
 
-    const affectAgent = affectAgentId ? agents.find((a) => a.id === affectAgentId) ?? null : null;
-    const affectConsign = affectAgent ? consignById.get(affectAgent.consignataireId) ?? null : null;
-
-    const closeDrawer = () => setAffectAgentId(null);
-
-    const saveDrawer = (ids: string[]) => {
-        if (affectAgentId) {
-            setAgents((cur) => cur.map((a) => (a.id === affectAgentId ? { ...a, armementIds: ids } : a)));
-        }
-
-        setAffectAgentId(null);
-    };
+    const affectAgent = affectId === null ? null : (agents.find((a) => a.id === affectId) ?? null);
+    const refusAgent = refusId === null ? null : (agents.find((a) => a.id === refusId) ?? null);
 
     return (
         <>
+            {!peutGerer && (
+                <div style={{ padding: '18px 26px 0' }}>
+                    <BandeauInfo titre="Consultation seule">
+                        Valider ou refuser un compte agent engage le CGC vis-à-vis d’une société : la décision relève de l’Administrateur (ADR-0013). Vous
+                        pouvez consulter les demandes et leur suivi, sans y statuer.
+                    </BandeauInfo>
+                </div>
+            )}
+
             <div style={{ padding: '18px 26px 26px' }}>
                 <div style={{ background: '#fff', border: '1px solid #D8DEE9', borderRadius: 8, boxShadow: '0 1px 3px rgba(20,44,115,.06)', overflow: 'hidden' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid #E7EBF2', background: '#FBFCFE', flexWrap: 'wrap' }}>
@@ -112,7 +146,9 @@ export default function AgentsTab() {
                                     <th style={{ background: '#1D3E9C', color: '#fff', fontSize: 10.5, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', textAlign: 'left', padding: '9px 12px', borderBottom: '2px solid #142C73', width: 200 }}>Consignataire</th>
                                     <th style={{ background: '#1D3E9C', color: '#fff', fontSize: 10.5, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', textAlign: 'left', padding: '9px 12px', borderBottom: '2px solid #142C73' }}>Armements affectés</th>
                                     <th style={{ background: '#1D3E9C', color: '#fff', fontSize: 10.5, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', textAlign: 'left', padding: '9px 12px', borderBottom: '2px solid #142C73', width: 126 }}>Statut</th>
-                                    <th style={{ background: '#1D3E9C', color: '#fff', fontSize: 10.5, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', textAlign: 'right', padding: '9px 16px', borderBottom: '2px solid #142C73', width: 220 }}>Actions</th>
+                                    {peutGerer && (
+                                        <th style={{ background: '#1D3E9C', color: '#fff', fontSize: 10.5, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', textAlign: 'right', padding: '9px 16px', borderBottom: '2px solid #142C73', width: 220 }}>Actions</th>
+                                    )}
                                 </tr>
                             </thead>
                             <tbody>
@@ -122,7 +158,6 @@ export default function AgentsTab() {
                                     </tr>
                                 ) : rows.map((a) => {
                                     const meta = STATUT_META[a.statut];
-                                    const consignName = consignById.get(a.consignataireId)?.name ?? '—';
 
                                     return (
                                         <tr key={a.id}>
@@ -130,17 +165,25 @@ export default function AgentsTab() {
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                                     <div style={avatarStyle(a.statut)}>{initials(a.name)}</div>
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                                        <span style={{ fontSize: 13, fontWeight: 700, color: '#1A1F2E' }}>{a.name}</span>
+                                                        <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                                                            <span style={{ fontSize: 13, fontWeight: 700, color: '#1A1F2E' }}>{a.name}</span>
+                                                            {a.est_titulaire ? (
+                                                                <span title="Titulaire du compte de la société : il gère les comptes de ses agents" style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.03em', textTransform: 'uppercase', color: '#1D3E9C', background: '#EEF3FF', border: '1px solid #C3D0F0', borderRadius: 4, padding: '1px 6px' }}>Titulaire</span>
+                                                            ) : null}
+                                                        </span>
                                                         <span style={{ fontSize: 11, color: '#5A6478' }}>{a.email}</span>
+                                                        <Trace agent={a} />
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td style={{ padding: '10px 12px', borderBottom: '1px solid #E7EBF2', fontSize: 12.5, color: '#3A4356', verticalAlign: 'middle' }}>{consignName}</td>
+                                            <td style={{ padding: '10px 12px', borderBottom: '1px solid #E7EBF2', fontSize: 12.5, color: '#3A4356', verticalAlign: 'middle' }}>{a.consignataire_name ?? '—'}</td>
                                             <td style={{ padding: '10px 12px', borderBottom: '1px solid #E7EBF2', verticalAlign: 'middle' }}>
-                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, maxWidth: 280 }}><AgentArmBadges ids={a.armementIds} /></div>
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, maxWidth: 280 }}><AgentArmBadges armements={a.armements} /></div>
                                             </td>
                                             <td style={{ padding: '10px 12px', borderBottom: '1px solid #E7EBF2', verticalAlign: 'middle' }}><span style={meta.pill}><span style={meta.dot} />{meta.label}</span></td>
-                                            <td style={{ padding: '10px 16px', borderBottom: '1px solid #E7EBF2', verticalAlign: 'middle' }}><AgentActions statut={a.statut} handlers={handlersFor(a)} /></td>
+                                            {peutGerer && (
+                                                <td style={{ padding: '10px 16px', borderBottom: '1px solid #E7EBF2', verticalAlign: 'middle' }}><AgentActions statut={a.statut} handlers={handlersFor(a)} /></td>
+                                            )}
                                         </tr>
                                     );
                                 })}
@@ -150,19 +193,53 @@ export default function AgentsTab() {
                 </div>
             </div>
 
-            {affectAgent && affectConsign ? (
+            {affectAgent ? (
                 <AffectationDrawer
                     title="Affectation aux armements"
-                    subtitle={`${affectAgent.name} · ${affectConsign.name}`}
+                    subtitle={`${affectAgent.name} · ${affectAgent.consignataire_name ?? '—'}`}
                     hint="L'agent ne pourra opérer (dossiers, manifestes, devis) que sur les armements cochés, parmi ceux représentés par sa société."
-                    sectionLabel={`Armements de ${affectConsign.name}`}
+                    sectionLabel={`Armements de ${affectAgent.consignataire_name ?? 'la société'}`}
                     emptyLabel="Cette société ne représente encore aucun armement."
-                    candidates={armementsByIds(affectConsign.armementIds)}
-                    selectedIds={affectAgent.armementIds}
-                    onClose={closeDrawer}
-                    onSave={saveDrawer}
+                    candidates={affectAgent.armements_societe}
+                    selectedIds={affectAgent.armements.map((arm) => arm.id)}
+                    enCours={enCours}
+                    onClose={() => setAffectId(null)}
+                    onSave={(ids) => decider(affectAgent, 'affectations', { armement_ids: ids }, () => setAffectId(null))}
                 />
             ) : null}
+
+            {refusAgent ? (
+                <RefusDialog
+                    agent={refusAgent.name}
+                    societe={refusAgent.consignataire_name ?? '—'}
+                    erreur={erreurRefus}
+                    enCours={enCours}
+                    onClose={() => setRefusId(null)}
+                    onConfirm={(motif) => decider(refusAgent, 'refus', { motif_refus: motif }, () => setRefusId(null))}
+                />
+            ) : null}
+
+            <ConfirmDialog etat={confirm} onFermer={() => setConfirm(null)} />
         </>
+    );
+}
+
+/**
+ * Trace de la dernière décision du CGC (ADR-0024). Affichée sur les comptes
+ * refusés, où elle porte l'information utile — qui a tranché, quand, et ce que
+ * la société doit corriger avant de soumettre à nouveau.
+ */
+function Trace({ agent }: { agent: AgentRow }) {
+    if (agent.statut !== 'refuse' || agent.decide_le === null) {
+        return null;
+    }
+
+    const le = DATE_COURTE.format(new Date(agent.decide_le));
+    const par = agent.decide_par ?? 'le CGC';
+
+    return (
+        <span title={agent.motif_refus ?? undefined} style={{ fontSize: 11, color: '#96271C', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            Refusé par {par} le {le}{agent.motif_refus ? ` — ${agent.motif_refus}` : ''}
+        </span>
     );
 }

@@ -1,10 +1,12 @@
-import ConfirmDialog from './confirm-dialog';
-import { Drawer, SelectField, TextField } from './drawer';
-import ReferentielCard from './referentiel-card';
-import { PAR_PAGE   } from './types';
-import type {Option, PortRow} from './types';
-import { CodeChip, PortIcon, RowActions, StatutBadge, Td, TdTitre, Th, Vide } from './ui';
-import { useReferentiel } from './use-referentiel';
+import ConfirmDialog from '@/components/admin/confirm-dialog';
+import { Drawer, SelectField, TextField } from '@/components/admin/drawer';
+import TableCard from '@/components/admin/table-card';
+import { PAR_PAGE } from '@/components/admin/types';
+import type { Option } from '@/components/admin/types';
+import { CodeChip, RowActions, StatutBadge, Td, TdTitre, Th, Vide } from '@/components/admin/ui';
+import { useCrudTab } from '@/components/admin/use-crud-tab';
+import type { PortRow } from './types';
+import { PortIcon } from './ui';
 
 /*
  * Référentiel Ports d'escale (code UN/LOCODE). Le préfixe de numérotation est
@@ -38,11 +40,11 @@ const bascule = (p: PortRow, prochain: boolean) => ({
 });
 
 export default function PortsTab({ ports, optionsPays, signalCreation }: { ports: PortRow[]; optionsPays: Option[]; signalCreation: number }) {
-    const ref = useReferentiel({ ressource: 'ports', lignes: ports, filtre, vierge: VIERGE, depuis, valide, bascule, signalCreation });
+    const ref = useCrudTab({ base: '/admin/referentiels/ports', lignes: ports, filtre, vierge: VIERGE, depuis, valide, bascule, signalCreation });
 
     return (
         <>
-            <ReferentielCard
+            <TableCard
                 recherche={ref.recherche}
                 onRecherche={ref.setRecherche}
                 placeholder="Rechercher un port, un code…"
@@ -79,7 +81,7 @@ export default function PortsTab({ ports, optionsPays, signalCreation }: { ports
                         <RowActions actif={p.actif} onEdit={() => ref.ouvrirEdition(p)} onToggle={() => ref.demanderBascule(p)} />
                     </tr>
                 ))}
-            </ReferentielCard>
+            </TableCard>
 
             {ref.mode && (
                 <Drawer

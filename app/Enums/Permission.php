@@ -27,6 +27,7 @@ enum Permission: string
     case ReferentielsGerer = 'referentiels.gerer';
     case UtilisateursGerer = 'utilisateurs.gerer';
     case ComptesClientsGerer = 'comptes-clients.gerer';
+    case RolesGerer = 'roles.gerer';
     case BaremeModifier = 'bareme.modifier';
     case StatistiquesConsulter = 'statistiques.consulter';
 
@@ -47,8 +48,38 @@ enum Permission: string
             self::ReferentielsGerer => 'Gérer les référentiels',
             self::UtilisateursGerer => 'Gérer les utilisateurs',
             self::ComptesClientsGerer => 'Créer / valider les comptes clients',
+            self::RolesGerer => 'Gérer les rôles et permissions',
             self::BaremeModifier => 'Modifier le barème',
             self::StatistiquesConsulter => 'Consulter les statistiques',
+        };
+    }
+
+    /**
+     * Domaine d'appartenance — regroupe les lignes de la matrice « Rôles &
+     * permissions » pour qu'on lise d'un coup d'œil qui touche à l'exploitation
+     * et qui touche à l'administration.
+     *
+     * Sert l'affichage uniquement : le contrôle d'accès ne connaît que les
+     * permissions unitaires.
+     */
+    public function domaine(): string
+    {
+        return match ($this) {
+            self::SituationPortuaireRenseigner,
+            self::DepouillementTraiter,
+            self::FactureTeleverser,
+            self::SituationPortuaireValider,
+            self::PvValider,
+            self::DossierCloturer,
+            self::EscaleModifierModeExploitation => 'Exploitation',
+
+            self::ReferentielsGerer,
+            self::UtilisateursGerer,
+            self::ComptesClientsGerer,
+            self::RolesGerer,
+            self::BaremeModifier => 'Administration',
+
+            self::StatistiquesConsulter => 'Consultation',
         };
     }
 

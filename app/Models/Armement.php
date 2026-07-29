@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
@@ -61,5 +62,15 @@ class Armement extends Model
     public function navires(): HasMany
     {
         return $this->hasMany(Navire::class);
+    }
+
+    /**
+     * Sociétés qui représentent cet armement au port (ADR-0014).
+     *
+     * @return BelongsToMany<Consignataire, $this>
+     */
+    public function consignataires(): BelongsToMany
+    {
+        return $this->belongsToMany(Consignataire::class);
     }
 }

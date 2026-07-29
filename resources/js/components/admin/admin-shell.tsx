@@ -27,8 +27,6 @@ type AdminShellProps = {
     tabs?: Tab[];
     activeTab?: string;
     onTab?: (key: string) => void;
-    /** Badge « comptes à valider » sur le module Utilisateurs. */
-    usersAlert?: number;
     children: ReactNode;
 };
 
@@ -131,11 +129,17 @@ export default function AdminShell({
     tabs,
     activeTab,
     onTab,
-    usersAlert,
     children,
 }: AdminShellProps) {
     const page = usePage();
     const user = (page.props as { auth?: { user?: { name?: string } } }).auth?.user;
+    /*
+     * Comptes agents en attente (ADR-0013). Donnée partagée par le serveur et
+     * non prop de page : le badge vit dans le rail, donc s'affiche depuis
+     * n'importe quel module de l'administration. Vaut 0 pour qui n'a pas la
+     * charge des comptes clients.
+     */
+    const usersAlert = (page.props as { admin?: { agentsAValider?: number } }).admin?.agentsAValider ?? 0;
     const adminName = user?.name ?? 'Administrateur CGC';
     const adminRole = 'Administrateur — CGC';
     const current = MODULES[module];

@@ -2,6 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\Permission;
+use App\Enums\StatutValidation;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -41,7 +44,27 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'admin' => [
+                'agentsAValider' => fn (): int => $this->agentsAValider($request),
+            ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
+    }
+
+    /**
+     * Comptes agents en attente de décision du CGC (ADR-0013). Partagé plutôt
+     * que passé par une page : le badge vit dans la barre latérale de l'espace
+     * d'administration, donc visible depuis n'importe quel module.
+     *
+     * Zéro pour qui n'a pas la charge des comptes clients — l'alerte s'adresse
+     * à celui qui peut y répondre.
+     */
+    private function agentsAValider(Request $request): int
+    {
+        if (! $request->user()?->can(Permission::ComptesClientsGerer->value)) {
+            return 0;
+        }
+
+        return User::where('statut_validation', StatutValidation::EnAttente)->count();
     }
 }

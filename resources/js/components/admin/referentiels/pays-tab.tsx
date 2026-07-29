@@ -1,10 +1,10 @@
-import ConfirmDialog from './confirm-dialog';
-import { Drawer, TextField } from './drawer';
-import ReferentielCard from './referentiel-card';
-import { PAR_PAGE  } from './types';
-import type {PaysRow} from './types';
-import { CodeChip, RowActions, StatutBadge, Td, Th, Vide } from './ui';
-import { useReferentiel } from './use-referentiel';
+import ConfirmDialog from '@/components/admin/confirm-dialog';
+import { Drawer, TextField } from '@/components/admin/drawer';
+import TableCard from '@/components/admin/table-card';
+import { PAR_PAGE } from '@/components/admin/types';
+import { CodeChip, RowActions, StatutBadge, Td, Th, Vide } from '@/components/admin/ui';
+import { useCrudTab } from '@/components/admin/use-crud-tab';
+import type { PaysRow } from './types';
 
 /*
  * Référentiel Pays (ISO 3166-1 alpha-2) — pavillon des navires, origine et
@@ -41,11 +41,11 @@ function utilisations(p: PaysRow) {
 }
 
 export default function PaysTab({ pays, signalCreation }: { pays: PaysRow[]; signalCreation: number }) {
-    const ref = useReferentiel({ ressource: 'pays', lignes: pays, filtre, vierge: VIERGE, depuis, valide, bascule, signalCreation });
+    const ref = useCrudTab({ base: '/admin/referentiels/pays', lignes: pays, filtre, vierge: VIERGE, depuis, valide, bascule, signalCreation });
 
     return (
         <>
-            <ReferentielCard
+            <TableCard
                 recherche={ref.recherche}
                 onRecherche={ref.setRecherche}
                 placeholder="Rechercher un pays, un code ISO…"
@@ -80,7 +80,7 @@ export default function PaysTab({ pays, signalCreation }: { pays: PaysRow[]; sig
                         <RowActions actif={p.actif} onEdit={() => ref.ouvrirEdition(p)} onToggle={() => ref.demanderBascule(p)} />
                     </tr>
                 ))}
-            </ReferentielCard>
+            </TableCard>
 
             {ref.mode && (
                 <Drawer

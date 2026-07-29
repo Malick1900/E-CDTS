@@ -1,10 +1,12 @@
-import ConfirmDialog from './confirm-dialog';
-import { Drawer, Field, SelectField, TextField } from './drawer';
-import ReferentielCard from './referentiel-card';
-import { PAR_PAGE    } from './types';
-import type {ModeExploitation, NavireRow, Option} from './types';
-import { MODE_LABEL, ModeBadge, RowActions, ShipIcon, StatutBadge, Td, TdTitre, Th, Vide } from './ui';
-import { useReferentiel } from './use-referentiel';
+import ConfirmDialog from '@/components/admin/confirm-dialog';
+import { Drawer, Field, SelectField, TextField } from '@/components/admin/drawer';
+import TableCard from '@/components/admin/table-card';
+import { PAR_PAGE } from '@/components/admin/types';
+import type { Option } from '@/components/admin/types';
+import { RowActions, StatutBadge, Td, TdTitre, Th, Vide } from '@/components/admin/ui';
+import { useCrudTab } from '@/components/admin/use-crud-tab';
+import type { ModeExploitation, NavireRow } from './types';
+import { MODE_LABEL, ModeBadge, ShipIcon } from './ui';
 
 /*
  * Référentiel Navires — entité maîtresse rapprochée du manifeste (ADR-0009).
@@ -63,11 +65,11 @@ type Props = {
 };
 
 export default function NaviresTab({ navires, optionsTypes, optionsArmements, optionsPays, signalCreation }: Props) {
-    const ref = useReferentiel({ ressource: 'navires', lignes: navires, filtre, vierge: VIERGE, depuis, valide, bascule, signalCreation });
+    const ref = useCrudTab({ base: '/admin/referentiels/navires', lignes: navires, filtre, vierge: VIERGE, depuis, valide, bascule, signalCreation });
 
     return (
         <>
-            <ReferentielCard
+            <TableCard
                 recherche={ref.recherche}
                 onRecherche={ref.setRecherche}
                 placeholder="Rechercher un navire, un n° IMO…"
@@ -123,7 +125,7 @@ export default function NaviresTab({ navires, optionsTypes, optionsArmements, op
                         <RowActions actif={n.actif} onEdit={() => ref.ouvrirEdition(n)} onToggle={() => ref.demanderBascule(n)} />
                     </tr>
                 ))}
-            </ReferentielCard>
+            </TableCard>
 
             {ref.mode && (
                 <Drawer

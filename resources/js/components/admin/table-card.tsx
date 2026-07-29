@@ -3,9 +3,9 @@ import Pagination from '@/components/admin/pagination';
 import { card, SearchIcon, searchInput } from './ui';
 
 /*
- * Coquille commune aux cinq onglets : barre de recherche + compteur, tableau,
- * état vide, pagination. C'est elle qui garantit que les cinq référentiels se
- * ressemblent — un onglet ne décrit plus que ses colonnes.
+ * Coquille commune aux onglets d'administration : barre de recherche +
+ * compteur, tableau, état vide, pagination. C'est elle qui garantit que les
+ * écrans se ressemblent — un onglet ne décrit plus que ses colonnes.
  *
  * Elle ne connaît pas la forme des lignes : l'onglet fournit son `<tr>`
  * d'en-tête et ses `<tr>` de corps, et garde donc la main sur le rendu de
@@ -23,7 +23,7 @@ type Props = {
     unite: [string, string];
     /** Mention discrète à droite de la barre d'outils. */
     apercu?: ReactNode;
-    /** Note explicative sous la carte (règles métier du référentiel). */
+    /** Note explicative sous la carte (règles métier de l'écran). */
     note?: ReactNode;
     /** Largeur minimale du tableau avant défilement horizontal. */
     largeurMin?: number;
@@ -35,7 +35,7 @@ type Props = {
     children: ReactNode;
 };
 
-export default function ReferentielCard({
+export default function TableCard({
     recherche,
     onRecherche,
     placeholder,
