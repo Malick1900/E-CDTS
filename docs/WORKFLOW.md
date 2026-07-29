@@ -2,13 +2,24 @@
 
 But : un historique **lisible**, des changements **traçables**, une CI qui **empêche** de merger du code cassé. Compatible **GitHub** et **GitLab**.
 
-## Branches
-- `main` — toujours déployable. Protégée : pas de push direct.
-- `develop` — (optionnel, si flux en deux temps) intégration.
-- `feature/<sujet>` — une fonctionnalité.
-- `fix/<sujet>` — une correction.
-- `chore/<sujet>` — maintenance, outillage, deps.
-- Branches **courtes** : petite portée, PR/MR rapide à relire.
+## Branches — **branche unique sur `main`** (ADR-0029)
+
+Le projet a **un seul développeur**. On travaille donc **directement sur `main`**, sans branche de fonctionnalité et sans pull request. `main` n'est pas protégée : le push direct est la voie normale.
+
+- `main` — la seule ligne de développement. Toujours déployable.
+- Commits **petits et fréquents**, un par tranche livrée.
+- **Pas de branche** créée sans raison explicite.
+
+**Contrepartie, à ne pas perdre de vue :** sans merge, la CI ne peut plus rien *empêcher* — elle constate après coup. Le filet devient la **discipline locale**, ci-dessous. Un commit qui passe mal se répare par `git revert`, jamais par réécriture d'historique sur `main`.
+
+> Le modèle par branches courtes (`feature/<sujet>`, `fix/<sujet>`, `chore/<sujet>`, PR relue puis mergée en squash) reste la cible **le jour où un second développeur rejoint le projet**. Il est décrit dans ADR-0029 pour ne pas être réinventé.
+
+## Avant chaque push — la checklist qui remplace la revue
+1. `vendor/bin/pint --test` passe.
+2. `php artisan test` vert.
+3. `composer types:check` (PHPStan niveau 7) — **exécuté par la CI**, donc à lancer avant, pas après.
+4. Front touché → `npx tsc --noEmit`, `npx eslint resources/js`, `npm run build`.
+5. Docs à jour (`DECISIONS.md` / `GLOSSARY.md` si besoin).
 
 ## Commits — Conventional Commits (obligatoire)
 Format : `type(scope): sujet à l'impératif présent`
@@ -26,37 +37,30 @@ Règles :
 - Corps si nécessaire : le **pourquoi**, pas le comment.
 - Référencer l'issue : `Refs #123` / `Closes #123`.
 
-## PR / MR
-- Titre en Conventional Commit ; description = **quoi + pourquoi + comment tester**.
-- **Petite** et focalisée ; si elle grossit, la découper.
-- Checklist avant ouverture (assurée par `/ship`) :
-  1. `vendor/bin/pint --dirty` passe.
-  2. `php artisan test` vert.
-  3. `npm run test` + `npm run test:e2e` verts (si front touché).
-  4. Docs à jour (`DECISIONS.md`/`GLOSSARY.md` si besoin).
-- Revue obligatoire avant merge. Merge **squash** pour un historique propre.
+## PR / MR — sans objet pour l'instant
+Il n'y a pas de revue à organiser tant que le projet n'a qu'un développeur. Le jour où une PR redevient utile : titre en Conventional Commit, description = **quoi + pourquoi + comment tester**, petite et focalisée, revue avant merge. Le **squash** n'est indiqué que si la branche contient des commits de travail intermédiaires ; des commits déjà propres se mergent en *rebase*, qui préserve leur granularité.
 
-## CI — pipeline cible (fichier à ajouter quand tu le décides)
-> Les fichiers CI ne sont **pas encore inclus** dans le harnais. Voici le pipeline visé, à créer le moment venu (`/plan` pour le générer). Rôle de la CI : à chaque push/PR, une machine neutre rejoue la checklist qualité et **bloque le merge** si une étape échoue.
+## CI — en place
+Deux workflows existent réellement, déclenchés sur **push** *et* pull request vers `main` :
 
-Étapes du pipeline (identiques pour GitHub Actions et GitLab CI) :
-1. **Lint** — Pint (`--test`).
-2. **Tests back** — Pest sur PostgreSQL (service container).
-3. **Build front** — `npm ci` + `npm run build`.
-4. **Tests front** — Vitest.
-5. **E2E** — Playwright (navigateurs installés, app démarrée).
-6. **Sécu** (optionnel) — Semgrep sur le diff.
+| Fichier | Job | Contenu |
+|---|---|---|
+| `.github/workflows/lint.yml` | `quality` | Pint (`--test`), PHP 8.4 |
+| `.github/workflows/tests.yml` | `ci` | matrice PHP **8.4 / 8.5** : `composer install`, build des assets, **`composer types:check` (PHPStan niveau 7)**, Pest |
 
-- **GitHub** → `.github/workflows/ci.yml`.
-- **GitLab** → `.gitlab-ci.yml` (`stages: [lint, test, build, e2e]`, service `postgres`, artefacts Playwright).
-- Caching composer + npm pour la vitesse.
+Deux pièges à connaître :
+- **PHPStan est dans la CI**, appelé par `composer types:check` — un `grep phpstan` sur les workflows ne le trouve pas. Il faut le lancer en local avant de pousser.
+- PHP **8.3 a été retiré** de la matrice : Symfony 8, embarqué par Laravel 13, exige `>= 8.4.1`. `composer.json` déclare pourtant encore `"php": "^8.3"` — dette connue, non corrigée parce que la régénération du lock est bloquée par des avis de sécurité sur Guzzle.
+
+Étapes encore absentes : Vitest, Playwright, analyse de sécurité (Semgrep sur le diff).
 
 ## Règles d'or
-- **Jamais** `git push --force` sur une branche partagée.
+- **Jamais** `git push --force` sur `main`. Un commit qui passe mal se répare par `git revert`.
 - **Jamais** committer `.env`, secrets, `/vendor`, `/node_modules`.
-- Ne pas merger avec la CI rouge, même « juste pour tester ».
+- Ne pas pousser avec la checklist rouge. Sans merge à bloquer, c'est la seule barrière qui reste.
 - Un `fix` commence idéalement par un test qui reproduit le bug (cf. `TESTING.md`).
 
 ## Signaux « demander avant d'agir »
-- Réécriture d'historique (`rebase`, `--force`) sur une branche partagée → demander.
+- Toute réécriture d'historique sur `main` (`rebase`, `--force`) → demander.
+- Création d'une branche, ouverture d'une PR → demander : le modèle par défaut est la branche unique.
 - Changement de stratégie de branches ou de release → plan + validation, puis `DECISIONS.md`.

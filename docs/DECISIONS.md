@@ -20,6 +20,21 @@
 
 ---
 
+## ADR-0029 — Branche unique sur `main`, sans pull request, tant qu'il n'y a qu'un développeur — 2026-07-30
+**Statut :** Acceptée (arbitrage du porteur, 2026-07-30) — **remplace la section « Branches » de `WORKFLOW.md`**.
+**Contexte :** le harnais posait un modèle par branches courtes avec `main` protégée et revue obligatoire. Dans les faits, une seule branche a été ouverte (`feature/phase-3-referentiels-crud`) et quatre tranches y ont été empilées — référentiels, comptes clients, matrice des rôles, fiches détail — sans jamais être mergée. Le nom décrivait alors un quart du contenu et a dû être renommé. Le porteur a relevé que le problème se reproduirait à chaque nouveau sujet : une branche longue portant un nom thématique est condamnée à mentir. Par ailleurs le modèle ne tenait pas sa promesse — la revue obligatoire n'a pas de sens quand le seul relecteur est l'auteur.
+**Décision :**
+- Le développement se fait **directement sur `main`**, sans branche de fonctionnalité et sans pull request. `main` n'est pas protégée sur GitHub.
+- **Un commit par tranche livrée**, poussé aussitôt. C'est la leçon de l'incident : quatre tranches empilées avant le premier commit s'étaient entremêlées dans les mêmes fichiers (`UserController`, `routes/web.php`, `utilisateurs.tsx`) et ne pouvaient plus être séparées en commits cohérents.
+- **La checklist locale remplace la revue** : Pint, Pest, `composer types:check`, et pour le front `tsc`, ESLint et le build — avant le push, jamais après.
+- Un commit qui passe mal se répare par **`git revert`**. Jamais de réécriture d'historique sur `main`.
+**Alternatives écartées :** *garder les branches courtes* — écarté : sans second développeur, elles ajoutent un coût de nommage et de merge sans apporter de relecture. *Branche longue nommée par thème* — c'est précisément ce qui a échoué : le pire des deux modèles, puisqu'on paie le coût de la branche sans la refermer.
+**Conséquences :**
+- **La CI ne peut plus rien empêcher.** Elle se déclenche sur push vers `main` et constate après coup ; il n'y a plus de merge à bloquer. C'est le coût assumé de la décision, et la raison pour laquelle la checklist locale n'est plus facultative.
+- Le modèle par branches courtes reste la **cible le jour où un second développeur rejoint le projet** — il est décrit dans `WORKFLOW.md` pour ne pas être réinventé.
+- Deux sujets menés en parallèle ne peuvent plus être isolés l'un de l'autre.
+- Dependabot continue de créer ses propres branches : c'est le seul cas où une branche apparaît sans intervention.
+
 ## ADR-0028 — Les décisions sur les comptes clients sont notifiées par courriel ; le mot de passe ne circule jamais — 2026-07-29
 **Statut :** Acceptée (arbitrage du porteur, 2026-07-29) — **complète ADR-0013, ADR-0024 et ADR-0027**.
 **Contexte :** rien ne sortait de l'application. Un titulaire dont le CGC venait d'ouvrir le compte ne l'apprenait que si un agent l'appelait, et le mot de passe initial — saisi par le CGC — circulait hors de tout canal maîtrisé. De même, une société dont un agent était validé ou refusé n'en savait rien : le motif de refus, pourtant obligatoire, ne quittait pas la base.
