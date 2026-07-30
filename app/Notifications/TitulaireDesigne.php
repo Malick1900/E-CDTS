@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Consignataire;
+use App\Models\User;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -28,7 +29,7 @@ class TitulaireDesigne extends Notification
         return ['mail'];
     }
 
-    public function toMail(object $notifiable): MailMessage
+    public function toMail(User $notifiable): MailMessage
     {
         return (new MailMessage)
             ->subject(__('Vous êtes désormais titulaire du compte :societe', ['societe' => $this->consignataire->name]))

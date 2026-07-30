@@ -46,7 +46,11 @@ class Navire extends Model
         ];
     }
 
-    /** Pavillon. @return BelongsTo<Pays, $this> */
+    /**
+     * Pavillon.
+     *
+     * @return BelongsTo<Pays, $this>
+     */
     public function pays(): BelongsTo
     {
         return $this->belongsTo(Pays::class);

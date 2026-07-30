@@ -113,7 +113,7 @@ class UserController extends Controller
         // de PHP étant stable, l'ordre de l'enum est conservé dans chaque groupe.
         usort($affiches, static fn (Profil $a, Profil $b): int => $b->estRecomposable() <=> $a->estRecomposable());
 
-        return array_values(array_map(
+        return array_map(
             static fn (Profil $profil): array => [
                 'id' => $roles->get($profil->value)?->id,
                 'name' => $profil->value,
@@ -121,7 +121,7 @@ class UserController extends Controller
                 'permissions' => $roles->get($profil->value)?->permissions->pluck('name')->all() ?? [],
             ],
             $affiches,
-        ));
+        );
     }
 
     /**
@@ -157,9 +157,9 @@ class UserController extends Controller
      * projetés en deux temps : les identifiants pour le formulaire, les libellés
      * déjà résolus pour l'affichage — le front n'a jamais à recroiser les listes.
      *
-     * @return Collection<int, array<string, mixed>>
+     * @return array<int, array<string, mixed>>
      */
-    private function consignataires(): Collection
+    private function consignataires(): array
     {
         return Consignataire::query()
             ->with([
@@ -208,7 +208,8 @@ class UserController extends Controller
                 'armement_names' => $consignataire->armements->pluck('name')->all(),
                 'port_ids' => $consignataire->ports->pluck('id')->all(),
                 'port_names' => $consignataire->ports->pluck('name')->all(),
-            ]);
+            ])
+            ->all();
     }
 
     /**
@@ -219,9 +220,9 @@ class UserController extends Controller
      * Le statut affiché combine la décision du CGC et l'activation : le front
      * n'a pas à refaire ce calcul pour retrouver les quatre états de l'écran.
      *
-     * @return Collection<int, array<string, mixed>>
+     * @return array<int, array<string, mixed>>
      */
-    private function agents(): Collection
+    private function agents(): array
     {
         return User::query()
             ->whereNotNull('consignataire_id')
@@ -243,11 +244,12 @@ class UserController extends Controller
                 'armements' => $this->armements($agent->armements),
                 // Le choix offert par le tiroir d'affectation : les armements de
                 // sa société, et eux seuls (ADR-0009).
-                'armements_societe' => $this->armements($agent->consignataire?->armements ?? collect()),
+                'armements_societe' => $this->armements($agent->consignataire->armements ?? collect()),
                 'decide_par' => $agent->valideur?->name,
                 'decide_le' => $agent->valide_le?->toIso8601String(),
                 'motif_refus' => $agent->motif_refus,
-            ]);
+            ])
+            ->all();
     }
 
     /**
@@ -256,14 +258,13 @@ class UserController extends Controller
      */
     private function armements(Collection $armements): array
     {
-        return $armements
+        return array_values($armements
             ->map(fn (Armement $armement): array => [
                 'id' => $armement->id,
                 'name' => $armement->name,
                 'sigle' => $armement->sigle,
             ])
-            ->values()
-            ->all();
+            ->all());
     }
 
     /**

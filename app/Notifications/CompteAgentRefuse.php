@@ -38,7 +38,7 @@ class CompteAgentRefuse extends Notification
             ->line(__("Le Conseil Gabonais des Chargeurs n'a pas validé la demande de compte agent suivante : :agent (:email), rattaché à :societe.", [
                 'agent' => $this->agent->name,
                 'email' => $this->agent->email,
-                'societe' => $this->agent->consignataire?->name ?? __('votre société'),
+                'societe' => $this->agent->consignataire->name ?? __('votre société'),
             ]))
             ->line(__('Motif : :motif', ['motif' => $this->motif]))
             ->line(__('La demande peut être soumise à nouveau une fois ce point corrigé. Le compte reste enregistré, il ne faut pas le recréer.'))

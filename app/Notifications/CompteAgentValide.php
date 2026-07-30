@@ -38,7 +38,7 @@ class CompteAgentValide extends Notification
             ->line(__('Le Conseil Gabonais des Chargeurs a validé le compte agent suivant : :agent (:email), rattaché à :societe.', [
                 'agent' => $this->agent->name,
                 'email' => $this->agent->email,
-                'societe' => $this->agent->consignataire?->name ?? __('votre société'),
+                'societe' => $this->agent->consignataire->name ?? __('votre société'),
             ]))
             ->line(__('Le compte est actif : :prenom peut désormais se connecter et déclarer sur les armements qui lui sont affectés.', [
                 'prenom' => $this->agent->first_name ?? $this->agent->name,

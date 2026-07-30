@@ -22,7 +22,7 @@ class NavireFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => ucwords(fake()->words(2, true)),
+            'name' => ucwords(fake()->word().' '.fake()->word()),
             'imo' => (string) fake()->unique()->numerify('9######'),
             'pays_id' => Pays::factory(),
             'type_navire_id' => TypeNavire::factory(),

@@ -183,7 +183,7 @@ class DemoSeeder extends Seeder
 
             $agent->armements()->sync(collect($armements)->map(fn (string $s): ?int => $sigles[$s] ?? null)->filter()->all());
 
-            if (($titulaires[$societe] ?? null) === $agent->name) {
+            if ($titulaires[$societe] === $agent->name) {
                 Consignataire::whereKey($consignataireId)->update(['titulaire_user_id' => $agent->id]);
             }
         }

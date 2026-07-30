@@ -8,7 +8,6 @@ use App\Models\Navire;
 use App\Models\Pays;
 use App\Models\Port;
 use App\Models\TypeNavire;
-use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -37,8 +36,8 @@ class ReferentielController extends Controller
         ]);
     }
 
-    /** @return Collection<int, array<string, mixed>> */
-    private function typesNavire(): Collection
+    /** @return array<int, array<string, mixed>> */
+    private function typesNavire(): array
     {
         return TypeNavire::query()
             ->withCount('navires')
@@ -50,11 +49,12 @@ class ReferentielController extends Controller
                 'name' => $type->name,
                 'actif' => $type->actif,
                 'navires_count' => $type->navires_count,
-            ]);
+            ])
+            ->all();
     }
 
-    /** @return Collection<int, array<string, mixed>> */
-    private function pays(): Collection
+    /** @return array<int, array<string, mixed>> */
+    private function pays(): array
     {
         return Pays::query()
             ->withCount(['navires', 'ports'])
@@ -67,11 +67,12 @@ class ReferentielController extends Controller
                 'actif' => $pays->actif,
                 'navires_count' => $pays->navires_count,
                 'ports_count' => $pays->ports_count,
-            ]);
+            ])
+            ->all();
     }
 
-    /** @return Collection<int, array<string, mixed>> */
-    private function ports(): Collection
+    /** @return array<int, array<string, mixed>> */
+    private function ports(): array
     {
         return Port::query()
             ->with('pays:id,name')
@@ -85,11 +86,12 @@ class ReferentielController extends Controller
                 'pays_name' => $port->pays?->name,
                 'prefixe_numerotation' => $port->prefixe_numerotation,
                 'actif' => $port->actif,
-            ]);
+            ])
+            ->all();
     }
 
-    /** @return Collection<int, array<string, mixed>> */
-    private function armements(): Collection
+    /** @return array<int, array<string, mixed>> */
+    private function armements(): array
     {
         return Armement::query()
             ->with(['paysOrigine:id,name', 'paysImmatriculation:id,name'])
@@ -109,11 +111,12 @@ class ReferentielController extends Controller
                 'adresse' => $armement->adresse,
                 'actif' => $armement->actif,
                 'navires_count' => $armement->navires_count,
-            ]);
+            ])
+            ->all();
     }
 
-    /** @return Collection<int, array<string, mixed>> */
-    private function navires(): Collection
+    /** @return array<int, array<string, mixed>> */
+    private function navires(): array
     {
         return Navire::query()
             ->with(['typeNavire:id,code,name', 'armement:id,name', 'pays:id,name'])
@@ -132,6 +135,7 @@ class ReferentielController extends Controller
                 'pays_name' => $navire->pays?->name,
                 'mode_exploitation_defaut' => $navire->mode_exploitation_defaut?->value,
                 'actif' => $navire->actif,
-            ]);
+            ])
+            ->all();
     }
 }

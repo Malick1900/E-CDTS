@@ -37,7 +37,7 @@ class TitulaireController extends Controller
 
         $entrant = DB::transaction(function () use ($request, $consignataire, $data): User {
             $entrant = isset($data['agent_id'])
-                ? User::findOrFail($data['agent_id'])
+                ? User::findOrFail((int) $data['agent_id'])
                 : $this->ouvrirCompte($request, $consignataire, $data);
 
             $consignataire->titulaire()->associate($entrant)->save();
