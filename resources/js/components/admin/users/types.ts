@@ -94,12 +94,15 @@ export type AgentRow = {
 
 /**
  * Une colonne de la matrice « Rôles & permissions » (ADR-0025). `super-admin`
- * n'y figure jamais ; `Administrateur` y figure avec `recomposable` à faux.
+ * n'y figure jamais ; `Administrateur` et les deux rôles clients (ADR-0031) y
+ * figurent avec `recomposable` à faux.
  */
 export type RoleMatriceRow = {
     id: number;
     name: string;
     recomposable: boolean;
+    /** Pourquoi la colonne est verrouillée — infobulle des cases figées. */
+    motif_fige: string | null;
     /** Noms des permissions actuellement portées (valeurs de l'enum PHP). */
     permissions: string[];
 };

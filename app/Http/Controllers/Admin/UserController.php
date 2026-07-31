@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\Permission;
 use App\Enums\Profil;
+use App\Enums\RoleClient;
 use App\Enums\StatutValidation;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UserStoreRequest;
@@ -63,9 +64,11 @@ class UserController extends Controller
 
         return Inertia::render('admin/utilisateurs', [
             'users' => $users,
-            // Rôles attribuables (le rôle technique super-admin reste hors UI).
+            // Rôles attribuables à un compte interne : ni le rôle technique
+            // super-admin, ni les rôles clients — ceux-là se déduisent de la
+            // position dans une société, ils ne se choisissent pas (ADR-0031).
             'assignableRoles' => Role::query()
-                ->where('name', '!=', Profil::SuperAdmin->value)
+                ->whereNotIn('name', [Profil::SuperAdmin->value, ...RoleClient::values()])
                 ->orderBy('name')
                 ->pluck('name'),
             'consignataires' => $this->consignataires(),
@@ -113,15 +116,31 @@ class UserController extends Controller
         // de PHP étant stable, l'ordre de l'enum est conservé dans chaque groupe.
         usort($affiches, static fn (Profil $a, Profil $b): int => $b->estRecomposable() <=> $a->estRecomposable());
 
-        return array_map(
+        $colonnes = array_map(
             static fn (Profil $profil): array => [
                 'id' => $roles->get($profil->value)?->id,
                 'name' => $profil->value,
                 'recomposable' => $profil->estRecomposable(),
+                'motif_fige' => $profil->estRecomposable() ? null : 'Ce rôle porte le catalogue complet par définition.',
                 'permissions' => $roles->get($profil->value)?->permissions->pluck('name')->all() ?? [],
             ],
             $affiches,
         );
+
+        // Les rôles clients ferment la matrice : on les montre pour que les
+        // capacités du titulaire et de ses agents se lisent à l'écran, mais ils
+        // ne se recomposent pas (ADR-0031).
+        foreach (RoleClient::cases() as $roleClient) {
+            $colonnes[] = [
+                'id' => $roles->get($roleClient->value)?->id,
+                'name' => $roleClient->value,
+                'recomposable' => false,
+                'motif_fige' => 'Rôle client figé : il découle de la position dans la société.',
+                'permissions' => $roles->get($roleClient->value)?->permissions->pluck('name')->all() ?? [],
+            ];
+        }
+
+        return $colonnes;
     }
 
     /**

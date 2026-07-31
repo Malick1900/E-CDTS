@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Users;
 
 use App\Enums\Permission;
+use App\Enums\RoleClient;
 use App\Enums\StatutValidation;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Users\ConsignataireStoreRequest;
@@ -285,6 +286,10 @@ class ConsignataireController extends Controller
         $titulaire->save();
 
         $consignataire->titulaire()->associate($titulaire)->save();
+
+        // Un compte client ne porte qu'un rôle, celui de sa position dans la
+        // société (ADR-0031) : syncRoles, pas assignRole.
+        $titulaire->syncRoles([RoleClient::Titulaire->value]);
 
         // Après commit : un courriel parti sur une transaction qui échoue
         // annoncerait un compte qui n'existe pas.

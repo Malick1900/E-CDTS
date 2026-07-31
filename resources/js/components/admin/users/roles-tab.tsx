@@ -195,7 +195,7 @@ function GroupeLignes({
                                 disabled={!role.recomposable}
                                 onChange={() => basculer(role, permission.value)}
                                 aria-label={`${permission.label} — ${role.name}`}
-                                title={role.recomposable ? undefined : 'Ce rôle porte le catalogue complet par définition.'}
+                                title={role.motif_fige ?? undefined}
                                 style={{ width: 16, height: 16, accentColor: '#1D3E9C', cursor: role.recomposable ? 'pointer' : 'not-allowed' }}
                             />
                         </td>

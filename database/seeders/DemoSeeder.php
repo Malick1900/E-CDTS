@@ -13,6 +13,7 @@ use App\Models\TypeNavire;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 
 /**
@@ -187,5 +188,10 @@ class DemoSeeder extends Seeder
                 Consignataire::whereKey($consignataireId)->update(['titulaire_user_id' => $agent->id]);
             }
         }
+
+        // Les rôles se déduisent de la position, donc après que les titulaires
+        // sont désignés — d'où une passe finale plutôt qu'une pose dans la
+        // boucle (ADR-0031).
+        Artisan::call('clients:synchroniser-roles');
     }
 }

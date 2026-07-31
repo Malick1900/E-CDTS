@@ -30,6 +30,10 @@ enum Permission: string
     case RolesGerer = 'roles.gerer';
     case BaremeModifier = 'bareme.modifier';
     case StatistiquesConsulter = 'statistiques.consulter';
+    case SituationPortuaireConsulter = 'situation-portuaire.consulter';
+    case DossiersConsulter = 'dossiers.consulter';
+    case DevisConsulter = 'devis.consulter';
+    case MesAgentsGerer = 'mes-agents.gerer';
 
     /**
      * Libellé métier lisible — alimente la matrice « Rôles & permissions »
@@ -51,6 +55,10 @@ enum Permission: string
             self::RolesGerer => 'Gérer les rôles et permissions',
             self::BaremeModifier => 'Modifier le barème',
             self::StatistiquesConsulter => 'Consulter les statistiques',
+            self::SituationPortuaireConsulter => 'Consulter la situation portuaire',
+            self::DossiersConsulter => "Consulter les dossiers d'escale",
+            self::DevisConsulter => 'Consulter les devis et factures',
+            self::MesAgentsGerer => 'Gérer les comptes agents de sa société',
         };
     }
 
@@ -77,9 +85,13 @@ enum Permission: string
             self::UtilisateursGerer,
             self::ComptesClientsGerer,
             self::RolesGerer,
-            self::BaremeModifier => 'Administration',
+            self::BaremeModifier,
+            self::MesAgentsGerer => 'Administration',
 
-            self::StatistiquesConsulter => 'Consultation',
+            self::StatistiquesConsulter,
+            self::SituationPortuaireConsulter,
+            self::DossiersConsulter,
+            self::DevisConsulter => 'Consultation',
         };
     }
 

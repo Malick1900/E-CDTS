@@ -5,6 +5,7 @@ namespace App\Http\Requests\Admin;
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Enums\Profil;
+use App\Enums\RoleClient;
 use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -36,7 +37,9 @@ class UserStoreRequest extends FormRequest
                 'string',
                 Rule::exists('roles', 'name'),
                 // Le rôle technique super-admin ne s'attribue jamais depuis l'UI.
-                Rule::notIn([Profil::SuperAdmin->value]),
+                // Les rôles clients non plus : ils suivent la position dans une
+                // société et n'ont aucun sens sur un compte interne (ADR-0031).
+                Rule::notIn([Profil::SuperAdmin->value, ...RoleClient::values()]),
             ],
         ];
     }

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Admin;
 
 use App\Concerns\ProfileValidationRules;
 use App\Enums\Profil;
+use App\Enums\RoleClient;
 use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -38,7 +39,7 @@ class UserUpdateRequest extends FormRequest
             'roles.*' => [
                 'string',
                 Rule::exists('roles', 'name'),
-                Rule::notIn([Profil::SuperAdmin->value]),
+                Rule::notIn([Profil::SuperAdmin->value, ...RoleClient::values()]),
             ],
         ];
     }

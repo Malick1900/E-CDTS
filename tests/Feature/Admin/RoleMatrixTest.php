@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin;
 
 use App\Enums\Permission;
 use App\Enums\Profil;
+use App\Enums\RoleClient;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -139,8 +140,9 @@ class RoleMatrixTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->where('peutGererClients', true)
-                // Les 5 profils du catalogue moins super-admin, qui n'y figure pas.
-                ->has('matriceRoles', count(Profil::cases()) - 1)
+                // Les 5 profils du catalogue moins super-admin, qui n'y figure
+                // pas, plus les deux rôles clients figés (ADR-0031).
+                ->has('matriceRoles', count(Profil::cases()) - 1 + count(RoleClient::cases()))
                 ->where('matriceRoles', fn ($roles): bool => collect($roles)
                     ->firstWhere('name', Profil::Administrateur->value)['recomposable'] === false)
                 // Le catalogue est projeté en entier : aucune permission ne doit

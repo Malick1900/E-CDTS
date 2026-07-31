@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Users;
 
+use App\Enums\RoleClient;
 use App\Enums\StatutValidation;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Users\TitulaireRemplacementRequest;
@@ -35,12 +36,20 @@ class TitulaireController extends Controller
         $data = $request->validated();
         $sortant = $consignataire->titulaire;
 
-        $entrant = DB::transaction(function () use ($request, $consignataire, $data): User {
+        $entrant = DB::transaction(function () use ($request, $consignataire, $data, $sortant): User {
             $entrant = isset($data['agent_id'])
                 ? User::findOrFail((int) $data['agent_id'])
                 : $this->ouvrirCompte($request, $consignataire, $data);
 
             $consignataire->titulaire()->associate($entrant)->save();
+
+            // Le rôle suit la fonction, dans les deux sens : l'entrant la prend,
+            // le sortant redevient agent déclarant — il perd la gestion des
+            // comptes, pas son accès (ADR-0027, ADR-0031). Le sortant d'abord :
+            // rien n'interdit de redésigner le titulaire en place, et l'ordre
+            // inverse le rétrograderait alors qu'il vient d'être confirmé.
+            $sortant?->syncRoles([RoleClient::Agent->value]);
+            $entrant->syncRoles([RoleClient::Titulaire->value]);
 
             return $entrant;
         });
