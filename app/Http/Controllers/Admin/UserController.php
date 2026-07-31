@@ -96,7 +96,7 @@ class UserController extends Controller
      * `super-admin` en est absent : il ne porte aucune permission explicite et
      * outrepasse via Gate::before — l'afficher, fût-ce tout décoché, serait
      * mensonger. `Administrateur` y figure mais figé, en dernière colonne :
-     * il porte le catalogue complet par définition.
+     * il porte par définition tout ce qui a un sens côté CGC.
      *
      * @return list<array<string, mixed>>
      */
@@ -121,7 +121,7 @@ class UserController extends Controller
                 'id' => $roles->get($profil->value)?->id,
                 'name' => $profil->value,
                 'recomposable' => $profil->estRecomposable(),
-                'motif_fige' => $profil->estRecomposable() ? null : 'Ce rôle porte le catalogue complet par définition.',
+                'motif_fige' => $profil->estRecomposable() ? null : 'Ce rôle porte toutes les permissions internes par définition.',
                 'permissions' => $roles->get($profil->value)?->permissions->pluck('name')->all() ?? [],
             ],
             $affiches,

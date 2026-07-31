@@ -37,7 +37,7 @@ enum Profil: string
      *
      * Deux exceptions, pour des raisons opposées : `super-admin` ne porte
      * aucune permission explicite (il outrepasse via Gate::before) et
-     * `Administrateur` les porte toutes par définition. Les décocher n'aurait
+     * `Administrateur` porte tout ce qui a un sens côté CGC. Les décocher n'aurait
      * respectivement aucun effet et aucun sens — et c'est ce qui rend
      * l'auto-blocage impossible par construction, sans garde à écrire.
      *
@@ -52,7 +52,14 @@ enum Profil: string
      * Composition d'attributions initiale du profil (matrice ENTITES.md §3).
      *
      * `super-admin` outrepasse via Gate::before → aucune permission explicite.
-     * `Administrateur` peut tout faire côté CGC → catalogue complet.
+     * `Administrateur` peut tout faire côté CGC → catalogue complet, à
+     * l'exception de `mes-agents.gerer` : « ses » agents, c'est ceux d'une
+     * société consignataire, et un compte interne n'en a pas.
+     *
+     * Depuis ADR-0030, une entrée de navigation = une permission : les
+     * permissions de consultation ouvrent l'écran, celles d'action y autorisent
+     * les gestes. Un profil qui renseigne la situation portuaire sans pouvoir la
+     * consulter n'aurait donc plus d'entrée de menu pour y accéder.
      *
      * @return list<Permission>
      */
@@ -60,14 +67,22 @@ enum Profil: string
     {
         return match ($this) {
             self::SuperAdmin => [],
+            // Il ne fait que la situation portuaire : ni dossiers d'escale, ni devis.
             self::Conferencier => [
+                Permission::SituationPortuaireConsulter,
                 Permission::SituationPortuaireRenseigner,
             ],
             self::AgentDepouilleur => [
+                Permission::SituationPortuaireConsulter,
+                Permission::DossiersConsulter,
+                Permission::DevisConsulter,
                 Permission::DepouillementTraiter,
                 Permission::FactureTeleverser,
             ],
             self::Superviseur => [
+                Permission::SituationPortuaireConsulter,
+                Permission::DossiersConsulter,
+                Permission::DevisConsulter,
                 Permission::SituationPortuaireRenseigner,
                 Permission::DepouillementTraiter,
                 Permission::FactureTeleverser,
@@ -79,7 +94,12 @@ enum Profil: string
                 Permission::UtilisateursGerer,
                 Permission::StatistiquesConsulter,
             ],
-            self::Administrateur => Permission::cases(),
+            self::Administrateur => array_filter(
+                Permission::cases(),
+                static fn (Permission $p): bool => $p !== Permission::MesAgentsGerer,
+            ),
+            // Profil d'observation : il n'a que les statistiques, et l'écran
+            // n'existe pas encore — il ne verra donc que le tableau de bord.
             self::Consultant => [
                 Permission::StatistiquesConsulter,
             ],
