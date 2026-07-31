@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Enums\StatutValidation;
 use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
@@ -44,18 +46,34 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
 
-        // Identifiants valides ET compte actif : un utilisateur désactivé
-        // (ADR-0012) ne peut plus se connecter, sans révéler la cause exacte.
+        // Deux échecs distincts, dans cet ordre (ADR-0032) : celui de
+        // l'identification, muet, et celui de l'état du compte, explicite. Rendre
+        // `null` laisse Fortify afficher son message générique — c'est ce qui
+        // empêche le formulaire de servir d'annuaire des comptes du CGC.
         Fortify::authenticateUsing(function (Request $request) {
             $user = User::where('email', $request->email)->first();
 
-            if ($user && $user->is_active && Hash::check($request->password, $user->password)) {
-                $user->forceFill(['last_login_at' => now()])->save();
-
-                return $user;
+            if (! $user || ! Hash::check($request->password, $user->password)) {
+                return null;
             }
 
-            return null;
+            // Le mot de passe est prouvé : on peut dire pourquoi ça bloque. Le
+            // statut passe avant `is_active`, dont il est la cause — un compte en
+            // attente est inactif, l'annoncer « désactivé » serait faux.
+            $motif = match (true) {
+                $user->statut_validation === StatutValidation::EnAttente => 'Votre compte est en cours de validation par le CGC. Vous recevrez un e-mail dès qu’il sera actif.',
+                $user->statut_validation === StatutValidation::Refuse => 'Votre demande d’accès n’a pas été retenue. Rapprochez-vous du CGC.',
+                ! $user->is_active => 'Votre compte a été désactivé. Contactez votre administrateur.',
+                default => null,
+            };
+
+            if ($motif !== null) {
+                throw ValidationException::withMessages([Fortify::username() => $motif]);
+            }
+
+            $user->forceFill(['last_login_at' => now()])->save();
+
+            return $user;
         });
     }
 

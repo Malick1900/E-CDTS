@@ -7,8 +7,10 @@ namespace App\Enums;
  *
  * Ne concerne que les comptes rattachés à une société consignataire : un compte
  * interne CGC n'a pas de statut de validation (colonne nulle). L'activation
- * elle-même reste portée par `users.is_active`, seule vérité lue à la connexion
- * — un compte en attente ou refusé est simplement inactif.
+ * elle-même reste portée par `users.is_active` : un compte en attente ou refusé
+ * est simplement inactif. Depuis ADR-0032, la connexion lit les deux — non pour
+ * décider (`is_active` y suffit) mais pour dire à l'utilisateur *pourquoi* elle
+ * refuse, une fois son mot de passe vérifié.
  *
  * Un refus n'est pas une impasse : la société peut soumettre à nouveau, ce qui
  * ramène le compte en attente sans effacer la décision précédente.
