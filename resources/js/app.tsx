@@ -15,6 +15,9 @@ createInertiaApp({
             case name.startsWith('admin/'):
                 // Les écrans admin portent leur propre chrome plein écran (AdminShell).
                 return null;
+            case name.startsWith('activite/'):
+                // Idem pour la coquille d'activité (ActivityShell — ADR-0030).
+                return null;
             case name === 'auth/login':
                 // La connexion porte son propre écran scindé plein page.
                 return null;

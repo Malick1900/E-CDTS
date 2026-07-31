@@ -21,7 +21,29 @@ use Illuminate\Support\Facades\Route;
 Route::redirect('/', '/login')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    // Coquille d'activité (ADR-0030). Tout le monde arrive ici, quel que soit le
+    // type de compte : ce sont la navigation et le contexte qui diffèrent, pas
+    // la route. Les quatre écrans suivants sont des jalons « à venir » — chaque
+    // module se branchera sur une entrée déjà en place.
+    Route::inertia('dashboard', 'activite/dashboard')->name('dashboard');
+
+    Route::inertia('situation-portuaire', 'activite/situation-portuaire')
+        ->middleware('can:'.Permission::SituationPortuaireConsulter->value)
+        ->name('situation-portuaire');
+
+    Route::inertia('dossiers', 'activite/dossiers')
+        ->middleware('can:'.Permission::DossiersConsulter->value)
+        ->name('dossiers');
+
+    Route::inertia('devis', 'activite/devis')
+        ->middleware('can:'.Permission::DevisConsulter->value)
+        ->name('devis');
+
+    // L'espace d'administration de sa propre société — le lot 2. L'entrée de
+    // nav existe déjà pour un titulaire : sans cette route, elle mènerait à un 404.
+    Route::inertia('mon-espace', 'activite/mon-espace')
+        ->middleware('can:'.Permission::MesAgentsGerer->value)
+        ->name('mon-espace');
 
     // Administration CGC — un module = une route. Les modules encore alimentés
     // par des données factices restent en Route::inertia ; ils seront câblés un

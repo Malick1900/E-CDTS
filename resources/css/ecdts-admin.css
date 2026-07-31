@@ -31,6 +31,8 @@
 
 /* États de survol (l'inline React ne gère pas :hover) */
 .ea-nav:hover { background: rgba(255, 255, 255, .10) !important; }
+/* Navigation horizontale de la coquille d'activité (ADR-0030). */
+.ea-topnav:hover { color: #1d3e9c !important; background: #f5f8fd !important; }
 .ea-backlink:hover { background: rgba(255, 255, 255, .10) !important; color: #fff !important; }
 .ea-tab:hover { color: #1d3e9c !important; }
 .ea-btn-primary:hover { background: #142c73 !important; }
