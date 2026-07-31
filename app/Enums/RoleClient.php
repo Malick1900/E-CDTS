@@ -39,10 +39,11 @@ enum RoleClient: string
                 Permission::DevisConsulter,
                 Permission::MesAgentsGerer,
             ],
+            // Ni les devis ni les factures : c'est de l'argent, cela reste au
+            // titulaire (ADR-0030). L'agent déclare, il n'engage pas la société.
             self::Agent => [
                 Permission::SituationPortuaireConsulter,
                 Permission::DossiersConsulter,
-                Permission::DevisConsulter,
             ],
         };
     }

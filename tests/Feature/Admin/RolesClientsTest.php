@@ -67,12 +67,14 @@ class RolesClientsTest extends TestCase
         $titulaire = Role::findByName(RoleClient::Titulaire->value);
         $agent = Role::findByName(RoleClient::Agent->value);
 
-        foreach ([Permission::SituationPortuaireConsulter, Permission::DossiersConsulter, Permission::DevisConsulter] as $lecture) {
+        foreach ([Permission::SituationPortuaireConsulter, Permission::DossiersConsulter] as $lecture) {
             $this->assertTrue($titulaire->hasPermissionTo($lecture->value));
             $this->assertTrue($agent->hasPermissionTo($lecture->value));
         }
 
-        // La seule différence entre les deux : qui gère les comptes de la société.
+        // Ce qui sépare les deux : l'argent et les comptes (ADR-0030, ADR-0031).
+        $this->assertTrue($titulaire->hasPermissionTo(Permission::DevisConsulter->value));
+        $this->assertFalse($agent->hasPermissionTo(Permission::DevisConsulter->value));
         $this->assertTrue($titulaire->hasPermissionTo(Permission::MesAgentsGerer->value));
         $this->assertFalse($agent->hasPermissionTo(Permission::MesAgentsGerer->value));
     }

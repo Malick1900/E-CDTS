@@ -40,7 +40,7 @@
 **Statut :** Acceptée (grilling du porteur, 2026-07-31) — **amende ADR-0025**, dont elle retient l'alternative écartée le 2026-07-29.
 **Contexte :** ADR-0025 avait refusé d'inscrire « Titulaire » et « Agent consignataire » au catalogue de rôles, au motif qu'un administrateur pourrait **vider ces rôles par mégarde et retirer « déclarer » à tous les agents du pays**. Les droits clients découlaient donc du seul rattachement. En cadrant la navigation filtrée d'ADR-0030, la question s'est reposée : l'interface a besoin d'un appel d'autorisation **uniforme**, qui ne sache pas à qui elle parle. Le porteur a rouvert le débat avec un argument nouveau — *« ça permet de voir réellement à l'écran les capacités du titulaire et des agents »*.
 **Décision :**
-- **Deux rôles rejoignent le catalogue** : `Consignataire — compte maître` et `Agent consignataire`.
+- **Deux rôles rejoignent le catalogue** : `Consignataire titulaire` et `Consignataire agent` — noms arrêtés à l'implémentation (2026-07-31), pour qu'ils se lisent comme les autres colonnes de la matrice, à côté de « Conférencier » et « Agent dépouilleur ».
 - Ils sont **figés** : non recomposables depuis l'écran « Rôles & permissions », au même titre que la ligne Administrateur. Ils s'y affichent **tout cochés et en lecture** — le but est précisément de rendre ces capacités visibles.
 - Composition : le compte maître porte `situation-portuaire.consulter`, `dossiers.consulter`, `devis.consulter` et `mes-agents.gerer` ; l'agent, les deux premières seulement.
 - **`mes-agents.gerer`** porte tout le pouvoir du titulaire sur sa propre société : créer et modifier ses agents, **leur affecter les armements**, éditer les coordonnées de contact.
