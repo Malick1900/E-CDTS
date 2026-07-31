@@ -14,7 +14,11 @@ use App\Http\Controllers\Admin\Users\RoleController;
 use App\Http\Controllers\Admin\Users\TitulaireController;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'welcome')->name('home');
+// e-CDTS est un portail fermé (ADR-0021) : la racine n'a rien à montrer à un
+// visiteur. Elle ouvre donc directement le formulaire de connexion — et le
+// middleware `guest` de Fortify renvoie au tableau de bord si la session est
+// déjà ouverte.
+Route::redirect('/', '/login')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
