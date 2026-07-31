@@ -20,6 +20,62 @@
 
 ---
 
+## ADR-0032 — Ce que la page de connexion révèle : l'état du compte, jamais son existence — 2026-07-31
+**Statut :** Acceptée (grilling du porteur, 2026-07-31) — **complète ADR-0013, ADR-0024 et ADR-0026**.
+**Contexte :** deux colonnes gouvernent l'accès d'un compte agent (ADR-0026) mais **une seule était lue à la connexion**. `is_active` bloquait, muettement — « sans révéler la cause exacte ». `statut_validation` ne bloquait pas du tout : un agent créé par sa société et **pas encore validé par le CGC** pouvait se connecter et atterrir sur un écran vide, alors que le circuit d'ADR-0013 dit précisément qu'il ne peut rien faire avant validation. Le porteur a demandé des messages explicites, y compris pour un compte inexistant.
+**Décision :**
+- **L'état d'un compte n'est révélé qu'après vérification du mot de passe.** Tant que le couple identifiant/mot de passe n'est pas juste, la réponse est un **message générique unique**, identique pour un email inconnu et pour un mot de passe faux.
+- Une fois les identifiants reconnus, quatre issues : `en attente` → « votre compte est en attente de validation par le CGC » ; `refusé` → message de refus ; désactivé → « votre compte a été suspendu, contactez le CGC » ; sinon, la session s'ouvre.
+- Dans les trois premiers cas, **la session ne s'ouvre pas** — le message informe, il n'accorde rien.
+**Alternatives écartées :**
+- *Annoncer « ce compte n'existe pas » dès un email inconnu*, comme demandé initialement — **écarté après mise en garde, arbitrage du porteur** : le formulaire de connexion serait devenu un **annuaire**. Tester des adresses en masse aurait révélé lesquelles sont des comptes valides du CGC — le premier reproche d'un audit sur une plateforme d'État. Le compromis retenu informe l'utilisateur légitime (qui connaît son mot de passe) sans rien apprendre à l'inconnu.
+- *Garder le silence complet*, comme aujourd'hui — écarté : un titulaire dont l'agent « n'arrive pas à se connecter » appelle le CGC pour un problème de mot de passe qui n'en est pas un. Le coût se paie au support.
+- *Laisser entrer l'agent en attente vers un écran d'attente* — écarté : ADR-0013 lui interdit d'opérer ; une session ouverte qui ne mène à rien est une promesse vide, et une surface d'attaque de plus.
+**Conséquences :**
+- `Fortify::authenticateUsing()` ne peut plus se contenter d'un booléen : il distingue l'échec d'identification de l'échec d'état. Les messages sont des **erreurs de validation sur le champ email**, comme le reste du formulaire.
+- La limitation à **5 tentatives par minute** reste la seule barrière contre l'essai de mots de passe en masse ; elle devient structurante, puisque c'est elle qui empêche d'atteindre le palier où l'état est révélé.
+- Le cas « désactivé » gagne un message là où ADR-0012 avait choisi le silence : la cause n'est plus cachée à qui prouve être le titulaire du compte.
+
+## ADR-0031 — Deux rôles clients au catalogue, figés — 2026-07-31
+**Statut :** Acceptée (grilling du porteur, 2026-07-31) — **amende ADR-0025**, dont elle retient l'alternative écartée le 2026-07-29.
+**Contexte :** ADR-0025 avait refusé d'inscrire « Titulaire » et « Agent consignataire » au catalogue de rôles, au motif qu'un administrateur pourrait **vider ces rôles par mégarde et retirer « déclarer » à tous les agents du pays**. Les droits clients découlaient donc du seul rattachement. En cadrant la navigation filtrée d'ADR-0030, la question s'est reposée : l'interface a besoin d'un appel d'autorisation **uniforme**, qui ne sache pas à qui elle parle. Le porteur a rouvert le débat avec un argument nouveau — *« ça permet de voir réellement à l'écran les capacités du titulaire et des agents »*.
+**Décision :**
+- **Deux rôles rejoignent le catalogue** : `Consignataire — compte maître` et `Agent consignataire`.
+- Ils sont **figés** : non recomposables depuis l'écran « Rôles & permissions », au même titre que la ligne Administrateur. Ils s'y affichent **tout cochés et en lecture** — le but est précisément de rendre ces capacités visibles.
+- Composition : le compte maître porte `situation-portuaire.consulter`, `dossiers.consulter`, `devis.consulter` et `mes-agents.gerer` ; l'agent, les deux premières seulement.
+- **`mes-agents.gerer`** porte tout le pouvoir du titulaire sur sa propre société : créer et modifier ses agents, **leur affecter les armements**, éditer les coordonnées de contact.
+- **La portée reste le rattachement.** Le rôle dit *ce qu'on peut faire*, la société et les armements affectés disent *sur quoi* — cette séparation, posée en ADR-0025 et déjà écrite dans le modèle, ne bouge pas.
+- Le rôle est **assigné à l'ouverture du compte** et rattrapé pour les comptes clients déjà en base.
+**Alternatives écartées :**
+- *Une règle unique dans le code* (les permissions clients accordées à côté du `Gate::before` du super-admin) — techniquement équivalente et fidèle à ADR-0025, mais **elle ne se voit nulle part**. C'est exactement ce que le porteur a refusé : une capacité qui n'apparaît sur aucun écran est une capacité qu'on oublie, et que personne ne peut vérifier sans lire le code.
+- *Des rôles clients recomposables* — écarté : rouvre mot pour mot le risque d'ADR-0025. Les figer neutralise l'objection sans rien coûter, puisque ces droits sont **les mêmes pour tous les titulaires et tous les agents** : il n'y a aucune variabilité à administrer.
+**Conséquences :**
+- **ADR-0025 est amendée sur ce point précis** — son « le catalogue ne sert que les internes CGC » ne tient plus. Tout le reste de cette ADR (garde `comptes-clients.gerer`, ligne Administrateur figée, écran qui recompose sans créer) reste en vigueur.
+- `Profil::estRecomposable()` gagne deux exclusions ; la matrice passe de 5 à **7 lignes**, qu'il faut désormais **grouper** — internes CGC d'un côté, comptes clients de l'autre — sans quoi elle mélange deux populations sans le dire.
+- **Le CGC perd l'écriture sur l'affectation des armements** : `mes-agents.gerer` la donne au titulaire seul. La matrice reste affichée côté CGC **en lecture seule** — voir qui opère sur quoi sert au support et à l'audit ; la route d'écriture, elle, disparaît.
+- `GLOSSARY.md` (« Compte client ») est corrigé : les droits ne découlent plus du seul rattachement.
+
+## ADR-0030 — Une coquille unique pour l'activité, une navigation filtrée par permission — 2026-07-31
+**Statut :** Acceptée (grilling du porteur, 2026-07-31) — **solde la dette laissée par ADR-0021** (« reste à brancher la redirection post-login selon le type de compte »).
+**Contexte :** seul le panneau d'administration CGC avait une coquille écrite — bandeau institutionnel, rail vertical de 4 modules, en-tête d'écran, onglets. Les **huit maquettes** du projet Claude Design (`Connexion`, `Administration`, `Administration consignataire`, `Situation portuaire`, `Dossiers escale`, `Ouverture dossier escale`, `Manifeste`, `Devis et Facturation`) montrent que tout le reste de l'application partage une **autre** charpente : le même bandeau, mais un en-tête applicatif **horizontal** portant la navigation. Le porteur a tranché : cette charpente est celle de l'**activité**, pour les clients comme pour les internes ; le rail vertical reste l'exception administrative.
+**Décision :**
+- **Deux coquilles, pas une.** « Activité » (navigation horizontale) pour **tout le monde** ; « Administration CGC » (rail vertical) pour le Superviseur et l'Administrateur, atteinte par l'entrée *Administration* et quittée par « Retour à la plateforme » — lien déjà en place. Elles partagent le bandeau institutionnel, l'en-tête d'écran et la barre d'onglets.
+- **Aucun aiguillage post-login.** Tout le monde arrive sur `/dashboard` ; ce sont la navigation et le contexte affiché qui diffèrent, pas la route. Un consignataire ouvre la plateforme et **il est chez lui**.
+- **Cinq entrées, chacune conditionnée à une permission** : *Tableau de bord* (toujours), *Situation portuaire*, *Dossiers d'escale*, *Devis & factures*, *Administration*. Un agent consignataire ne voit ni *Devis & factures* — c'est de l'argent, il reste au titulaire — ni *Administration*. Le Consultant ne voit que le tableau de bord jusqu'à ce que le module Statistiques existe.
+- **L'entrée *Administration* mène à deux endroits selon le compte** : l'espace de sa société pour un titulaire, le panneau CGC pour un Superviseur ou un Administrateur. Jamais les deux.
+- **Carte de contexte** en haut à droite — « Espace de {société} — Agrément {n°} » pour un compte client, **rien** pour un interne CGC.
+- **Trois permissions de consultation à créer** : `situation-portuaire.consulter`, `dossiers.consulter`, `devis.consulter`. Le catalogue ne décrivait jusqu'ici que des **actions** ; une navigation filtrée a besoin de droits de **lecture**.
+- Les entrées dont le module n'existe pas encore mènent à un écran « à venir », comme `bareme` et `audit` aujourd'hui. Le tableau de bord est **vide** pour tous, provisoirement.
+- **Deux écarts assumés à la maquette** : le bloc sécurité se limite au mot de passe (passkeys et 2FA retirés par ADR-0019), et la demande d'ajout d'un armement ne sera pas construite — elle se traite **hors système**, la liste des armements du client reste en lecture seule.
+**Alternatives écartées :**
+- *Rediriger chaque type de compte vers sa propre route d'accueil* — écarté : deux fois plus de routes pour un contenu qui diffère de toute façon par les données projetées, et un point de bascule de plus à maintenir à chaque nouveau profil.
+- *Afficher les cinq entrées à tout le monde et laisser le 403 trancher* — écarté : une navigation qui promet ce qu'elle ne tient pas. Le refus expliqué (`errors/403`) reste le filet pour une URL tapée à la main, pas le mode de fonctionnement normal.
+- *Étendre le rail vertical à toute l'application* — écarté : il a été dessiné pour quatre modules d'administration, pas pour un parcours d'exploitation.
+**Conséquences :**
+- Le tableau de bord du starter kit disparaît au profit d'un écran unique dans la nouvelle coquille. `AdminShell` n'est pas touché.
+- Chaque module livré ensuite (situation portuaire, dossiers, manifeste, devis) **se branche sur une entrée déjà en place** — c'est le bénéfice de poser la charpente avant le contenu.
+- La navigation devient le point de vérité de « qui a le droit de voir quoi » : toute nouvelle permission de consultation devra y être rattachée, sous peine d'un module inatteignable.
+
 ## ADR-0029 — Branche unique sur `main`, sans pull request, tant qu'il n'y a qu'un développeur — 2026-07-30
 **Statut :** Acceptée (arbitrage du porteur, 2026-07-30) — **remplace la section « Branches » de `WORKFLOW.md`**.
 **Contexte :** le harnais posait un modèle par branches courtes avec `main` protégée et revue obligatoire. Dans les faits, une seule branche a été ouverte (`feature/phase-3-referentiels-crud`) et quatre tranches y ont été empilées — référentiels, comptes clients, matrice des rôles, fiches détail — sans jamais être mergée. Le nom décrivait alors un quart du contenu et a dû être renommé. Le porteur a relevé que le problème se reproduirait à chaque nouveau sujet : une branche longue portant un nom thématique est condamnée à mentir. Par ailleurs le modèle ne tenait pas sa promesse — la revue obligatoire n'a pas de sens quand le seul relecteur est l'auteur.
@@ -76,10 +132,10 @@
 **Conséquences :** l'écran Agents est un écran de **décision**, sans création — la société crée ses agents depuis son portail, qui reste à construire ; d'ici là le jeu de démonstration alimente les quatre états. Le volet client (fiche société **et** comptes agents) passe entièrement sous `comptes-clients.gerer` (ADR-0025), ce qui solde l'incohérence des routes consignataires. Les contraintes `CHECK` ne sont posées que sur PostgreSQL, la suite de tests tournant sur SQLite.
 
 ## ADR-0025 — Catalogue de rôles réservé aux internes ; matrice recomposable, ligne Administrateur figée — 2026-07-29
-**Statut :** Acceptée (grilling du porteur, 2026-07-29) — **précise ADR-0012 et ADR-0015**, **amende ADR-0012** sur la création de rôles.
+**Statut :** Acceptée (grilling du porteur, 2026-07-29) — **précise ADR-0012 et ADR-0015**, **amende ADR-0012** sur la création de rôles. **Amendée par ADR-0031** (2026-07-31) : le catalogue accueille finalement deux rôles clients, figés.
 **Contexte :** avant de construire l'écran « Rôles & permissions », quatre zones d'ombre restaient : jusqu'où va le catalogue (les clients en font-ils partie ?), ce qu'on peut faire depuis l'écran, qui peut le faire, et comment le CGC est protégé de lui-même.
 **Décision :**
-- **Le catalogue ne sert que les internes CGC.** Les droits d'un compte client découlent de son **rattachement** (société consignataire, armements affectés), vérifiés par des policies dédiées — pas d'un rôle spatie.
+- ~~**Le catalogue ne sert que les internes CGC.** Les droits d'un compte client découlent de son **rattachement** (société consignataire, armements affectés), vérifiés par des policies dédiées — pas d'un rôle spatie.~~ **Amendé (ADR-0031)** : deux rôles clients **figés** rejoignent le catalogue, pour que ces capacités soient visibles à l'écran. Le rattachement reste la source de la **portée**, jamais du droit.
 - **Tout le volet client est gardé par `comptes-clients.gerer`** — fiche société consignataire **et** validation des comptes agents — donc **Administrateur seul** (cohérent ADR-0013). Le Superviseur conserve `utilisateurs.gerer` pour les comptes internes uniquement.
 - **L'écran recompose, il ne crée pas.** On coche/décoche les permissions des rôles existants ; la création, le renommage et la suppression de rôles ne sont **pas** au périmètre.
 - **Nouvelle permission `roles.gerer`** (13e du catalogue), portée par l'Administrateur seul. Sans elle, un Superviseur détenteur de `utilisateurs.gerer` pouvait s'octroyer `bareme.modifier` — escalade de privilèges en deux clics.
@@ -88,7 +144,7 @@
 - L'écran est le **4ᵉ onglet** de `/admin/utilisateurs`, visible pour les seuls détenteurs de `roles.gerer`.
 - **Aucune journalisation** de la recomposition pour l'instant : le module Journal d'audit définira son mécanisme et couvrira tous les gestes sensibles d'un coup.
 **Alternatives écartées :**
-- *Ajouter des rôles « Titulaire » et « Agent consignataire » au catalogue* — unifierait le contrôle d'accès derrière `can()`, mais exposerait des rôles qu'un administrateur pourrait vider par mégarde, retirant « déclarer » à tous les agents du pays. Le rattachement est de toute façon la source de vérité pour les clients (armements affectés) : un rôle n'aurait rien ajouté.
+- *Ajouter des rôles « Titulaire » et « Agent consignataire » au catalogue* — unifierait le contrôle d'accès derrière `can()`, mais exposerait des rôles qu'un administrateur pourrait vider par mégarde, retirant « déclarer » à tous les agents du pays. Le rattachement est de toute façon la source de vérité pour les clients (armements affectés) : un rôle n'aurait rien ajouté. — **Retenue depuis (ADR-0031)** : les rôles sont **figés**, ce qui referme le risque du vidage, et ils rendent visibles à l'écran des capacités qui, autrement, ne se lisaient que dans le code.
 - *CRUD complet des rôles*, comme l'annonçait ADR-0012 — écarté par proportionnalité : il faudrait traiter l'unicité des noms, le sort d'un rôle supprimé encore porté par des comptes, les rôles vides. Le besoin réel (« le Superviseur ne doit plus toucher au barème ») est couvert par la recomposition seule. **Réouvrable.**
 - *Garder l'écran sous `utilisateurs.gerer`* — laissait l'escalade ouverte, avec pour seul garde-fou un journal d'audit a posteriori qui n'existe pas encore.
 - *Anti-auto-blocage par contrôle à l'enregistrement* (refuser de retirer `roles.gerer` au dernier rôle qui la porte) — devenu **sans objet** : figer la ligne Administrateur rend le verrouillage impossible par construction, sans une ligne de code de garde.
