@@ -63,8 +63,10 @@
 - **Aucun aiguillage post-login.** Tout le monde arrive sur `/dashboard` ; ce sont la navigation et le contexte affiché qui diffèrent, pas la route. Un consignataire ouvre la plateforme et **il est chez lui**.
 - **Cinq entrées, chacune conditionnée à une permission** : *Tableau de bord* (toujours), *Situation portuaire*, *Dossiers d'escale*, *Devis & factures*, *Administration*. Un agent consignataire ne voit ni *Devis & factures* — c'est de l'argent, il reste au titulaire — ni *Administration*. Le Consultant ne voit que le tableau de bord jusqu'à ce que le module Statistiques existe.
 - **L'entrée *Administration* mène à deux endroits selon le compte** : l'espace de sa société pour un titulaire, le panneau CGC pour un Superviseur ou un Administrateur. Jamais les deux.
-- **Carte de contexte** en haut à droite — « Espace de {société} — Agrément {n°} » pour un compte client, **rien** pour un interne CGC.
+- **Carte de contexte** en haut à droite — « Espace de {société} — Agrément {n°} » pour un compte client, **rien** pour un interne CGC. *À l'implémentation (2026-08-01) : le numéro d'agrément n'existe pas en base ; la carte affiche le **RCCM/NIF** en attendant que le champ soit tranché.*
 - **Trois permissions de consultation à créer** : `situation-portuaire.consulter`, `dossiers.consulter`, `devis.consulter`. Le catalogue ne décrivait jusqu'ici que des **actions** ; une navigation filtrée a besoin de droits de **lecture**.
+- **Qui reçoit quelle consultation, côté CGC** (matrice arrêtée le 2026-08-01) : le Conférencier n'a que *Situation portuaire* — il la renseigne, il ne suit pas les dossiers ; l'Agent dépouilleur et le Superviseur ont les trois ; l'Administrateur les a par son catalogue ; le **Consultant n'en a aucune** — son écran est *Statistiques*, qui n'existe pas encore.
+- **`mes-agents.gerer` quitte la composition de l'Administrateur** : « ses » agents, ce sont ceux d'une société consignataire, et un compte interne n'en a pas. La ligne Administrateur reste figée, mais elle ne porte plus le catalogue *complet*.
 - Les entrées dont le module n'existe pas encore mènent à un écran « à venir », comme `bareme` et `audit` aujourd'hui. Le tableau de bord est **vide** pour tous, provisoirement.
 - **Deux écarts assumés à la maquette** : le bloc sécurité se limite au mot de passe (passkeys et 2FA retirés par ADR-0019), et la demande d'ajout d'un armement ne sera pas construite — elle se traite **hors système**, la liste des armements du client reste en lecture seule.
 **Alternatives écartées :**
@@ -75,6 +77,9 @@
 - Le tableau de bord du starter kit disparaît au profit d'un écran unique dans la nouvelle coquille. `AdminShell` n'est pas touché.
 - Chaque module livré ensuite (situation portuaire, dossiers, manifeste, devis) **se branche sur une entrée déjà en place** — c'est le bénéfice de poser la charpente avant le contenu.
 - La navigation devient le point de vérité de « qui a le droit de voir quoi » : toute nouvelle permission de consultation devra y être rattachée, sous peine d'un module inatteignable.
+- Les entrées sont **calculées côté serveur** (`HandleInertiaRequests`) et non déduites des permissions dans le navigateur : « quelle permission ouvre quel écran » est une règle métier, et l'entrée *Administration* mène de toute façon à deux endroits selon le compte.
+- Les bases déjà peuplées sont rattrapées par **`roles:aligner-consultations`** — additive, parce que rejouer le seeder écraserait les compositions amendées depuis l'écran des rôles.
+- La **puce utilisateur gagne un menu** que la maquette n'avait pas : sans lui, la déconnexion ne serait atteignable depuis aucun écran d'activité.
 
 ## ADR-0029 — Branche unique sur `main`, sans pull request, tant qu'il n'y a qu'un développeur — 2026-07-30
 **Statut :** Acceptée (arbitrage du porteur, 2026-07-30) — **remplace la section « Branches » de `WORKFLOW.md`**.
