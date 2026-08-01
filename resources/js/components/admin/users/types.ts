@@ -98,6 +98,8 @@ export type AgentRow = {
 export type RoleMatriceRow = {
     id: number;
     name: string;
+    /** Population du rôle : personnel du CGC ou compte d'une société cliente. */
+    groupe: 'interne' | 'client';
     recomposable: boolean;
     /** Pourquoi la colonne est verrouillée — infobulle des cases figées. */
     motif_fige: string | null;

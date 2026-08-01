@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import type { ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import { BandeauInfo, card, Th } from '@/components/admin/ui';
 import type { GroupePermissions, RoleMatriceRow } from '@/components/admin/users/types';
@@ -7,11 +8,12 @@ import type { GroupePermissions, RoleMatriceRow } from '@/components/admin/users
  * Matrice « Rôles & permissions » (ADR-0025).
  *
  * Les permissions viennent du code et ne sont ni créables ni supprimables
- * d'ici : l'écran dit seulement QUI porte QUOI. Deux rôles échappent à
+ * d'ici : l'écran dit seulement QUI porte QUOI. Trois rôles échappent à
  * l'édition — `super-admin`, absent de la matrice (il outrepasse via Gate et ne
- * porte rien d'explicite), et `Administrateur`, présent mais figé (il porte le
- * catalogue complet par définition). C'est ce qui rend l'auto-blocage impossible
- * sans avoir à l'interdire.
+ * porte rien d'explicite), `Administrateur`, présent mais figé (il porte tout ce
+ * qui a un sens côté CGC), et les deux rôles clients, qui suivent la position
+ * occupée dans une société (ADR-0031). Les deux premiers sont ce qui rend
+ * l'auto-blocage impossible sans avoir à l'interdire.
  *
  * L'enregistrement se fait colonne par colonne : on ajuste un rôle librement,
  * puis on valide — ou on annule. Une seule requête par rôle.
@@ -90,17 +92,46 @@ export default function RolesTab({ roles, catalogue }: Props) {
 
     const largeurColonne = 118;
 
+    /** Les colonnes regroupées par population, dans leur ordre d'affichage. */
+    const populations = useMemo(
+        () =>
+            roles.reduce<{ groupe: RoleMatriceRow['groupe']; colonnes: number }[]>((acc, role) => {
+                const dernier = acc[acc.length - 1];
+
+                if (dernier?.groupe === role.groupe) {
+                    dernier.colonnes += 1;
+                } else {
+                    acc.push({ groupe: role.groupe, colonnes: 1 });
+                }
+
+                return acc;
+            }, []),
+        [roles],
+    );
+
     return (
         <div style={{ padding: '18px 26px 26px', display: 'flex', flexDirection: 'column', gap: 14 }}>
             <BandeauInfo titre="Ce que cet écran modifie">
                 Les permissions sont définies par le code : on ne peut ni en créer, ni en supprimer, ni ajouter ou renommer un rôle. Seule la
-                <strong> composition</strong> des rôles se modifie ici. La colonne <strong>Administrateur</strong> porte le catalogue complet par
-                définition et n'est pas modifiable ; le rôle technique <strong>super-admin</strong> n'y figure pas.
+                <strong> composition</strong> des rôles se modifie ici. Trois colonnes échappent à l'édition : <strong>Administrateur</strong>, qui porte
+                par définition tout ce qui a un sens côté CGC, et les deux rôles clients, qui découlent de la position occupée dans une société. Le rôle
+                technique <strong>super-admin</strong> n'y figure pas.
             </BandeauInfo>
 
             <div style={{ ...card, overflowX: 'auto' }}>
                 <table style={{ width: '100%', minWidth: 620 + roles.length * largeurColonne, borderCollapse: 'separate', borderSpacing: 0 }}>
                     <thead>
+                        {/* Deux populations dans un même tableau : sans cette
+                            ligne, rien ne dirait que les deux dernières colonnes
+                            ne décrivent pas du personnel du CGC (ADR-0031). */}
+                        <tr>
+                            <ThGroupe />
+                            {populations.map(({ groupe, colonnes }) => (
+                                <ThGroupe key={groupe} span={colonnes}>
+                                    {groupe === 'interne' ? 'Comptes internes CGC' : 'Comptes clients'}
+                                </ThGroupe>
+                            ))}
+                        </tr>
                         <tr>
                             <Th first>Permission</Th>
                             {roles.map((role) => (
@@ -155,8 +186,8 @@ export default function RolesTab({ roles, catalogue }: Props) {
 
             <p style={{ margin: '0 2px', fontSize: 11.5, color: '#8A93A6', lineHeight: 1.5, maxWidth: 900 }}>
                 Une permission retirée s'applique dès la connexion suivante des comptes portant ce rôle. Un rôle peut être entièrement décoché : c'est la
-                façon de neutraliser un profil sans le supprimer. Les comptes clients (titulaires et agents consignataires) ne sont pas concernés — leurs
-                droits découlent de leur rattachement, pas d'un rôle.
+                façon de neutraliser un profil sans le supprimer. Les deux colonnes clientes sont là pour être lues, pas modifiées : un compte client
+                reçoit son rôle de sa position dans sa société — titulaire ou agent — et la société détermine ensuite sur quels armements il opère.
             </p>
         </div>
     );
@@ -205,6 +236,26 @@ function GroupeLignes({
         </>
     );
 }
+
+/** Bandeau de population, au-dessus des en-têtes de colonnes. */
+const ThGroupe = ({ span = 1, children }: { span?: number; children?: ReactNode }) => (
+    <th
+        colSpan={span}
+        style={{
+            padding: children ? '7px 12px 6px' : 0,
+            background: '#142C73',
+            color: '#C9D4F0',
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '.08em',
+            textTransform: 'uppercase',
+            textAlign: 'center',
+            borderRight: '1px solid rgba(255,255,255,.18)',
+        }}
+    >
+        {children}
+    </th>
+);
 
 const CadenasIcon = () => (
     <svg width="11" height="11" viewBox="0 0 14 14" fill="none" style={{ flex: 'none', opacity: 0.85 }}>

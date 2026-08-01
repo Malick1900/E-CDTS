@@ -169,7 +169,10 @@ class RolesClientsTest extends TestCase
                 ->has('matriceRoles', count(Profil::cases()) - 1 + count(RoleClient::cases()))
                 ->where('matriceRoles', fn ($roles): bool => collect($roles)
                     ->whereIn('name', RoleClient::values())
-                    ->every(fn (array $role): bool => $role['recomposable'] === false))
+                    ->every(fn (array $role): bool => $role['recomposable'] === false && $role['groupe'] === 'client'))
+                // Les deux populations sont contiguës, sinon le bandeau qui les
+                // sépare découperait le tableau n'importe où (ADR-0031).
+                ->where('matriceRoles', fn ($roles): bool => collect($roles)->pluck('groupe')->unique()->values()->all() === ['interne', 'client'])
                 // Les rôles clients ne sont pas proposés pour un compte interne.
                 ->where('assignableRoles', fn ($roles): bool => collect($roles)
                     ->intersect(RoleClient::values())

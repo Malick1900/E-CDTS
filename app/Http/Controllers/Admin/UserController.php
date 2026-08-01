@@ -120,6 +120,7 @@ class UserController extends Controller
             static fn (Profil $profil): array => [
                 'id' => $roles->get($profil->value)?->id,
                 'name' => $profil->value,
+                'groupe' => 'interne',
                 'recomposable' => $profil->estRecomposable(),
                 'motif_fige' => $profil->estRecomposable() ? null : 'Ce rôle porte toutes les permissions internes par définition.',
                 'permissions' => $roles->get($profil->value)?->permissions->pluck('name')->all() ?? [],
@@ -129,11 +130,14 @@ class UserController extends Controller
 
         // Les rôles clients ferment la matrice : on les montre pour que les
         // capacités du titulaire et de ses agents se lisent à l'écran, mais ils
-        // ne se recomposent pas (ADR-0031).
+        // ne se recomposent pas (ADR-0031). Le groupe les sépare visuellement
+        // des internes — sans quoi le tableau mélangerait deux populations sans
+        // le dire.
         foreach (RoleClient::cases() as $roleClient) {
             $colonnes[] = [
                 'id' => $roles->get($roleClient->value)?->id,
                 'name' => $roleClient->value,
+                'groupe' => 'client',
                 'recomposable' => false,
                 'motif_fige' => 'Rôle client figé : il découle de la position dans la société.',
                 'permissions' => $roles->get($roleClient->value)?->permissions->pluck('name')->all() ?? [],
