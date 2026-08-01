@@ -82,10 +82,8 @@ export type AgentRow = {
     /** Titulaire du compte de sa société : il déclare **et** gère les agents. */
     est_titulaire: boolean;
     statut: AgentStatut;
-    /** Portée de l'agent (ADR-0009). */
+    /** Portée de l'agent (ADR-0009), en lecture seule côté CGC (ADR-0030). */
     armements: ArmementBadge[];
-    /** Les seuls armements affectables : ceux que sa société représente. */
-    armements_societe: ArmementBadge[];
     /** Trace de la dernière décision du CGC (ADR-0024). */
     decide_par: string | null;
     decide_le: string | null;

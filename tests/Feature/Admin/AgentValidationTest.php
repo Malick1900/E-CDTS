@@ -209,50 +209,10 @@ class AgentValidationTest extends TestCase
     }
 
     // ── Portée (ADR-0009) ─────────────────────────────────────────
-
-    public function test_scope_is_limited_to_the_armements_represented_by_the_company(): void
-    {
-        $consignataire = Consignataire::factory()->create();
-        [$represente, $autre] = Armement::factory()->count(2)->create()->all();
-        $consignataire->armements()->sync([$represente->id]);
-
-        $agent = $this->agent($consignataire);
-        $agent->update(['statut_validation' => StatutValidation::Valide, 'is_active' => true]);
-
-        $this->actingAs($this->admin())
-            ->patch(route('admin.utilisateurs.agents.affectations', $agent), ['armement_ids' => [$represente->id, $autre->id]])
-            ->assertSessionHasErrors('armement_ids.1');
-
-        $this->assertCount(0, $agent->refresh()->armements, 'Un identifiant hors périmètre fait échouer la requête entière, il n\'est pas ignoré en silence.');
-    }
-
-    public function test_scope_synchronises_in_both_directions(): void
-    {
-        $consignataire = Consignataire::factory()->create();
-        [$retire, $conserve, $ajoute] = Armement::factory()->count(3)->create()->all();
-        $consignataire->armements()->sync([$retire->id, $conserve->id, $ajoute->id]);
-
-        $agent = $this->agent($consignataire);
-        $agent->update(['statut_validation' => StatutValidation::Valide, 'is_active' => true]);
-        $agent->armements()->sync([$retire->id, $conserve->id]);
-
-        $this->actingAs($this->admin())
-            ->patch(route('admin.utilisateurs.agents.affectations', $agent), ['armement_ids' => [$conserve->id, $ajoute->id]])
-            ->assertRedirect(route('admin.utilisateurs.index'));
-
-        $this->assertEqualsCanonicalizing([$conserve->id, $ajoute->id], $agent->refresh()->armements->pluck('id')->all());
-    }
-
-    public function test_a_pending_account_receives_no_scope(): void
-    {
-        $consignataire = Consignataire::factory()->create();
-        $armement = Armement::factory()->create();
-        $consignataire->armements()->sync([$armement->id]);
-
-        $this->actingAs($this->admin())
-            ->patch(route('admin.utilisateurs.agents.affectations', $this->agent($consignataire)), ['armement_ids' => [$armement->id]])
-            ->assertSessionHasErrors('statut_validation');
-    }
+    //
+    // Le CGC n'affecte plus les armements : ce geste appartient au titulaire de
+    // la société, seul porteur de `mes-agents.gerer` (ADR-0030). Les tests de
+    // cette section reviendront avec l'écran qui porte l'écriture, côté client.
 
     // ── Connexion ─────────────────────────────────────────────────
 
@@ -363,7 +323,6 @@ class AgentValidationTest extends TestCase
                 ->where('agents.0.statut', 'actif')
                 ->where('agents.0.consignataire_name', $consignataire->name)
                 ->where('agents.0.armements.0.name', $armement->name)
-                ->where('agents.0.armements_societe.0.id', $armement->id)
                 ->where('users', fn ($users): bool => collect($users)->doesntContain('id', $agent->id))
             );
     }

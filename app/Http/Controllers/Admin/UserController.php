@@ -260,10 +260,9 @@ class UserController extends Controller
                 // société — il ne change pas les actions offertes au CGC.
                 'est_titulaire' => $agent->consignataire?->titulaire_user_id === $agent->id,
                 'statut' => $agent->statutAffiche(),
+                // En lecture seule : voir qui opère sur quoi sert au support et à
+                // l'audit, mais le CGC n'écrit plus cette portée (ADR-0030).
                 'armements' => $this->armements($agent->armements),
-                // Le choix offert par le tiroir d'affectation : les armements de
-                // sa société, et eux seuls (ADR-0009).
-                'armements_societe' => $this->armements($agent->consignataire->armements ?? collect()),
                 'decide_par' => $agent->valideur?->name,
                 'decide_le' => $agent->valide_le?->toIso8601String(),
                 'motif_refus' => $agent->motif_refus,

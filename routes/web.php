@@ -118,7 +118,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::patch('utilisateurs/agents/{agent}/refus', [AgentController::class, 'refuser'])->name('utilisateurs.agents.refus');
             Route::patch('utilisateurs/agents/{agent}/reexamen', [AgentController::class, 'reexaminer'])->name('utilisateurs.agents.reexamen');
             Route::patch('utilisateurs/agents/{agent}/activation', [AgentController::class, 'toggleActive'])->name('utilisateurs.agents.activation');
-            Route::patch('utilisateurs/agents/{agent}/affectations', [AgentController::class, 'affectations'])->name('utilisateurs.agents.affectations');
+
+            // Pas de route d'affectation des armements : elle appartient au
+            // titulaire de la société, seul porteur de `mes-agents.gerer`
+            // (ADR-0030). Le CGC continue de voir qui opère sur quoi — c'est
+            // utile au support et à l'audit — mais ne l'écrit plus.
         });
 
         // Recomposition des rôles (ADR-0025). Permission dédiée, et non

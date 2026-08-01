@@ -193,9 +193,10 @@ class ConsignataireManagementTest extends TestCase
                 'armement_ids' => [$armement->id],
             ] + $this->titulaire());
 
-        $titulaire = Consignataire::firstWhere('name', 'SAGA Gabon')->titulaire;
-
-        // Il apparaît dans l'onglet Agents, marqué comme titulaire...
+        // Il apparaît dans l'onglet Agents, marqué comme titulaire. Sa portée
+        // d'armements n'est plus vérifiée ici : depuis ADR-0030, c'est le
+        // titulaire qui affecte les armements de sa société, le CGC n'a plus de
+        // route pour le faire.
         $this->actingAs($this->admin())
             ->get(route('admin.utilisateurs.index'))
             ->assertInertia(fn ($page) => $page
@@ -203,13 +204,6 @@ class ConsignataireManagementTest extends TestCase
                 ->where('agents.0.est_titulaire', true)
                 ->where('agents.0.statut', 'actif')
             );
-
-        // ...et reçoit une portée d'armements comme n'importe quel déclarant.
-        $this->actingAs($this->admin())
-            ->patch(route('admin.utilisateurs.agents.affectations', $titulaire), ['armement_ids' => [$armement->id]])
-            ->assertRedirect(route('admin.utilisateurs.index'));
-
-        $this->assertSame([$armement->id], $titulaire->refresh()->armements->pluck('id')->all());
     }
 
     public function test_a_company_can_be_created_before_its_account_holder_is_named(): void

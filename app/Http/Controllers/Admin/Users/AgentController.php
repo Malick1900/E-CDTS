@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin\Users;
 
 use App\Enums\StatutValidation;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\Users\AgentAffectationRequest;
 use App\Http\Requests\Admin\Users\AgentRefuseRequest;
 use App\Models\User;
 use App\Notifications\CompteAgentRefuse;
@@ -100,22 +99,6 @@ class AgentController extends Controller
             'type' => 'success',
             'message' => $agent->is_active ? __('Compte agent réactivé.') : __('Compte agent désactivé.'),
         ]);
-
-        return to_route('admin.utilisateurs.index');
-    }
-
-    /**
-     * Portée de l'agent (ADR-0009). Le tiroir renvoie toujours la liste
-     * complète : une case décochée est un retrait, donc `sync()`.
-     */
-    public function affectations(AgentAffectationRequest $request, User $agent): RedirectResponse
-    {
-        $this->garantirAgent($agent);
-        $this->garantirStatut($agent, [StatutValidation::Valide], __('Un compte non validé ne peut pas recevoir d\'affectation.'));
-
-        $agent->armements()->sync($request->validated('armement_ids') ?? []);
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Affectations mises à jour.')]);
 
         return to_route('admin.utilisateurs.index');
     }
