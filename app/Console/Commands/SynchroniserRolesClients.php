@@ -2,9 +2,13 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\Permission as PermissionCatalogue;
 use App\Enums\RoleClient;
 use App\Models\User;
 use Illuminate\Console\Command;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Aligne le rôle de chaque compte client sur sa position réelle (ADR-0031).
@@ -24,6 +28,8 @@ class SynchroniserRolesClients extends Command
 
     public function handle(): int
     {
+        $this->poserLesRoles();
+
         $comptes = User::query()
             ->whereNotNull('consignataire_id')
             ->with(['roles:id,name', 'consignataire:id,titulaire_user_id'])
@@ -49,5 +55,39 @@ class SynchroniserRolesClients extends Command
         $this->info("{$alignes} compte(s) aligné(s) sur {$comptes->count()} compte(s) client(s).");
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Les deux rôles et leur composition, posés avant de les distribuer.
+     *
+     * Sans quoi la commande échouerait sur le cas même qu'elle vise : une base
+     * d'« avant les rôles clients » ne les a, par définition, pas. Le seeder RBAC
+     * fait le même geste, mais exiger son passage préalable ferait dépendre un
+     * rattrapage d'un ordre d'exécution que personne ne lira. La composition,
+     * elle, ne vient que d'un endroit — l'enum (ADR-0031).
+     */
+    private function poserLesRoles(): void
+    {
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        foreach (RoleClient::cases() as $roleClient) {
+            foreach ($roleClient->permissions() as $permission) {
+                Permission::findOrCreate($permission->value, 'web');
+            }
+        }
+
+        // Le registrar a pu mémoriser la collection AVANT ces créations.
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        foreach (RoleClient::cases() as $roleClient) {
+            Role::findOrCreate($roleClient->value, 'web')->syncPermissions(
+                array_map(
+                    static fn (PermissionCatalogue $p): string => $p->value,
+                    $roleClient->permissions(),
+                ),
+            );
+        }
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 }

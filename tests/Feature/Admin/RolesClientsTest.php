@@ -139,6 +139,20 @@ class RolesClientsTest extends TestCase
         $this->assertSame([RoleClient::Agent->value], $agent->fresh()->getRoleNames()->all());
     }
 
+    public function test_la_commande_pose_les_roles_absents_avant_de_les_distribuer(): void
+    {
+        $titulaire = $this->societeAvecTitulaire()->titulaire;
+
+        // Une base d'« avant les rôles clients » : ni les rôles, ni le rôle posé.
+        $titulaire->syncRoles([]);
+        Role::whereIn('name', RoleClient::values())->delete();
+
+        $this->artisan('clients:synchroniser-roles')->assertSuccessful();
+
+        $this->assertSame([RoleClient::Titulaire->value], $titulaire->fresh()->getRoleNames()->all());
+        $this->assertTrue($titulaire->fresh()->can(Permission::MesAgentsGerer->value));
+    }
+
     public function test_la_commande_est_idempotente(): void
     {
         $titulaire = $this->societeAvecTitulaire()->titulaire;
