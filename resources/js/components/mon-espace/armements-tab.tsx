@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import TableCard from '@/components/admin/table-card';
 import { PAR_PAGE } from '@/components/admin/types';
-import { BadgeAlerte, Td, Th } from '@/components/admin/ui';
+import { BadgeAlerte, Td, Th, Vide } from '@/components/admin/ui';
 import type { MonAgentRow, MonArmementRow } from './types';
 
 /*
@@ -10,9 +10,14 @@ import type { MonAgentRow, MonArmementRow } from './types';
  *
  * Écran en lecture seule, et il le restera : c'est le CGC qui rattache un
  * armement à une fiche société, sur pièces. La société n'en choisit pas la
- * liste, elle en répartit la charge — d'où la seule chose utile à montrer ici
- * en plus de la fiche : combien de ses agents couvrent chaque armement, et
- * lesquels. Un armement sans agent est un angle mort ; il est signalé.
+ * liste, elle en répartit la charge.
+ *
+ * La fiche de l'armement y est donnée en entier — pavillon, immatriculation,
+ * gérant, siège. Le consignataire est le mandataire de cette compagnie au
+ * port : ces mentions sont celles avec lesquelles il correspond et engage son
+ * mandant. S'y ajoute ce que lui seul peut savoir : combien de ses agents
+ * couvrent l'armement, et lesquels. Un armement sans agent est un angle mort ;
+ * il est signalé.
  */
 
 /** Ce qu'on nomme avant de renvoyer au compteur — au-delà, la liste noierait la ligne. */
@@ -65,7 +70,9 @@ export default function ArmementsTab({
                   (a) =>
                       a.name.toLowerCase().includes(q) ||
                       (a.sigle?.toLowerCase().includes(q) ?? false) ||
-                      (a.pays?.toLowerCase().includes(q) ?? false),
+                      (a.pays_origine?.toLowerCase().includes(q) ?? false) ||
+                      (a.gerant?.toLowerCase().includes(q) ?? false) ||
+                      (a.rccm_nif?.toLowerCase().includes(q) ?? false),
               );
     }, [armements, recherche]);
 
@@ -90,10 +97,10 @@ export default function ArmementsTab({
                 setRecherche(v);
                 setPage(1);
             }}
-            placeholder="Rechercher un armement…"
+            placeholder="Rechercher un nom, un sigle, un gérant, un RCCM…"
             total={total}
             unite={['armement', 'armements']}
-            largeurMin={720}
+            largeurMin={1180}
             vide={
                 armements.length === 0
                     ? 'Votre société ne représente aucun armement. C’est le CGC qui les rattache à votre fiche.'
@@ -106,7 +113,11 @@ export default function ArmementsTab({
             entete={
                 <tr>
                     <Th first>Armement</Th>
-                    <Th w={300}>Agents affectés</Th>
+                    <Th w={140}>Pavillon</Th>
+                    <Th w={180}>Immatriculation</Th>
+                    <Th w={160}>Gérant</Th>
+                    <Th w={210}>Siège</Th>
+                    <Th w={230}>Agents affectés</Th>
                 </tr>
             }
         >
@@ -143,6 +154,33 @@ export default function ArmementsTab({
                                     {armement.sigle ??
                                         armement.name.slice(0, 3).toUpperCase()}
                                 </div>
+                                <span
+                                    style={{
+                                        fontSize: 13.5,
+                                        fontWeight: 700,
+                                        color: '#1A1F2E',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 8,
+                                    }}
+                                >
+                                    {armement.name}
+                                    {armement.actif ? null : (
+                                        <BadgeAlerte majuscules>
+                                            Désactivé
+                                        </BadgeAlerte>
+                                    )}
+                                </span>
+                            </div>
+                        </Td>
+
+                        <Td>{armement.pays_origine ?? <Vide />}</Td>
+
+                        <Td>
+                            {armement.rccm_nif === null &&
+                            armement.pays_immatriculation === null ? (
+                                <Vide />
+                            ) : (
                                 <div
                                     style={{
                                         display: 'flex',
@@ -152,20 +190,12 @@ export default function ArmementsTab({
                                 >
                                     <span
                                         style={{
-                                            fontSize: 13.5,
-                                            fontWeight: 700,
+                                            fontWeight: 600,
                                             color: '#1A1F2E',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: 8,
+                                            fontVariantNumeric: 'tabular-nums',
                                         }}
                                     >
-                                        {armement.name}
-                                        {armement.actif ? null : (
-                                            <BadgeAlerte majuscules>
-                                                Désactivé
-                                            </BadgeAlerte>
-                                        )}
+                                        {armement.rccm_nif ?? '—'}
                                     </span>
                                     <span
                                         style={{
@@ -173,12 +203,16 @@ export default function ArmementsTab({
                                             color: '#5A6478',
                                         }}
                                     >
-                                        {armement.pays ??
-                                            'Pavillon non précisé'}
+                                        {armement.pays_immatriculation ??
+                                            'Pays non précisé'}
                                     </span>
                                 </div>
-                            </div>
+                            )}
                         </Td>
+
+                        <Td>{armement.gerant ?? <Vide />}</Td>
+
+                        <Td>{armement.adresse ?? <Vide />}</Td>
 
                         <Td>
                             {noms.length === 0 ? (

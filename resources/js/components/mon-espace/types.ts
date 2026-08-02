@@ -38,8 +38,13 @@ export type MonAgentRow = {
  * ce qui laisse la matrice d'affectation s'en servir telle quelle.
  */
 export type MonArmementRow = ArmementBadge & {
-    /** Pavillon de l'armateur, tel que le CGC le détient. */
-    pays: string | null;
+    /** Pavillon de l'armateur — le pays d'où il opère. */
+    pays_origine: string | null;
+    /** Pays où la compagnie est immatriculée ; souvent distinct du pavillon. */
+    pays_immatriculation: string | null;
+    gerant: string | null;
+    rccm_nif: string | null;
+    adresse: string | null;
     /** Un armement désactivé au référentiel ne portera plus d'escale nouvelle. */
     actif: boolean;
 };

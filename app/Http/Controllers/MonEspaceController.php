@@ -131,19 +131,29 @@ class MonEspaceController extends Controller
      * entre ses agents. C'est donc à la fois les colonnes de la matrice
      * d'affectation et le contenu de l'onglet qui les recense.
      *
+     * La fiche de l'armement est projetée en entier — pavillon, immatriculation,
+     * gérant, siège. Ce n'est pas de l'ornement : le consignataire est le
+     * mandataire de cette compagnie au port, et c'est à partir de ces mentions
+     * qu'il correspond avec elle et qu'il l'engage. Les lui masquer l'obligerait
+     * à tenir sa propre copie du dossier à côté de la plateforme.
+     *
      * @return list<array<string, mixed>>
      */
     private function armements(Consignataire $societe): array
     {
         return array_values($societe->armements()
-            ->with('paysOrigine:id,name')
+            ->with(['paysOrigine:id,name', 'paysImmatriculation:id,name'])
             ->orderBy('name')
             ->get()
             ->map(fn (Armement $armement): array => [
                 'id' => $armement->id,
                 'name' => $armement->name,
                 'sigle' => $armement->sigle,
-                'pays' => $armement->paysOrigine?->name,
+                'pays_origine' => $armement->paysOrigine?->name,
+                'pays_immatriculation' => $armement->paysImmatriculation?->name,
+                'gerant' => $armement->gerant,
+                'rccm_nif' => $armement->rccm_nif,
+                'adresse' => $armement->adresse,
                 // Un armement que le CGC a désactivé au référentiel reste
                 // rattaché à la société : le dire vaut mieux que le masquer,
                 // sinon la disparition d'une ligne resterait inexpliquée.
