@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Permission;
+use App\Http\Controllers\Admin\BaremeController;
 use App\Http\Controllers\Admin\ReferentielController;
 use App\Http\Controllers\Admin\Referentiels\ArmementController;
 use App\Http\Controllers\Admin\Referentiels\NavireController;
@@ -133,7 +134,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::patch('utilisateurs/roles/{role}', [RoleController::class, 'update'])->name('utilisateurs.roles.update');
         });
 
-        Route::inertia('bareme', 'admin/bareme')->name('bareme');
+        // Barème CDTS (ADR-0034). Permission dédiée : le Superviseur gère les
+        // comptes et les référentiels, mais la grille tarifaire n'appartient
+        // qu'à l'Administrateur — c'est elle qui fixe ce que le port facture.
+        Route::middleware('can:'.Permission::BaremeModifier->value)->group(function () {
+            Route::get('bareme', [BaremeController::class, 'index'])->name('bareme');
+            Route::post('bareme', [BaremeController::class, 'store'])->name('bareme.store');
+            Route::patch('bareme/{ligne}', [BaremeController::class, 'update'])->name('bareme.update');
+            Route::patch('bareme/{ligne}/activation', [BaremeController::class, 'toggleActive'])->name('bareme.activation');
+            Route::delete('bareme/{ligne}', [BaremeController::class, 'destroy'])->name('bareme.destroy');
+        });
+
         Route::inertia('audit', 'admin/audit')->name('audit');
     });
 });

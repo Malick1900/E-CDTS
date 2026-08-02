@@ -23,6 +23,10 @@ class DatabaseSeeder extends Seeder
         // navire. Vocation à exister en production.
         $this->call(ReferentielsSeeder::class);
 
+        // Barème CDTS en vigueur (ADR-0034). Donnée de production : c'est la
+        // grille officielle du CGC, pas un jeu d'exemple.
+        $this->call(BaremeSeeder::class);
+
         // À partir d'ici : développement uniquement.
 
         // Compte de développement : profil Administrateur (toutes les

@@ -20,6 +20,27 @@
 
 ---
 
+## ADR-0034 — Le barème est tenu en francs ; l'euro en est la lecture — 2026-08-02
+**Statut :** Acceptée (arbitrage du porteur, 2026-08-02).
+**Contexte :** le CGC tient son barème CDTS sur papier — deux volets (export, import), 58 articles référencés `EXP…` / `IMP…`, chacun avec un montant en francs CFA, sa conversion en euros, une remise de 4 % et un « taux appliqué ». Les consignataires devront un jour lire leurs montants dans l'une ou l'autre monnaie. La plateforme n'avait qu'un écran `/admin/bareme` en attente, dont le texte promettait du versionnement de tarifs et une « unité payante ».
+**Décision :**
+- **Une table, `bareme_lignes`** : référence, sens, désignation, code de nomenclature, montant en francs. Rien d'autre — pas d'unité, pas d'état actif, pas de version.
+- **Le franc est la seule valeur saisie.** L'euro est calculé à la parité fixe XAF/EUR (655,96), déclarée dans `config/cdts.php`, et n'est jamais stocké ni exposé à l'écran. Vérifié sur le document : 1589,51 / 655,96 = 2,42 € au centime près sur toutes les lignes contrôlées — c'est bien le franc qui fait foi.
+- **Les remises ne sont pas gérées par la plateforme.** Les colonnes « -4 % » et « taux appliqué » du papier ne sont pas reprises : e-CDTS affiche les montants en vigueur, pas ce qui est facturé après arrangement.
+- **Écriture réservée à l'Administrateur** (`bareme.modifier`) : ajout, modification, désactivation et suppression d'une ligne. Le Superviseur, qui gère pourtant les comptes et les référentiels, n'y accède pas — c'est le barème qui fixe ce que le port facture.
+- **Deux gestes pour retirer une ligne, et non un seul.** La **désactivation** est celui du quotidien : la ligne sort de l'exploitation, reste dans la grille et revient d'un clic. La **suppression** reste possible pour ce qui n'aurait jamais dû être saisi. Le seeder respecte la décision du CGC : il ne réactive pas une ligne écartée.
+- Les 58 lignes sont posées par `BaremeSeeder`, idempotent : il fait autorité sur ce qu'il connaît et laisse intactes les lignes ajoutées depuis l'écran.
+**Alternatives écartées :**
+- *Stocker les deux montants*, comme le demandait la formulation initiale — écarté : deux colonnes pour une seule vérité finissent par diverger, il suffirait qu'on corrige le franc sans toucher l'euro. L'écran montre bien les deux, une seule se saisit.
+- *Faire de la parité un référentiel modifiable* — écarté : elle est fixe par traité, pas par décision du CGC. Une valeur qu'on ne peut pas légitimement changer n'a rien à faire dans un écran de saisie.
+- *N'offrir que la suppression*, puisque rien ne pointe encore vers une ligne de barème — écarté par le porteur : ce qu'on veut d'ordinaire, c'est retirer un article de l'exploitation sans effacer la trace qu'il a été tarifé. La suppression sèche reste offerte, mais elle n'est plus le seul geste. **La suppression sera à retirer dès qu'un devis citera une ligne.**
+- *Versionner les tarifs*, comme le promettait l'écran d'attente — hors périmètre, retiré. Le sujet reviendra avec la facturation : une facture émise doit rester lisible au tarif de son époque, qu'on historise les lignes ou qu'on fige le montant sur la facture.
+**Conséquences :**
+- Le rail d'administration est désormais **filtré par permission** côté serveur, comme la navigation d'activité (ADR-0030). Sans cela, le Superviseur aurait vu une entrée « Barème » menant à un 403.
+- Les montants ont été **transcrits à la main depuis deux photographies** du document. Ils demandent une relecture du CGC avant tout usage de facturation.
+- **Deux points à trancher par le CGC**, transcrits tels quels : IMP25 à IMP28 portent la nomenclature `03` là où leurs équivalents export (EXP26 à EXP29) portent `04` ; EXP07 et IMP02 sont à 0,00.
+- Les libellés des sept catégories de nomenclature (`01` à `07`) ne figurent pas sur le document : l'écran n'affiche donc que le code.
+
 ## ADR-0033 — On ne donne pas ce qu'on n'a pas : l'attribution d'un rôle est bornée par ses propres permissions — 2026-08-02
 **Statut :** Acceptée (arbitrage du porteur, 2026-08-02) — **ferme une faille d'ADR-0025**, dont elle rend la séparation effective.
 **Contexte :** ADR-0025 a séparé `utilisateurs.gerer` de `roles.gerer` précisément « pour qu'un Superviseur ne puisse pas s'octroyer n'importe quelle permission en deux clics ». La séparation était contournable en un clic : le Superviseur, qui gère les comptes internes, voyait dans le formulaire de création **toutes** les cases de rôles, dont *Administrateur*. Il se créait un compte administrateur — ou s'ajoutait le rôle à lui-même — et reprenait tout ce que la séparation lui refusait. Constaté par le porteur sur l'écran « Nouvel utilisateur ».

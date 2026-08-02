@@ -1,26 +1,56 @@
 import { Head } from '@inertiajs/react';
+import { useMemo, useState } from 'react';
 import AdminShell from '@/components/admin/admin-shell';
-import NextDelivery from '@/components/admin/next-delivery';
+import BaremeTab from '@/components/admin/bareme/bareme-tab';
+import type { BaremeLigneRow } from '@/components/admin/bareme/bareme-tab';
+import Toast from '@/components/admin/toast';
 
-export default function Bareme() {
+/*
+ * Barème CDTS — la grille tarifaire du CGC (ADR-0034).
+ *
+ * Un volet par sens de trafic : le document officiel en tient deux, et la même
+ * marchandise n'a pas le même prix selon qu'elle part ou qu'elle arrive.
+ *
+ * Écran réservé à l'Administrateur (`bareme.modifier`) : c'est lui qui fixe ce
+ * que le port facture.
+ */
+
+type Props = {
+    lignes: BaremeLigneRow[];
+    sens: Array<{ value: string; label: string }>;
+};
+
+export default function Bareme({ lignes = [], sens = [] }: Props) {
+    const [volet, setVolet] = useState(sens[0]?.value ?? 'export');
+    const [signalCreation, setSignalCreation] = useState(0);
+
+    const changerVolet = (cle: string) => {
+        setVolet(cle);
+        setSignalCreation(0);
+    };
+
+    const parSens = useMemo(() => lignes.filter((l) => l.sens === volet), [lignes, volet]);
+    const libelle = sens.find((s) => s.value === volet)?.label ?? '';
+
     return (
         <>
             <Head title="Barème — Administration" />
             <AdminShell
                 module="bareme"
                 title="Barème"
-                subtitle="Grille tarifaire par nomenclature CGC — valeurs uniquement, versionnées. Le moteur codé lit cette grille."
+                subtitle="Grille tarifaire CDTS en vigueur — montants en francs CFA, convertis en euros."
+                primary={{ label: 'Nouvelle ligne', onClick: () => setSignalCreation((n) => n + 1) }}
+                tabs={sens.map((s) => ({
+                    key: s.value,
+                    label: s.label,
+                    badge: lignes.filter((l) => l.sens === s.value).length,
+                }))}
+                activeTab={volet}
+                onTab={changerVolet}
             >
-                <NextDelivery
-                    title="Module en cours de construction"
-                    description="L'édition de la grille tarifaire sera livrée après le référentiel et la gestion des utilisateurs."
-                    features={[
-                        'Saisie de la grille nomenclature CGC ↔ prix ↔ unité payante.',
-                        'Versionnement : on n’écrase jamais un tarif, on crée une nouvelle version.',
-                        'Un devis déjà liquidé reste attaché à son barème d’origine.',
-                        'Distinction ligne régulière / tramping et sec / frigo lue par le moteur.',
-                    ]}
-                />
+                <BaremeTab lignes={parSens} sens={volet} sensLabel={libelle} signalCreation={signalCreation} />
+
+                <Toast />
             </AdminShell>
         </>
     );
