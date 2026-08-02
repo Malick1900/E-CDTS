@@ -24,7 +24,8 @@
 **Statut :** Acceptée (arbitrage du porteur, 2026-08-02).
 **Contexte :** le CGC tient son barème CDTS sur papier — deux volets (export, import), 58 articles référencés `EXP…` / `IMP…`, chacun avec un montant en francs CFA, sa conversion en euros, une remise de 4 % et un « taux appliqué ». Les consignataires devront un jour lire leurs montants dans l'une ou l'autre monnaie. La plateforme n'avait qu'un écran `/admin/bareme` en attente, dont le texte promettait du versionnement de tarifs et une « unité payante ».
 **Décision :**
-- **Une table, `bareme_lignes`** : référence, sens, désignation, code de nomenclature, montant en francs. Rien d'autre — pas d'unité, pas d'état actif, pas de version.
+- **Une table, `bareme_lignes`** : référence, sens, désignation, montant en francs, état actif. Rien d'autre — pas d'unité, pas de version.
+- **Pas de code de nomenclature.** Il figure sur le document, il a d'abord été repris, puis écarté par le porteur : un « 04 » nu n'apprend rien à qui lit l'écran, et les libellés des sept catégories n'existent nulle part. Le sujet reviendra au dépouillement, où la nomenclature sert à catégoriser une ligne de manifeste — mais c'est un autre écran et une autre donnée que le tarif.
 - **Le franc est la seule valeur saisie.** L'euro est calculé à la parité fixe XAF/EUR (655,96), déclarée dans `config/cdts.php`, et n'est jamais stocké ni exposé à l'écran. Vérifié sur le document : 1589,51 / 655,96 = 2,42 € au centime près sur toutes les lignes contrôlées — c'est bien le franc qui fait foi.
 - **Les remises ne sont pas gérées par la plateforme.** Les colonnes « -4 % » et « taux appliqué » du papier ne sont pas reprises : e-CDTS affiche les montants en vigueur, pas ce qui est facturé après arrangement.
 - **Écriture réservée à l'Administrateur** (`bareme.modifier`) : ajout, modification, désactivation et suppression d'une ligne. Le Superviseur, qui gère pourtant les comptes et les référentiels, n'y accède pas — c'est le barème qui fixe ce que le port facture.
@@ -38,8 +39,7 @@
 **Conséquences :**
 - Le rail d'administration est désormais **filtré par permission** côté serveur, comme la navigation d'activité (ADR-0030). Sans cela, le Superviseur aurait vu une entrée « Barème » menant à un 403.
 - Les montants ont été **transcrits à la main depuis deux photographies** du document. Ils demandent une relecture du CGC avant tout usage de facturation.
-- **Deux points à trancher par le CGC**, transcrits tels quels : IMP25 à IMP28 portent la nomenclature `03` là où leurs équivalents export (EXP26 à EXP29) portent `04` ; EXP07 et IMP02 sont à 0,00.
-- Les libellés des sept catégories de nomenclature (`01` à `07`) ne figurent pas sur le document : l'écran n'affiche donc que le code.
+- **Un point relevé et laissé tel quel** : EXP07 (minerais et vrac liquide export) et IMP02 (bois import) sont à 0,00 sur le document.
 
 ## ADR-0033 — On ne donne pas ce qu'on n'a pas : l'attribution d'un rôle est bornée par ses propres permissions — 2026-08-02
 **Statut :** Acceptée (arbitrage du porteur, 2026-08-02) — **ferme une faille d'ADR-0025**, dont elle rend la séparation effective.

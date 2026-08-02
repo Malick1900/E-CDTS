@@ -25,7 +25,6 @@ export type BaremeLigneRow = {
     reference: string;
     sens: string;
     designation: string;
-    nomenclature: string;
     montant_cfa: number;
     montant_euro: number;
     actif: boolean;
@@ -35,7 +34,6 @@ type Form = {
     reference: string;
     sens: string;
     designation: string;
-    nomenclature: string;
     montant_cfa: string;
 };
 
@@ -82,7 +80,7 @@ export default function BaremeTab({ lignes, sens, sensLabel, signalCreation }: P
 
         return q === ''
             ? lignes
-            : lignes.filter((l) => l.designation.toLowerCase().includes(q) || l.reference.toLowerCase().includes(q) || l.nomenclature.includes(q));
+            : lignes.filter((l) => l.designation.toLowerCase().includes(q) || l.reference.toLowerCase().includes(q));
     }, [lignes, recherche]);
 
     const total = filtrees.length;
@@ -97,7 +95,6 @@ export default function BaremeTab({ lignes, sens, sensLabel, signalCreation }: P
     const peutValider =
         form.reference.trim() !== '' &&
         form.designation.trim() !== '' &&
-        /^\d{2}$/.test(form.nomenclature.trim()) &&
         form.montant_cfa.trim() !== '' &&
         Number.isFinite(Number(form.montant_cfa));
 
@@ -170,7 +167,7 @@ export default function BaremeTab({ lignes, sens, sensLabel, signalCreation }: P
                 placeholder="Rechercher une désignation, une référence…"
                 total={total}
                 unite={['ligne', 'lignes']}
-                largeurMin={1040}
+                largeurMin={940}
                 vide={recherche ? 'Aucune ligne ne correspond à la recherche.' : 'Aucune ligne pour ce sens de trafic.'}
                 page={pageCourante}
                 parPage={PAR_PAGE}
@@ -180,7 +177,6 @@ export default function BaremeTab({ lignes, sens, sensLabel, signalCreation }: P
                     <tr>
                         <Th w={110} first>Référence</Th>
                         <Th>Désignation</Th>
-                        <Th w={110} center>Nomenclature</Th>
                         <Th w={150}>Montant CFA</Th>
                         <Th w={120}>Montant €</Th>
                         <Th w={110}>Statut</Th>
@@ -194,7 +190,6 @@ export default function BaremeTab({ lignes, sens, sensLabel, signalCreation }: P
                             <CodeChip>{l.reference}</CodeChip>
                         </Td>
                         <Td style={{ fontSize: 13, color: '#1A1F2E' }}>{l.designation}</Td>
-                        <Td style={{ textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>{l.nomenclature}</Td>
                         <Td style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: '#1A1F2E' }}>
                             {francs.format(l.montant_cfa)} <span style={{ fontWeight: 400, color: '#8A93A6' }}>FCFA</span>
                         </Td>
@@ -292,17 +287,6 @@ export default function BaremeTab({ lignes, sens, sensLabel, signalCreation }: P
                         erreur={erreurs.designation}
                     />
                     <TextField
-                        label="Nomenclature"
-                        requis
-                        chiffres
-                        maxLength={2}
-                        placeholder="ex. 03"
-                        valeur={form.nomenclature}
-                        onChange={(v) => champ('nomenclature', v)}
-                        erreur={erreurs.nomenclature}
-                        aide="Catégorie de la nomenclature CGC, sur deux chiffres."
-                    />
-                    <TextField
                         label="Montant en francs CFA"
                         requis
                         chiffres
@@ -321,7 +305,7 @@ export default function BaremeTab({ lignes, sens, sensLabel, signalCreation }: P
 }
 
 function vierge(sens: string): Form {
-    return { reference: '', sens, designation: '', nomenclature: '', montant_cfa: '' };
+    return { reference: '', sens, designation: '', montant_cfa: '' };
 }
 
 function depuis(l: BaremeLigneRow): Form {
@@ -329,7 +313,6 @@ function depuis(l: BaremeLigneRow): Form {
         reference: l.reference,
         sens: l.sens,
         designation: l.designation,
-        nomenclature: l.nomenclature,
         montant_cfa: String(l.montant_cfa),
     };
 }

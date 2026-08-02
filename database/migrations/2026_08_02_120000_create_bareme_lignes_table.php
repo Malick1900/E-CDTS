@@ -26,9 +26,6 @@ return new class extends Migration
             $table->string('reference')->unique();
             $table->enum('sens', SensTrafic::values());
             $table->string('designation');
-            // Catégorie de la nomenclature CGC : « 01 » à « 07 ». Chaîne et non
-            // entier, le zéro initial fait partie du code.
-            $table->string('nomenclature', 2);
             $table->decimal('montant_cfa', 12, 2);
             // Une ligne retirée de l'exploitation sans être effacée de la grille
             // — le geste courant, la suppression restant possible.

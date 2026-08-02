@@ -38,7 +38,6 @@ class BaremeController extends Controller
                     'reference' => $ligne->reference,
                     'sens' => $ligne->sens->value,
                     'designation' => $ligne->designation,
-                    'nomenclature' => $ligne->nomenclature,
                     'montant_cfa' => (float) $ligne->montant_cfa,
                     'montant_euro' => $ligne->montantEuro(),
                     'actif' => $ligne->actif,

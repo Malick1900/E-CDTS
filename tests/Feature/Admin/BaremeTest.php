@@ -49,7 +49,6 @@ class BaremeTest extends TestCase
             'reference' => 'EXP30',
             'sens' => SensTrafic::Export->value,
             'designation' => 'MARCHANDISE DE TEST',
-            'nomenclature' => '01',
             'montant_cfa' => 1312,
         ], $remplace);
     }
@@ -181,11 +180,11 @@ class BaremeTest extends TestCase
         $this->assertSame(1, BaremeLigne::count());
     }
 
-    public function test_une_nomenclature_hors_format_est_refusee(): void
+    public function test_un_montant_negatif_est_refuse(): void
     {
         $this->actingAs($this->interne(Profil::Administrateur))
-            ->post(route('admin.bareme.store'), $this->ligne(['nomenclature' => '3']))
-            ->assertSessionHasErrors('nomenclature');
+            ->post(route('admin.bareme.store'), $this->ligne(['montant_cfa' => -1]))
+            ->assertSessionHasErrors('montant_cfa');
     }
 
     public function test_le_montant_change_et_l_euro_suit(): void

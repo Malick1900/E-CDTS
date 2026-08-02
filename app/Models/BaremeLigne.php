@@ -14,7 +14,6 @@ use Illuminate\Support\Carbon;
  * @property string $reference
  * @property SensTrafic $sens
  * @property string $designation
- * @property string $nomenclature
  * @property string $montant_cfa
  * @property bool $actif
  * @property Carbon|null $created_at
@@ -24,7 +23,6 @@ use Illuminate\Support\Carbon;
     'reference',
     'sens',
     'designation',
-    'nomenclature',
     'montant_cfa',
     'actif',
 ])]
