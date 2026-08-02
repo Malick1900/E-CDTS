@@ -20,6 +20,21 @@
 
 ---
 
+## ADR-0035 — Le lien de définition du mot de passe ne va qu'à son titulaire — 2026-08-02
+**Statut :** Acceptée — **complète ADR-0013** (la société crée, le CGC valide) et **ADR-0027** (ouverture du compte titulaire).
+**Contexte :** un compte agent est créé par sa société avec un mot de passe aléatoire de 10 caractères que **personne ne connaît** — il n'est jamais affiché ni transmis. L'agent n'avait donc aucun chemin d'entrée : le courriel de validation le renvoyait vers « Mot de passe oublié », un détour qu'il fallait comprendre seul. Or ce courriel part à **trois destinataires** (l'agent, le titulaire de sa société, l'adresse de contact) : y placer un lien de définition revenait à le distribuer à trois personnes.
+**Décision :**
+- Le courriel de validation porte un **lien de définition du mot de passe**, émis à l'envoi et valable une heure.
+- **Il ne figure que dans la copie de l'intéressé.** La distinction se fait sur le `$notifiable` : les deux autres copies mènent à la page de connexion et se bornent à indiquer que l'agent a reçu son lien.
+- La même règle vaut déjà pour l'ouverture d'un compte titulaire (ADR-0027) : l'agent du CGC qui saisit la fiche ne connaît jamais le mot de passe qu'il ouvre.
+**Alternatives écartées :**
+- *Le même courriel pour tout le monde, lien compris* — écarté : le lien **est** un accès au compte, pas une information. Le titulaire qui l'ouvrirait choisirait le mot de passe de son agent, entrerait dans son compte et y déclarerait sous son identité. La traçabilité des déclarations — ce que le circuit de validation existe pour établir — n'aurait plus de valeur opposable.
+- *Transmettre un mot de passe provisoire* — écarté : un secret qui transite par courriel et par un tiers n'en est plus un.
+- *Ne rien changer et laisser « Mot de passe oublié »* — écarté : le parcours fonctionne mais s'apprend par déduction, et le premier réflexe d'un agent bloqué est d'appeler son titulaire, qui appelle le CGC.
+**Conséquences :**
+- La notification n'est plus la même pour tous ses destinataires. Un test compare les trois copies : c'est cette divergence qu'il protège.
+- Le jeton naît à l'envoi, pas à la décision. Un courriel relevé le lendemain est expiré — d'où le rappel explicite du recours « Mot de passe oublié », qui évite un aller-retour avec le CGC.
+
 ## ADR-0034 — Le barème est tenu en francs ; l'euro en est la lecture — 2026-08-02
 **Statut :** Acceptée (arbitrage du porteur, 2026-08-02).
 **Contexte :** le CGC tient son barème CDTS sur papier — deux volets (export, import), 58 articles référencés `EXP…` / `IMP…`, chacun avec un montant en francs CFA, sa conversion en euros, une remise de 4 % et un « taux appliqué ». Les consignataires devront un jour lire leurs montants dans l'une ou l'autre monnaie. La plateforme n'avait qu'un écran `/admin/bareme` en attente, dont le texte promettait du versionnement de tarifs et une « unité payante ».
