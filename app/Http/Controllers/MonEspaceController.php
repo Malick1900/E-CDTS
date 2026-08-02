@@ -6,6 +6,7 @@ use App\Concerns\BorneASaSociete;
 use App\Enums\StatutValidation;
 use App\Models\Armement;
 use App\Models\Consignataire;
+use App\Models\Navire;
 use App\Models\Port;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -33,6 +34,7 @@ class MonEspaceController extends Controller
         $societe->load(['paysImmatriculation:id,name', 'ports.pays:id,name']);
 
         $armements = $this->armements($societe);
+        $navires = $this->navires($societe);
 
         return Inertia::render('activite/mon-espace', [
             // L'en-tête « Espace de … » vient déjà de la coquille (ADR-0030) ;
@@ -40,11 +42,53 @@ class MonEspaceController extends Controller
             'compteurs' => [
                 'agents' => $societe->agents()->count(),
                 'armements' => count($armements),
+                'navires' => count($navires),
             ],
             'agents' => $this->agents($request, $societe),
             'armements' => $armements,
+            'navires' => $navires,
             'societe' => $this->fiche($societe),
         ]);
+    }
+
+    /**
+     * Les navires des armements que la société représente.
+     *
+     * Rien n'est déduit du nom ni sous-entendu : la plateforme détient ces
+     * fiches, le consignataire est celui qui présentera ces navires au port,
+     * et il doit pouvoir lire ce que l'administration sait d'eux — numéro OMI,
+     * pavillon, type, mode d'exploitation par défaut. C'est sur ces mentions
+     * que le rapprochement du manifeste se fera (ADR-0009) ; les découvrir au
+     * moment d'un écart serait trop tard.
+     *
+     * Le périmètre suit celui des armements représentés : un navire dont
+     * l'armement n'est pas au mandat de la société n'a pas à y figurer.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function navires(Consignataire $societe): array
+    {
+        return array_values(Navire::query()
+            ->whereIn('armement_id', $societe->armements()->pluck('armements.id'))
+            ->with(['pays:id,name', 'typeNavire:id,name', 'armement:id,name,sigle'])
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Navire $navire): array => [
+                'id' => $navire->id,
+                'name' => $navire->name,
+                // Identifiant OMI : unique et immuable, c'est lui qui fait foi
+                // quand deux navires portent le même nom.
+                'imo' => $navire->imo,
+                'pavillon' => $navire->pays?->name,
+                'type' => $navire->typeNavire?->name,
+                'armement' => $navire->armement?->name,
+                'armement_sigle' => $navire->armement?->sigle,
+                // Valeur par défaut du navire, recopiée sur l'escale — c'est
+                // l'escale que la facturation lira, et seul le CGC l'y modifie.
+                'mode_exploitation' => $navire->mode_exploitation_defaut?->value,
+                'actif' => $navire->actif,
+            ])
+            ->all());
     }
 
     /**

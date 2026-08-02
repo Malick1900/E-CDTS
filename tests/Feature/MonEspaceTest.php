@@ -7,6 +7,7 @@ use App\Enums\RoleClient;
 use App\Enums\StatutValidation;
 use App\Models\Armement;
 use App\Models\Consignataire;
+use App\Models\Navire;
 use App\Models\Port;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -111,6 +112,42 @@ class MonEspaceTest extends TestCase
                         'id', 'name', 'sigle', 'navires', 'pays_origine',
                         'pays_immatriculation', 'gerant', 'rccm_nif',
                         'adresse', 'actif',
+                    ])
+                )
+            );
+    }
+
+    /**
+     * L'onglet « Navires » donne la flotte des armements représentés, en
+     * entier — mais elle seule : le navire d'un armement qu'une concurrente
+     * représente n'a rien à faire dans cet écran.
+     */
+    public function test_la_flotte_visible_est_celle_des_armements_representes(): void
+    {
+        $mienne = $this->societe();
+        $mien = Armement::factory()->create();
+        $mienne->armements()->attach($mien);
+        Navire::factory()->count(2)->create(['armement_id' => $mien->id]);
+
+        $autre = $this->societe();
+        $sien = Armement::factory()->create();
+        $autre->armements()->attach($sien);
+        Navire::factory()->count(3)->create(['armement_id' => $sien->id]);
+
+        // Un navire sans armement n'appartient à personne : il ne remonte nulle part.
+        Navire::factory()->create(['armement_id' => null]);
+
+        $this->actingAs($mienne->titulaire)
+            ->get(route('mon-espace'))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('compteurs.navires', 2)
+                ->has('navires', 2, fn (AssertableInertia $navire) => $navire
+                    // La fiche entière : c'est sur ces mentions que le manifeste
+                    // sera rapproché (ADR-0009).
+                    ->hasAll([
+                        'id', 'name', 'imo', 'pavillon', 'type', 'armement',
+                        'armement_sigle', 'mode_exploitation', 'actif',
                     ])
                 )
             );

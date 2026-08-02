@@ -1,3 +1,4 @@
+import type { ModeExploitation } from '@/components/admin/referentiels/types';
 import type {
     AgentStatut,
     ArmementBadge,
@@ -48,6 +49,25 @@ export type MonArmementRow = ArmementBadge & {
     rccm_nif: string | null;
     adresse: string | null;
     /** Un armement désactivé au référentiel ne portera plus d'escale nouvelle. */
+    actif: boolean;
+};
+
+/**
+ * Un navire d'un armement représenté. La fiche entière, telle que la plateforme
+ * la détient : c'est ce navire que la société présentera au port, et c'est sur
+ * ces mentions que le manifeste sera rapproché (ADR-0009).
+ */
+export type MonNavireRow = {
+    id: number;
+    name: string;
+    /** Numéro OMI — l'identifiant qui départage deux navires de même nom. */
+    imo: string | null;
+    pavillon: string | null;
+    type: string | null;
+    armement: string | null;
+    armement_sigle: string | null;
+    /** Valeur par défaut du navire, recopiée sur l'escale à sa création. */
+    mode_exploitation: ModeExploitation | null;
     actif: boolean;
 };
 
