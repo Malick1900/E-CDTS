@@ -258,6 +258,47 @@ class AgentValidationTest extends TestCase
         );
     }
 
+    /**
+     * Le lien de définition du mot de passe est un jeton d'accès au compte :
+     * il n'a rien à faire dans la copie du titulaire ni dans celle du contact
+     * de la société. L'un comme l'autre pourraient sinon entrer dans le compte
+     * de l'agent et déclarer sous son identité.
+     */
+    public function test_only_the_agent_is_sent_the_password_link(): void
+    {
+        NotificationFacade::fake();
+
+        $consignataire = Consignataire::factory()->create(['email' => 'contact@saga-gabon.ga']);
+        $titulaire = $this->agent($consignataire);
+        $titulaire->update(['statut_validation' => StatutValidation::Valide, 'is_active' => true]);
+        $consignataire->titulaire()->associate($titulaire)->save();
+
+        $agent = $this->agent($consignataire);
+
+        $this->actingAs($this->admin())->patch(route('admin.utilisateurs.agents.validation', $agent));
+
+        NotificationFacade::assertSentTo(
+            $agent,
+            CompteAgentValide::class,
+            fn (CompteAgentValide $notification, array $canaux, object $destinataire): bool => str_contains(
+                (string) $notification->toMail($destinataire)->actionUrl,
+                'reset-password',
+            ),
+        );
+
+        // Les deux autres copies mènent à la page de connexion, sans jeton.
+        NotificationFacade::assertSentTo(
+            $titulaire,
+            CompteAgentValide::class,
+            fn (CompteAgentValide $notification, array $canaux, object $destinataire): bool => $notification->toMail($destinataire)->actionUrl === url('/login'),
+        );
+
+        NotificationFacade::assertSentOnDemand(
+            CompteAgentValide::class,
+            fn (CompteAgentValide $notification, array $canaux, object $destinataire): bool => $notification->toMail($destinataire)->actionUrl === url('/login'),
+        );
+    }
+
     public function test_a_refusal_carries_its_reason_to_the_same_people(): void
     {
         NotificationFacade::fake();
