@@ -185,12 +185,13 @@ class NavigationTest extends TestCase
                 ->where('coquille.qualite', $consignataire->name)
             );
 
-        // Un interne du CGC n'est chez personne : ni carte, ni puce.
+        // Un interne du CGC n'est chez personne : pas de carte. Sa puce annonce
+        // son profil, qui lui dit quels écrans lui sont ouverts.
         $this->actingAs($this->interne(Profil::Superviseur))
             ->get(route('dashboard'))
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->where('coquille.contexte', null)
-                ->where('coquille.qualite', null)
+                ->where('coquille.qualite', 'Superviseur')
             );
     }
 

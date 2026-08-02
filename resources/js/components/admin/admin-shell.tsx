@@ -140,8 +140,25 @@ export default function AdminShell({
      * charge des comptes clients.
      */
     const usersAlert = (page.props as { admin?: { agentsAValider?: number } }).admin?.agentsAValider ?? 0;
+    /*
+     * Les modules ouverts à ce compte, filtrés par le serveur comme la
+     * navigation d'activité (ADR-0030) : le rail ne propose pas un écran qui
+     * répondrait 403. Le module courant y figure toujours — on n'y serait pas
+     * arrivé sinon.
+     */
+    const ouverts = (page.props as { admin?: { modules?: AdminModule[] } }).admin
+        ?.modules;
+    const rail = ouverts
+        ? MODULE_ORDER.filter((key) => ouverts.includes(key))
+        : MODULE_ORDER;
     const adminName = user?.name ?? 'Administrateur CGC';
-    const adminRole = 'Administrateur — CGC';
+    /*
+     * Le profil du compte, tel que le serveur le calcule pour les deux
+     * coquilles. Le panneau l'affichait en dur — « Administrateur — CGC » —
+     * donc faux pour un Superviseur, qui n'a pourtant pas les mêmes écrans.
+     */
+    const adminRole = (page.props as { coquille?: { qualite?: string | null } })
+        .coquille?.qualite;
     const current = MODULES[module];
 
     // Menus de l'en-tête : cloche notifications et puce utilisateur (exclusifs).
@@ -202,7 +219,7 @@ export default function AdminShell({
                     </div>
 
                     <nav style={{ flex: '1 1 auto', minHeight: 0, overflow: 'auto', padding: '12px 12px', display: 'flex', flexDirection: 'column', gap: 3 }}>
-                        {MODULE_ORDER.map((key) => {
+                        {rail.map((key) => {
                             const meta = MODULES[key];
                             const active = key === module;
 
@@ -299,7 +316,7 @@ export default function AdminShell({
                                         <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#1D3E9C', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12.5, fontWeight: 700, flex: 'none' }}>{initials(adminName)}</div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-start' }}>
                                             <span style={{ fontSize: 13, fontWeight: 600, color: '#1A1F2E', lineHeight: 1.2, whiteSpace: 'nowrap' }}>{adminName}</span>
-                                            <span style={{ fontSize: 11, color: '#5A6478', lineHeight: 1.2, whiteSpace: 'nowrap' }}>{adminRole}</span>
+                                            {adminRole ? <span style={{ fontSize: 11, color: '#5A6478', lineHeight: 1.2, whiteSpace: 'nowrap' }}>{adminRole}</span> : null}
                                         </div>
                                         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flex: 'none', color: '#8A93A6', transform: openMenu === 'user' ? 'rotate(180deg)' : undefined, transition: 'transform .15s' }}>
                                             <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -325,7 +342,7 @@ export default function AdminShell({
                                         <div style={{ position: 'absolute', top: 44, right: 0, width: 224, background: '#fff', border: '1px solid #D8DEE9', borderRadius: 11, boxShadow: '0 12px 32px rgba(20,31,46,.16)', zIndex: 40, overflow: 'hidden', padding: 5 }}>
                                             <div style={{ padding: '8px 10px 9px', borderBottom: '1px solid #EDF0F5', marginBottom: 4 }}>
                                                 <div style={{ fontSize: 12.5, fontWeight: 700, color: '#1A1F2E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{adminName}</div>
-                                                <div style={{ fontSize: 11, color: '#5A6478' }}>{adminRole}</div>
+                                                {adminRole ? <div style={{ fontSize: 11, color: '#5A6478' }}>{adminRole}</div> : null}
                                             </div>
                                             <Link
                                                 href={profileEdit()}

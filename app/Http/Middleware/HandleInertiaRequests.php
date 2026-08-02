@@ -48,6 +48,7 @@ class HandleInertiaRequests extends Middleware
             'coquille' => fn (): ?array => $this->coquille($request->user()),
             'admin' => [
                 'agentsAValider' => fn (): int => $this->agentsAValider($request),
+                'modules' => fn (): array => $this->modulesAdmin($request->user()),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
@@ -127,17 +128,66 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * Le sous-titre de la puce utilisateur : la société pour un compte client,
-     * rien pour un interne CGC.
+     * Les modules du rail d'administration ouverts à ce compte.
      *
-     * Un client a besoin de lire au nom de qui il déclare — il peut avoir un
-     * compte chez plusieurs consignataires. Un interne, lui, est chez lui : son
-     * profil n'apprend rien à celui qui le porte, et l'écrire sous son nom ne
-     * ferait qu'exposer l'organisation du CGC à quiconque regarde l'écran.
+     * Même raison que la navigation d'activité (ADR-0030) : le rail doit dire la
+     * vérité. Un Superviseur n'a pas le barème — lui laisser l'entrée, c'est lui
+     * promettre un écran qui répondra 403.
+     *
+     * Calculé par `can()` et non depuis la liste des permissions partagée : le
+     * super-admin n'en porte aucune explicitement, il outrepasse via Gate::before.
+     *
+     * @return list<string>
+     */
+    private function modulesAdmin(?User $user): array
+    {
+        if (! $user) {
+            return [];
+        }
+
+        $modules = [
+            'users' => Permission::UtilisateursGerer,
+            'ref' => Permission::ReferentielsGerer,
+            'bareme' => Permission::BaremeModifier,
+        ];
+
+        $ouverts = [];
+
+        foreach ($modules as $module => $permission) {
+            if ($user->can($permission->value)) {
+                $ouverts[] = $module;
+            }
+        }
+
+        // Le journal d'audit n'a pas encore de permission dédiée ni d'écran
+        // réel : il reste visible pour tous ceux qui atteignent le panneau.
+        $ouverts[] = 'audit';
+
+        return $ouverts;
+    }
+
+    /**
+     * Le sous-titre de la puce utilisateur : la société pour un compte client,
+     * le profil pour un interne CGC.
+     *
+     * Les deux populations n'ont pas besoin de la même chose. Un client lit au
+     * nom de quelle société il déclare — il peut avoir un compte chez plusieurs
+     * consignataires. Un interne lit ce qu'il a le droit de faire : sur une
+     * plateforme où les profils n'ouvrent pas les mêmes écrans, savoir qu'on est
+     * Consultant et non Superviseur explique ce qu'on ne voit pas.
+     *
+     * Le premier rôle suffit : un compte interne en cumule rarement, et c'est
+     * une indication, pas une habilitation.
      */
     private function qualite(User $user): ?string
     {
-        return $user->consignataire?->name;
+        if ($societe = $user->consignataire) {
+            return $societe->name;
+        }
+
+        $profil = $user->getRoleNames()->first();
+
+        return is_string($profil) ? $profil : null;
     }
 
     /**
