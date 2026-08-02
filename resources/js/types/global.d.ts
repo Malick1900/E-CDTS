@@ -12,7 +12,10 @@ declare module 'react' {
  * Elle n'est pas conservée dans l'historique du navigateur : elle vaut pour la
  * réponse en cours, puis disparaît.
  */
-export type FlashToast = { type: 'success' | 'error' | 'info'; message: string };
+export type FlashToast = {
+    type: 'success' | 'error' | 'info';
+    message: string;
+};
 
 declare module '@inertiajs/core' {
     export interface InertiaConfig {

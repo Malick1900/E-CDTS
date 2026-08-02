@@ -54,33 +54,89 @@ export default function TableCard({
     return (
         <div style={{ padding: '18px 26px 26px' }}>
             <div style={card}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid #E7EBF2', background: '#FBFCFE', flexWrap: 'wrap' }}>
+                <div
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        padding: '12px 16px',
+                        borderBottom: '1px solid #E7EBF2',
+                        background: '#FBFCFE',
+                        flexWrap: 'wrap',
+                    }}
+                >
                     <div style={{ position: 'relative', flex: 'none' }}>
                         <SearchIcon />
-                        <input type="search" value={recherche} onChange={(e) => onRecherche(e.target.value)} placeholder={placeholder} aria-label={placeholder} style={searchInput} />
+                        <input
+                            type="search"
+                            value={recherche}
+                            onChange={(e) => onRecherche(e.target.value)}
+                            placeholder={placeholder}
+                            aria-label={placeholder}
+                            style={searchInput}
+                        />
                     </div>
                     <div style={{ flex: 1 }} />
                     {apercu}
-                    <span style={{ fontSize: 12, color: '#8A93A6', fontVariantNumeric: 'tabular-nums' }}>
+                    <span
+                        style={{
+                            fontSize: 12,
+                            color: '#8A93A6',
+                            fontVariantNumeric: 'tabular-nums',
+                        }}
+                    >
                         {total} {total > 1 ? unite[1] : unite[0]}
                     </span>
                 </div>
 
                 {total > 0 ? (
                     <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', minWidth: largeurMin, borderCollapse: 'separate', borderSpacing: 0 }}>
+                        <table
+                            style={{
+                                width: '100%',
+                                minWidth: largeurMin,
+                                borderCollapse: 'separate',
+                                borderSpacing: 0,
+                            }}
+                        >
                             <thead>{entete}</thead>
                             <tbody>{children}</tbody>
                         </table>
                     </div>
                 ) : (
-                    <div style={{ padding: '44px 20px', textAlign: 'center', color: '#8A93A6', fontSize: 13 }}>{vide}</div>
+                    <div
+                        style={{
+                            padding: '44px 20px',
+                            textAlign: 'center',
+                            color: '#8A93A6',
+                            fontSize: 13,
+                        }}
+                    >
+                        {vide}
+                    </div>
                 )}
 
-                <Pagination total={total} page={page} parPage={parPage} onPage={onPage} />
+                <Pagination
+                    total={total}
+                    page={page}
+                    parPage={parPage}
+                    onPage={onPage}
+                />
             </div>
 
-            {note && <p style={{ margin: '12px 2px 0', fontSize: 11.5, color: '#8A93A6', lineHeight: 1.5, maxWidth: 900 }}>{note}</p>}
+            {note && (
+                <p
+                    style={{
+                        margin: '12px 2px 0',
+                        fontSize: 11.5,
+                        color: '#8A93A6',
+                        lineHeight: 1.5,
+                        maxWidth: 900,
+                    }}
+                >
+                    {note}
+                </p>
+            )}
         </div>
     );
 }

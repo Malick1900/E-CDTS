@@ -2,7 +2,14 @@ import ConfirmDialog from '@/components/admin/confirm-dialog';
 import { Drawer, TextField } from '@/components/admin/drawer';
 import TableCard from '@/components/admin/table-card';
 import { PAR_PAGE } from '@/components/admin/types';
-import { CodeChip, RowActions, StatutBadge, Td, Th, Vide } from '@/components/admin/ui';
+import {
+    CodeChip,
+    RowActions,
+    StatutBadge,
+    Td,
+    Th,
+    Vide,
+} from '@/components/admin/ui';
 import { useCrudTab } from '@/components/admin/use-crud-tab';
 import type { PaysRow } from './types';
 
@@ -15,7 +22,8 @@ type Form = { code: string; name: string };
 
 const VIERGE: Form = { code: '', name: '' };
 
-const filtre = (p: PaysRow, q: string) => p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q);
+const filtre = (p: PaysRow, q: string) =>
+    p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q);
 
 const depuis = (p: PaysRow): Form => ({ code: p.code, name: p.name });
 
@@ -33,15 +41,34 @@ const bascule = (p: PaysRow, prochain: boolean) => ({
 /** « 2 navires · 1 port », ou un tiret si le pays n'est encore utilisé nulle part. */
 function utilisations(p: PaysRow) {
     const parts = [
-        p.navires_count > 0 ? `${p.navires_count} navire${p.navires_count > 1 ? 's' : ''}` : null,
-        p.ports_count > 0 ? `${p.ports_count} port${p.ports_count > 1 ? 's' : ''}` : null,
+        p.navires_count > 0
+            ? `${p.navires_count} navire${p.navires_count > 1 ? 's' : ''}`
+            : null,
+        p.ports_count > 0
+            ? `${p.ports_count} port${p.ports_count > 1 ? 's' : ''}`
+            : null,
     ].filter(Boolean);
 
     return parts.length === 0 ? <Vide /> : parts.join(' · ');
 }
 
-export default function PaysTab({ pays, signalCreation }: { pays: PaysRow[]; signalCreation: number }) {
-    const ref = useCrudTab({ base: '/admin/referentiels/pays', lignes: pays, filtre, vierge: VIERGE, depuis, valide, bascule, signalCreation });
+export default function PaysTab({
+    pays,
+    signalCreation,
+}: {
+    pays: PaysRow[];
+    signalCreation: number;
+}) {
+    const ref = useCrudTab({
+        base: '/admin/referentiels/pays',
+        lignes: pays,
+        filtre,
+        vierge: VIERGE,
+        depuis,
+        valide,
+        bascule,
+        signalCreation,
+    });
 
     return (
         <>
@@ -52,18 +79,26 @@ export default function PaysTab({ pays, signalCreation }: { pays: PaysRow[]; sig
                 total={ref.total}
                 unite={['pays', 'pays']}
                 largeurMin={720}
-                vide={ref.recherche ? 'Aucun pays ne correspond à la recherche.' : 'Aucun pays — ajoutez-en un avec « Nouveau pays ».'}
+                vide={
+                    ref.recherche
+                        ? 'Aucun pays ne correspond à la recherche.'
+                        : 'Aucun pays — ajoutez-en un avec « Nouveau pays ».'
+                }
                 page={ref.page}
                 parPage={PAR_PAGE}
                 onPage={ref.setPage}
                 note="Un pays peut être désactivé — il disparaît alors de la saisie — mais jamais supprimé : les navires, ports et armements déjà rattachés restent intacts."
                 entete={
                     <tr>
-                        <Th w={90} first>Code</Th>
+                        <Th w={90} first>
+                            Code
+                        </Th>
                         <Th>Nom du pays</Th>
                         <Th w={170}>Utilisations</Th>
                         <Th w={120}>Statut</Th>
-                        <Th w={104} center>Actions</Th>
+                        <Th w={104} center>
+                            Actions
+                        </Th>
                     </tr>
                 }
             >
@@ -72,28 +107,66 @@ export default function PaysTab({ pays, signalCreation }: { pays: PaysRow[]; sig
                         <Td style={{ padding: '10px 16px' }}>
                             <CodeChip>{p.code}</CodeChip>
                         </Td>
-                        <Td style={{ fontSize: 13, color: '#1A1F2E' }}>{p.name}</Td>
-                        <Td style={{ fontVariantNumeric: 'tabular-nums', color: '#5A6478' }}>{utilisations(p)}</Td>
+                        <Td style={{ fontSize: 13, color: '#1A1F2E' }}>
+                            {p.name}
+                        </Td>
+                        <Td
+                            style={{
+                                fontVariantNumeric: 'tabular-nums',
+                                color: '#5A6478',
+                            }}
+                        >
+                            {utilisations(p)}
+                        </Td>
                         <Td>
                             <StatutBadge actif={p.actif} />
                         </Td>
-                        <RowActions actif={p.actif} onEdit={() => ref.ouvrirEdition(p)} onToggle={() => ref.demanderBascule(p)} />
+                        <RowActions
+                            actif={p.actif}
+                            onEdit={() => ref.ouvrirEdition(p)}
+                            onToggle={() => ref.demanderBascule(p)}
+                        />
                     </tr>
                 ))}
             </TableCard>
 
             {ref.mode && (
                 <Drawer
-                    titre={ref.mode === 'creation' ? 'Nouveau pays' : 'Modifier le pays'}
+                    titre={
+                        ref.mode === 'creation'
+                            ? 'Nouveau pays'
+                            : 'Modifier le pays'
+                    }
                     soustitre="Référentiel Pays — code ISO 3166-1 alpha-2."
-                    valider={ref.mode === 'creation' ? 'Enregistrer' : 'Mettre à jour'}
+                    valider={
+                        ref.mode === 'creation'
+                            ? 'Enregistrer'
+                            : 'Mettre à jour'
+                    }
                     peutValider={ref.peutValider}
                     enCours={ref.enCours}
                     onFermer={ref.fermer}
                     onValider={ref.valider}
                 >
-                    <TextField label="Code ISO" requis majuscules maxLength={2} placeholder="ex. GA" valeur={ref.form.code} onChange={(v) => ref.champ('code', v)} erreur={ref.erreurs.code} aide="Deux lettres, norme ISO 3166-1 alpha-2." />
-                    <TextField label="Nom du pays" requis placeholder="ex. Gabon" valeur={ref.form.name} onChange={(v) => ref.champ('name', v)} erreur={ref.erreurs.name} />
+                    <TextField
+                        label="Code ISO"
+                        requis
+                        majuscules
+                        maxLength={2}
+                        placeholder="ex. GA"
+                        valeur={ref.form.code}
+                        onChange={(v) => ref.champ('code', v)}
+                        erreur={ref.erreurs.code}
+                        aide="Deux lettres, norme ISO 3166-1 alpha-2."
+                    />
+                    <TextField
+                        label="Nom du pays"
+                        requis
+                        placeholder="ex. Gabon"
+                        valeur={ref.form.name}
+                        onChange={(v) => ref.champ('name', v)}
+                        erreur={ref.erreurs.name}
+                    />
                 </Drawer>
             )}
 

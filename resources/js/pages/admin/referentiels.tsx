@@ -5,7 +5,13 @@ import ArmementsTab from '@/components/admin/referentiels/armements-tab';
 import NaviresTab from '@/components/admin/referentiels/navires-tab';
 import PaysTab from '@/components/admin/referentiels/pays-tab';
 import PortsTab from '@/components/admin/referentiels/ports-tab';
-import type { ArmementRow, NavireRow, PaysRow, PortRow, TypeNavireRow } from '@/components/admin/referentiels/types';
+import type {
+    ArmementRow,
+    NavireRow,
+    PaysRow,
+    PortRow,
+    TypeNavireRow,
+} from '@/components/admin/referentiels/types';
 import TypesNavireTab from '@/components/admin/referentiels/types-navire-tab';
 import Toast from '@/components/admin/toast';
 
@@ -36,7 +42,13 @@ const LIBELLE_AJOUT: Record<Onglet, string> = {
     pays: 'Nouveau pays',
 };
 
-export default function Referentiels({ typesNavire = [], pays = [], ports = [], armements = [], navires = [] }: Props) {
+export default function Referentiels({
+    typesNavire = [],
+    pays = [],
+    ports = [],
+    armements = [],
+    navires = [],
+}: Props) {
     const [onglet, setOnglet] = useState<Onglet>('navires');
 
     /*
@@ -54,9 +66,27 @@ export default function Referentiels({ typesNavire = [], pays = [], ports = [], 
 
     // Listes déroulantes : on ne propose que les lignes actives — une entrée
     // désactivée disparaît de la saisie sans casser les rattachements existants.
-    const optionsPays = useMemo(() => pays.filter((p) => p.actif).map((p) => ({ value: p.id, label: p.name })), [pays]);
-    const optionsTypes = useMemo(() => typesNavire.filter((t) => t.actif).map((t) => ({ value: t.id, label: `${t.code} — ${t.name}` })), [typesNavire]);
-    const optionsArmements = useMemo(() => armements.filter((a) => a.actif).map((a) => ({ value: a.id, label: a.name })), [armements]);
+    const optionsPays = useMemo(
+        () =>
+            pays
+                .filter((p) => p.actif)
+                .map((p) => ({ value: p.id, label: p.name })),
+        [pays],
+    );
+    const optionsTypes = useMemo(
+        () =>
+            typesNavire
+                .filter((t) => t.actif)
+                .map((t) => ({ value: t.id, label: `${t.code} — ${t.name}` })),
+        [typesNavire],
+    );
+    const optionsArmements = useMemo(
+        () =>
+            armements
+                .filter((a) => a.actif)
+                .map((a) => ({ value: a.id, label: a.name })),
+        [armements],
+    );
 
     return (
         <>
@@ -65,24 +95,60 @@ export default function Referentiels({ typesNavire = [], pays = [], ports = [], 
                 module="ref"
                 title="Référentiels"
                 subtitle="Données maîtres du CGC (écriture réservée) — navires, armements, ports, types de navire et pays."
-                primary={{ label: LIBELLE_AJOUT[onglet], onClick: () => setSignalCreation((n) => n + 1) }}
+                primary={{
+                    label: LIBELLE_AJOUT[onglet],
+                    onClick: () => setSignalCreation((n) => n + 1),
+                }}
                 tabs={[
                     { key: 'navires', label: 'Navires', badge: navires.length },
-                    { key: 'armements', label: 'Armements', badge: armements.length },
+                    {
+                        key: 'armements',
+                        label: 'Armements',
+                        badge: armements.length,
+                    },
                     { key: 'ports', label: 'Ports', badge: ports.length },
-                    { key: 'types', label: 'Types de navire', badge: typesNavire.length },
+                    {
+                        key: 'types',
+                        label: 'Types de navire',
+                        badge: typesNavire.length,
+                    },
                     { key: 'pays', label: 'Pays', badge: pays.length },
                 ]}
                 activeTab={onglet}
                 onTab={changerOnglet}
             >
                 {onglet === 'navires' && (
-                    <NaviresTab navires={navires} optionsTypes={optionsTypes} optionsArmements={optionsArmements} optionsPays={optionsPays} signalCreation={signalCreation} />
+                    <NaviresTab
+                        navires={navires}
+                        optionsTypes={optionsTypes}
+                        optionsArmements={optionsArmements}
+                        optionsPays={optionsPays}
+                        signalCreation={signalCreation}
+                    />
                 )}
-                {onglet === 'armements' && <ArmementsTab armements={armements} optionsPays={optionsPays} signalCreation={signalCreation} />}
-                {onglet === 'ports' && <PortsTab ports={ports} optionsPays={optionsPays} signalCreation={signalCreation} />}
-                {onglet === 'types' && <TypesNavireTab typesNavire={typesNavire} signalCreation={signalCreation} />}
-                {onglet === 'pays' && <PaysTab pays={pays} signalCreation={signalCreation} />}
+                {onglet === 'armements' && (
+                    <ArmementsTab
+                        armements={armements}
+                        optionsPays={optionsPays}
+                        signalCreation={signalCreation}
+                    />
+                )}
+                {onglet === 'ports' && (
+                    <PortsTab
+                        ports={ports}
+                        optionsPays={optionsPays}
+                        signalCreation={signalCreation}
+                    />
+                )}
+                {onglet === 'types' && (
+                    <TypesNavireTab
+                        typesNavire={typesNavire}
+                        signalCreation={signalCreation}
+                    />
+                )}
+                {onglet === 'pays' && (
+                    <PaysTab pays={pays} signalCreation={signalCreation} />
+                )}
 
                 <Toast />
             </AdminShell>

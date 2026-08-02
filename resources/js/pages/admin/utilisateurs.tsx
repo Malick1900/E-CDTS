@@ -7,7 +7,12 @@ import ConsignatairesTab from '@/components/admin/users/consignataires-tab';
 import InternesTab from '@/components/admin/users/internes-tab';
 import type { UserRow } from '@/components/admin/users/internes-tab';
 import RolesTab from '@/components/admin/users/roles-tab';
-import type { AgentRow, ConsignataireRow, GroupePermissions, RoleMatriceRow } from '@/components/admin/users/types';
+import type {
+    AgentRow,
+    ConsignataireRow,
+    GroupePermissions,
+    RoleMatriceRow,
+} from '@/components/admin/users/types';
 
 /*
  * Module « Utilisateurs & habilitations ».
@@ -49,7 +54,8 @@ const LIBELLE_AJOUT: Partial<Record<TabKey, string>> = {
 };
 
 /** Garde de l'onglet demandé par l'URL : une clé inconnue retombe sur le défaut. */
-const estOnglet = (cle: string | null): cle is TabKey => cle !== null && cle in TAB_LABELS;
+const estOnglet = (cle: string | null): cle is TabKey =>
+    cle !== null && cle in TAB_LABELS;
 
 export default function Utilisateurs({
     users,
@@ -72,7 +78,9 @@ export default function Utilisateurs({
     const demande = params.get('tab');
     const rechercheInitiale = params.get('q') ?? '';
 
-    const [tab, setTab] = useState<TabKey>(estOnglet(demande) ? demande : 'internes');
+    const [tab, setTab] = useState<TabKey>(
+        estOnglet(demande) ? demande : 'internes',
+    );
 
     /*
      * Le bouton « Ajouter » vit dans l'AdminShell, le tiroir vit dans l'onglet :
@@ -89,7 +97,10 @@ export default function Utilisateurs({
     /* Le volet client est consultable par tout gestionnaire d'utilisateurs, mais
      * seul l'Administrateur y écrit : sans ce retrait, le Superviseur verrait un
      * bouton qui ne mène qu'à un refus (ADR-0025). */
-    const libelleAjout = tab === 'consignataires' && !peutGererClients ? undefined : LIBELLE_AJOUT[tab];
+    const libelleAjout =
+        tab === 'consignataires' && !peutGererClients
+            ? undefined
+            : LIBELLE_AJOUT[tab];
 
     return (
         <>
@@ -99,21 +110,43 @@ export default function Utilisateurs({
                 title="Utilisateurs & habilitations"
                 subtitle="Comptes internes du CGC, sociétés consignataires et agents — habilitations par rôles cumulables (RBAC)."
                 crumbSub={TAB_LABELS[tab]}
-                primary={libelleAjout ? { label: libelleAjout, onClick: () => setSignalCreation((n) => n + 1) } : undefined}
+                primary={
+                    libelleAjout
+                        ? {
+                              label: libelleAjout,
+                              onClick: () => setSignalCreation((n) => n + 1),
+                          }
+                        : undefined
+                }
                 tabs={[
                     { key: 'internes', label: TAB_LABELS.internes },
-                    { key: 'consignataires', label: TAB_LABELS.consignataires, badge: consignataires.length },
+                    {
+                        key: 'consignataires',
+                        label: TAB_LABELS.consignataires,
+                        badge: consignataires.length,
+                    },
                     // Le badge d'onglet compte les demandes en attente, pas les
                     // agents : c'est ce qui appelle une action du CGC.
-                    { key: 'agents', label: TAB_LABELS.agents, badge: agents.filter((a) => a.statut === 'en_attente').length },
+                    {
+                        key: 'agents',
+                        label: TAB_LABELS.agents,
+                        badge: agents.filter((a) => a.statut === 'en_attente')
+                            .length,
+                    },
                     // Pas de badge : une matrice ne compte pas d'actions à mener.
-                    ...(matriceRoles ? [{ key: 'roles', label: TAB_LABELS.roles }] : []),
+                    ...(matriceRoles
+                        ? [{ key: 'roles', label: TAB_LABELS.roles }]
+                        : []),
                 ]}
                 activeTab={tab}
                 onTab={changerOnglet}
             >
                 {tab === 'internes' ? (
-                    <InternesTab users={users} assignableRoles={assignableRoles} creatingSignal={signalCreation} />
+                    <InternesTab
+                        users={users}
+                        assignableRoles={assignableRoles}
+                        creatingSignal={signalCreation}
+                    />
                 ) : null}
                 {tab === 'consignataires' ? (
                     <ConsignatairesTab
@@ -125,8 +158,19 @@ export default function Utilisateurs({
                         peutGerer={peutGererClients}
                     />
                 ) : null}
-                {tab === 'agents' ? <AgentsTab agents={agents} peutGerer={peutGererClients} rechercheInitiale={rechercheInitiale} /> : null}
-                {tab === 'roles' && matriceRoles ? <RolesTab roles={matriceRoles} catalogue={cataloguePermissions} /> : null}
+                {tab === 'agents' ? (
+                    <AgentsTab
+                        agents={agents}
+                        peutGerer={peutGererClients}
+                        rechercheInitiale={rechercheInitiale}
+                    />
+                ) : null}
+                {tab === 'roles' && matriceRoles ? (
+                    <RolesTab
+                        roles={matriceRoles}
+                        catalogue={cataloguePermissions}
+                    />
+                ) : null}
             </AdminShell>
         </>
     );

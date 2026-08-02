@@ -29,7 +29,10 @@ export default function Bareme({ lignes = [], sens = [] }: Props) {
         setSignalCreation(0);
     };
 
-    const parSens = useMemo(() => lignes.filter((l) => l.sens === volet), [lignes, volet]);
+    const parSens = useMemo(
+        () => lignes.filter((l) => l.sens === volet),
+        [lignes, volet],
+    );
     const libelle = sens.find((s) => s.value === volet)?.label ?? '';
 
     return (
@@ -39,7 +42,10 @@ export default function Bareme({ lignes = [], sens = [] }: Props) {
                 module="bareme"
                 title="Barème"
                 subtitle="Grille tarifaire CDTS en vigueur — montants en francs CFA, convertis en euros."
-                primary={{ label: 'Nouvelle ligne', onClick: () => setSignalCreation((n) => n + 1) }}
+                primary={{
+                    label: 'Nouvelle ligne',
+                    onClick: () => setSignalCreation((n) => n + 1),
+                }}
                 tabs={sens.map((s) => ({
                     key: s.value,
                     label: s.label,
@@ -48,7 +54,12 @@ export default function Bareme({ lignes = [], sens = [] }: Props) {
                 activeTab={volet}
                 onTab={changerVolet}
             >
-                <BaremeTab lignes={parSens} sens={volet} sensLabel={libelle} signalCreation={signalCreation} />
+                <BaremeTab
+                    lignes={parSens}
+                    sens={volet}
+                    sensLabel={libelle}
+                    signalCreation={signalCreation}
+                />
 
                 <Toast />
             </AdminShell>

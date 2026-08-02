@@ -5,7 +5,15 @@ import type { ConfirmEtat } from '@/components/admin/confirm-dialog';
 import { Drawer, Field, TextField } from '@/components/admin/drawer';
 import TableCard from '@/components/admin/table-card';
 import { PAR_PAGE } from '@/components/admin/types';
-import { CodeChip, fieldSelect, iconBtn, PowerIcon, StatutBadge, Td, Th } from '@/components/admin/ui';
+import {
+    CodeChip,
+    fieldSelect,
+    iconBtn,
+    PowerIcon,
+    StatutBadge,
+    Td,
+    Th,
+} from '@/components/admin/ui';
 
 /*
  * Le barème CDTS — un volet par sens de trafic (ADR-0034).
@@ -37,8 +45,14 @@ type Form = {
     montant_cfa: string;
 };
 
-const francs = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const euros = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
+const francs = new Intl.NumberFormat('fr-FR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+});
+const euros = new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
+});
 
 type Props = {
     lignes: BaremeLigneRow[];
@@ -48,7 +62,12 @@ type Props = {
     signalCreation: number;
 };
 
-export default function BaremeTab({ lignes, sens, sensLabel, signalCreation }: Props) {
+export default function BaremeTab({
+    lignes,
+    sens,
+    sensLabel,
+    signalCreation,
+}: Props) {
     const [recherche, setRecherche] = useState('');
     const [page, setPage] = useState(1);
 
@@ -80,17 +99,29 @@ export default function BaremeTab({ lignes, sens, sensLabel, signalCreation }: P
 
         return q === ''
             ? lignes
-            : lignes.filter((l) => l.designation.toLowerCase().includes(q) || l.reference.toLowerCase().includes(q));
+            : lignes.filter(
+                  (l) =>
+                      l.designation.toLowerCase().includes(q) ||
+                      l.reference.toLowerCase().includes(q),
+              );
     }, [lignes, recherche]);
 
     const total = filtrees.length;
-    const pageCourante = Math.min(page, Math.max(1, Math.ceil(total / PAR_PAGE)));
+    const pageCourante = Math.min(
+        page,
+        Math.max(1, Math.ceil(total / PAR_PAGE)),
+    );
     const lignesPage = useMemo(
-        () => filtrees.slice((pageCourante - 1) * PAR_PAGE, pageCourante * PAR_PAGE),
+        () =>
+            filtrees.slice(
+                (pageCourante - 1) * PAR_PAGE,
+                pageCourante * PAR_PAGE,
+            ),
         [filtrees, pageCourante],
     );
 
-    const champ = (cle: keyof Form, valeur: string) => setForm((precedent) => ({ ...precedent, [cle]: valeur }));
+    const champ = (cle: keyof Form, valeur: string) =>
+        setForm((precedent) => ({ ...precedent, [cle]: valeur }));
 
     const peutValider =
         form.reference.trim() !== '' &&
@@ -126,7 +157,9 @@ export default function BaremeTab({ lignes, sens, sensLabel, signalCreation }: P
         const prochain = !ligne.actif;
 
         setConfirm({
-            titre: prochain ? 'Réactiver cette ligne ?' : 'Désactiver cette ligne ?',
+            titre: prochain
+                ? 'Réactiver cette ligne ?'
+                : 'Désactiver cette ligne ?',
             corps: prochain
                 ? 'La ligne redevient tarifable et réapparaît dans l’exploitation.'
                 : 'La ligne reste dans la grille mais n’est plus proposée à l’exploitation. Elle se réactive à tout moment.',
@@ -136,7 +169,11 @@ export default function BaremeTab({ lignes, sens, sensLabel, signalCreation }: P
             danger: !prochain,
             onOk: () => {
                 setConfirm(null);
-                router.patch(`/admin/bareme/${ligne.id}/activation`, {}, { preserveScroll: true, preserveState: true });
+                router.patch(
+                    `/admin/bareme/${ligne.id}/activation`,
+                    {},
+                    { preserveScroll: true, preserveState: true },
+                );
             },
         });
     };
@@ -151,7 +188,10 @@ export default function BaremeTab({ lignes, sens, sensLabel, signalCreation }: P
             danger: true,
             onOk: () => {
                 setConfirm(null);
-                router.delete(`/admin/bareme/${ligne.id}`, { preserveScroll: true, preserveState: true });
+                router.delete(`/admin/bareme/${ligne.id}`, {
+                    preserveScroll: true,
+                    preserveState: true,
+                });
             },
         });
     };
@@ -168,19 +208,27 @@ export default function BaremeTab({ lignes, sens, sensLabel, signalCreation }: P
                 total={total}
                 unite={['ligne', 'lignes']}
                 largeurMin={940}
-                vide={recherche ? 'Aucune ligne ne correspond à la recherche.' : 'Aucune ligne pour ce sens de trafic.'}
+                vide={
+                    recherche
+                        ? 'Aucune ligne ne correspond à la recherche.'
+                        : 'Aucune ligne pour ce sens de trafic.'
+                }
                 page={pageCourante}
                 parPage={PAR_PAGE}
                 onPage={setPage}
                 note="Les montants sont ceux du barème CDTS en vigueur. Le franc CFA est la valeur de référence ; l'euro en est la conversion et ne se saisit pas. Une ligne désactivée reste dans la grille mais n'est plus proposée à l'exploitation ; la supprimer, en revanche, l'efface définitivement. Les remises et taux appliqués ne sont pas gérés ici."
                 entete={
                     <tr>
-                        <Th w={110} first>Référence</Th>
+                        <Th w={110} first>
+                            Référence
+                        </Th>
                         <Th>Désignation</Th>
                         <Th w={150}>Montant CFA</Th>
                         <Th w={120}>Montant €</Th>
                         <Th w={110}>Statut</Th>
-                        <Th w={132} center>Actions</Th>
+                        <Th w={132} center>
+                            Actions
+                        </Th>
                     </tr>
                 }
             >
@@ -189,16 +237,41 @@ export default function BaremeTab({ lignes, sens, sensLabel, signalCreation }: P
                         <Td style={{ padding: '10px 16px' }}>
                             <CodeChip>{l.reference}</CodeChip>
                         </Td>
-                        <Td style={{ fontSize: 13, color: '#1A1F2E' }}>{l.designation}</Td>
-                        <Td style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: '#1A1F2E' }}>
-                            {francs.format(l.montant_cfa)} <span style={{ fontWeight: 400, color: '#8A93A6' }}>FCFA</span>
+                        <Td style={{ fontSize: 13, color: '#1A1F2E' }}>
+                            {l.designation}
                         </Td>
-                        <Td style={{ fontVariantNumeric: 'tabular-nums', color: '#3A4356' }}>{euros.format(l.montant_euro)}</Td>
+                        <Td
+                            style={{
+                                fontVariantNumeric: 'tabular-nums',
+                                fontWeight: 700,
+                                color: '#1A1F2E',
+                            }}
+                        >
+                            {francs.format(l.montant_cfa)}{' '}
+                            <span style={{ fontWeight: 400, color: '#8A93A6' }}>
+                                FCFA
+                            </span>
+                        </Td>
+                        <Td
+                            style={{
+                                fontVariantNumeric: 'tabular-nums',
+                                color: '#3A4356',
+                            }}
+                        >
+                            {euros.format(l.montant_euro)}
+                        </Td>
                         <Td>
                             <StatutBadge actif={l.actif} />
                         </Td>
                         <Td>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: 6,
+                                }}
+                            >
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -211,8 +284,18 @@ export default function BaremeTab({ lignes, sens, sensLabel, signalCreation }: P
                                     className="ea-icon-btn"
                                     style={iconBtn}
                                 >
-                                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                                        <path d="M11.5 2.5l2 2L6 12l-2.5.5L4 10l7.5-7.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+                                    <svg
+                                        width="14"
+                                        height="14"
+                                        viewBox="0 0 16 16"
+                                        fill="none"
+                                    >
+                                        <path
+                                            d="M11.5 2.5l2 2L6 12l-2.5.5L4 10l7.5-7.5z"
+                                            stroke="currentColor"
+                                            strokeWidth="1.3"
+                                            strokeLinejoin="round"
+                                        />
                                     </svg>
                                 </button>
                                 <button
@@ -220,7 +303,10 @@ export default function BaremeTab({ lignes, sens, sensLabel, signalCreation }: P
                                     onClick={() => demanderBascule(l)}
                                     title={l.actif ? 'Désactiver' : 'Réactiver'}
                                     className="ea-icon-btn"
-                                    style={{ ...iconBtn, color: l.actif ? '#C0392B' : '#0A7D46' }}
+                                    style={{
+                                        ...iconBtn,
+                                        color: l.actif ? '#C0392B' : '#0A7D46',
+                                    }}
                                 >
                                     <PowerIcon />
                                 </button>
@@ -229,10 +315,25 @@ export default function BaremeTab({ lignes, sens, sensLabel, signalCreation }: P
                                     onClick={() => demanderSuppression(l)}
                                     title="Supprimer"
                                     className="ea-icon-danger"
-                                    style={{ ...iconBtn, color: '#C0392B', borderColor: '#E0B4AD' }}
+                                    style={{
+                                        ...iconBtn,
+                                        color: '#C0392B',
+                                        borderColor: '#E0B4AD',
+                                    }}
                                 >
-                                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                                        <path d="M3.5 4.5h9M6.5 4.5V3h3v1.5M5 4.5l.5 8h5l.5-8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                                    <svg
+                                        width="14"
+                                        height="14"
+                                        viewBox="0 0 16 16"
+                                        fill="none"
+                                    >
+                                        <path
+                                            d="M3.5 4.5h9M6.5 4.5V3h3v1.5M5 4.5l.5 8h5l.5-8"
+                                            stroke="currentColor"
+                                            strokeWidth="1.3"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        />
                                     </svg>
                                 </button>
                             </div>
@@ -243,9 +344,15 @@ export default function BaremeTab({ lignes, sens, sensLabel, signalCreation }: P
 
             {mode && (
                 <Drawer
-                    titre={mode === 'creation' ? `Nouvelle ligne — ${sensLabel}` : 'Modifier la ligne'}
+                    titre={
+                        mode === 'creation'
+                            ? `Nouvelle ligne — ${sensLabel}`
+                            : 'Modifier la ligne'
+                    }
                     soustitre="Barème CDTS — montant en francs CFA."
-                    valider={mode === 'creation' ? 'Enregistrer' : 'Mettre à jour'}
+                    valider={
+                        mode === 'creation' ? 'Enregistrer' : 'Mettre à jour'
+                    }
                     peutValider={peutValider}
                     enCours={enCours}
                     onFermer={() => {
@@ -271,7 +378,12 @@ export default function BaremeTab({ lignes, sens, sensLabel, signalCreation }: P
                             value={form.sens}
                             onChange={(e) => champ('sens', e.target.value)}
                             aria-label="Sens du trafic"
-                            style={{ ...fieldSelect, borderColor: erreurs.sens ? '#E0B4AD' : '#D8DEE9' }}
+                            style={{
+                                ...fieldSelect,
+                                borderColor: erreurs.sens
+                                    ? '#E0B4AD'
+                                    : '#D8DEE9',
+                            }}
                         >
                             <option value="export">Export</option>
                             <option value="import">Import</option>

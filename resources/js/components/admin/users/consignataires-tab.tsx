@@ -1,10 +1,27 @@
 import { Link } from '@inertiajs/react';
 import ConfirmDialog from '@/components/admin/confirm-dialog';
-import { Drawer, Field, MultiSelectField, Section, SelectField, TextField } from '@/components/admin/drawer';
+import {
+    Drawer,
+    Field,
+    MultiSelectField,
+    Section,
+    SelectField,
+    TextField,
+} from '@/components/admin/drawer';
 import TableCard from '@/components/admin/table-card';
 import { PAR_PAGE } from '@/components/admin/types';
 import type { Option } from '@/components/admin/types';
-import { BadgeAlerte, BandeauInfo, fieldInput, iconBtn, RowActions, StatutBadge, Td, Th, Vide } from '@/components/admin/ui';
+import {
+    BadgeAlerte,
+    BandeauInfo,
+    fieldInput,
+    iconBtn,
+    RowActions,
+    StatutBadge,
+    Td,
+    Th,
+    Vide,
+} from '@/components/admin/ui';
 import { useCrudTab } from '@/components/admin/use-crud-tab';
 import type { ConsignataireRow } from './types';
 
@@ -85,7 +102,9 @@ const depuis = (c: ConsignataireRow): Form => ({
 const valide = (f: Form) => f.name.trim() !== '';
 
 const bascule = (c: ConsignataireRow, prochain: boolean) => ({
-    titre: prochain ? 'Réactiver ce consignataire ?' : 'Désactiver ce consignataire ?',
+    titre: prochain
+        ? 'Réactiver ce consignataire ?'
+        : 'Désactiver ce consignataire ?',
     corps: prochain
         ? 'La société pourra de nouveau être désignée sur les escales et les déclarations.'
         : 'Une société inactive n’est plus proposée à la saisie. Ses escales et ses factures déjà émises ne sont pas affectées.',
@@ -94,7 +113,8 @@ const bascule = (c: ConsignataireRow, prochain: boolean) => ({
 });
 
 /** Pastille de la première colonne : le sigle, à défaut le début de la raison sociale. */
-const initiales = (c: ConsignataireRow) => (c.sigle ?? c.name.slice(0, 3)).toUpperCase();
+const initiales = (c: ConsignataireRow) =>
+    (c.sigle ?? c.name.slice(0, 3)).toUpperCase();
 
 /**
  * Libellés d'un rattachement N-N, **tronqués**. Une société qui représente
@@ -111,14 +131,40 @@ function Rattachements({ noms, max = 3 }: { noms: string[]; max?: number }) {
     const reste = noms.length - visibles.length;
 
     return (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, alignItems: 'center' }}>
+        <div
+            style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 5,
+                alignItems: 'center',
+            }}
+        >
             {visibles.map((nom) => (
-                <span key={nom} style={{ fontSize: 11, fontWeight: 600, color: '#3A4356', background: '#EEF1F7', border: '1px solid #D8DEE9', borderRadius: 5, padding: '2px 8px' }}>
+                <span
+                    key={nom}
+                    style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: '#3A4356',
+                        background: '#EEF1F7',
+                        border: '1px solid #D8DEE9',
+                        borderRadius: 5,
+                        padding: '2px 8px',
+                    }}
+                >
                     {nom}
                 </span>
             ))}
             {reste > 0 && (
-                <span title={noms.slice(max).join(', ')} style={{ fontSize: 11, fontWeight: 700, color: '#5A6478', fontVariantNumeric: 'tabular-nums' }}>
+                <span
+                    title={noms.slice(max).join(', ')}
+                    style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: '#5A6478',
+                        fontVariantNumeric: 'tabular-nums',
+                    }}
+                >
                     +{reste}
                 </span>
             )}
@@ -133,15 +179,29 @@ function Rattachements({ noms, max = 3 }: { noms: string[]; max?: number }) {
  */
 function ComptesAgents({ consignataire }: { consignataire: ConsignataireRow }) {
     if (consignataire.agents_count === 0) {
-        return <span style={{ fontSize: 12, color: '#8A93A6' }}>Aucun compte</span>;
+        return (
+            <span style={{ fontSize: 12, color: '#8A93A6' }}>Aucun compte</span>
+        );
     }
 
     return (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 12.5, fontWeight: 600, color: '#1A1F2E', fontVariantNumeric: 'tabular-nums' }}>
-                {consignataire.agents_count} compte{consignataire.agents_count > 1 ? 's' : ''}
+            <span
+                style={{
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    color: '#1A1F2E',
+                    fontVariantNumeric: 'tabular-nums',
+                }}
+            >
+                {consignataire.agents_count} compte
+                {consignataire.agents_count > 1 ? 's' : ''}
             </span>
-            {consignataire.agents_en_attente > 0 && <BadgeAlerte>{consignataire.agents_en_attente} en attente</BadgeAlerte>}
+            {consignataire.agents_en_attente > 0 && (
+                <BadgeAlerte>
+                    {consignataire.agents_en_attente} en attente
+                </BadgeAlerte>
+            )}
         </div>
     );
 }
@@ -156,22 +216,42 @@ type Props = {
     peutGerer: boolean;
 };
 
-export default function ConsignatairesTab({ consignataires, optionsPays, optionsArmements, optionsPorts, signalCreation, peutGerer }: Props) {
-    const ref = useCrudTab({ base: BASE, lignes: consignataires, filtre, vierge: VIERGE, depuis, valide, bascule, signalCreation });
+export default function ConsignatairesTab({
+    consignataires,
+    optionsPays,
+    optionsArmements,
+    optionsPorts,
+    signalCreation,
+    peutGerer,
+}: Props) {
+    const ref = useCrudTab({
+        base: BASE,
+        lignes: consignataires,
+        filtre,
+        vierge: VIERGE,
+        depuis,
+        valide,
+        bascule,
+        signalCreation,
+    });
 
     // Un titulaire déjà en place ne se recrée pas : les champs d'identité
     // éditent son compte, et confier la fonction à un autre passe par le
     // dialogue de remplacement, désormais tenu par la fiche de la société.
-    const aDejaUnTitulaire = consignataires.some((c) => c.id === ref.edite && c.titulaire_user_id !== null);
+    const aDejaUnTitulaire = consignataires.some(
+        (c) => c.id === ref.edite && c.titulaire_user_id !== null,
+    );
 
     return (
         <>
             {!peutGerer && (
                 <div style={{ padding: '18px 26px 0' }}>
                     <BandeauInfo titre="Consultation seule">
-                        La création des sociétés consignataires, la désignation de leur titulaire et la validation des comptes agents engagent le CGC
-                        vis-à-vis d’un tiers : elles relèvent de l’Administrateur (ADR-0013). Vous conservez la gestion des comptes internes CGC dans
-                        l’onglet « Internes CGC ».
+                        La création des sociétés consignataires, la désignation
+                        de leur titulaire et la validation des comptes agents
+                        engagent le CGC vis-à-vis d’un tiers : elles relèvent de
+                        l’Administrateur (ADR-0013). Vous conservez la gestion
+                        des comptes internes CGC dans l’onglet « Internes CGC ».
                     </BandeauInfo>
                 </div>
             )}
@@ -183,7 +263,11 @@ export default function ConsignatairesTab({ consignataires, optionsPays, options
                 total={ref.total}
                 unite={['société', 'sociétés']}
                 largeurMin={980}
-                vide={ref.recherche ? 'Aucune société ne correspond à la recherche.' : 'Aucune société consignataire — ajoutez-en une avec « Nouveau consignataire ».'}
+                vide={
+                    ref.recherche
+                        ? 'Aucune société ne correspond à la recherche.'
+                        : 'Aucune société consignataire — ajoutez-en une avec « Nouveau consignataire ».'
+                }
                 page={ref.page}
                 parPage={PAR_PAGE}
                 onPage={ref.setPage}
@@ -195,22 +279,74 @@ export default function ConsignatairesTab({ consignataires, optionsPays, options
                         <Th w={190}>Comptes agents</Th>
                         <Th w={120}>Statut</Th>
                         {peutGerer && (
-                            <Th w={104} center>Actions</Th>
+                            <Th w={104} center>
+                                Actions
+                            </Th>
                         )}
-                        <Th w={80} center>Détail</Th>
+                        <Th w={80} center>
+                            Détail
+                        </Th>
                     </tr>
                 }
             >
                 {ref.lignesPage.map((c) => (
                     <tr key={c.id} className="ea-row">
                         <Td style={{ padding: '10px 16px' }}>
-                            <Link href={`${BASE}/${c.id}`} style={{ display: 'flex', alignItems: 'center', gap: 11, textDecoration: 'none' }}>
-                                <div style={{ width: 32, height: 32, borderRadius: 7, background: '#EEF3FF', border: '1px solid #C3D0F0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: '#1D3E9C', flex: 'none' }}>
+                            <Link
+                                href={`${BASE}/${c.id}`}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 11,
+                                    textDecoration: 'none',
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        width: 32,
+                                        height: 32,
+                                        borderRadius: 7,
+                                        background: '#EEF3FF',
+                                        border: '1px solid #C3D0F0',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: 10,
+                                        fontWeight: 800,
+                                        color: '#1D3E9C',
+                                        flex: 'none',
+                                    }}
+                                >
                                     {initiales(c)}
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                    <span style={{ fontSize: 13.5, fontWeight: 700, color: '#1A1F2E' }}>{c.name}</span>
-                                    {c.rccm_nif && <span style={{ fontSize: 11, color: '#8A93A6', fontVariantNumeric: 'tabular-nums' }}>{c.rccm_nif}</span>}
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: 2,
+                                    }}
+                                >
+                                    <span
+                                        style={{
+                                            fontSize: 13.5,
+                                            fontWeight: 700,
+                                            color: '#1A1F2E',
+                                        }}
+                                    >
+                                        {c.name}
+                                    </span>
+                                    {c.rccm_nif && (
+                                        <span
+                                            style={{
+                                                fontSize: 11,
+                                                color: '#8A93A6',
+                                                fontVariantNumeric:
+                                                    'tabular-nums',
+                                            }}
+                                        >
+                                            {c.rccm_nif}
+                                        </span>
+                                    )}
                                 </div>
                             </Link>
                         </Td>
@@ -223,11 +359,34 @@ export default function ConsignatairesTab({ consignataires, optionsPays, options
                         <Td>
                             <StatutBadge actif={c.actif} />
                         </Td>
-                        {peutGerer && <RowActions actif={c.actif} onEdit={() => ref.ouvrirEdition(c)} onToggle={() => ref.demanderBascule(c)} />}
+                        {peutGerer && (
+                            <RowActions
+                                actif={c.actif}
+                                onEdit={() => ref.ouvrirEdition(c)}
+                                onToggle={() => ref.demanderBascule(c)}
+                            />
+                        )}
                         <Td style={{ textAlign: 'center' }}>
-                            <Link href={`${BASE}/${c.id}`} title={`Fiche de ${c.name}`} className="ea-icon-btn" style={{ ...iconBtn, textDecoration: 'none' }}>
-                                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                                    <path d="M6 3.5L10.5 8 6 12.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                            <Link
+                                href={`${BASE}/${c.id}`}
+                                title={`Fiche de ${c.name}`}
+                                className="ea-icon-btn"
+                                style={{ ...iconBtn, textDecoration: 'none' }}
+                            >
+                                <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 16 16"
+                                    fill="none"
+                                    aria-hidden="true"
+                                >
+                                    <path
+                                        d="M6 3.5L10.5 8 6 12.5"
+                                        stroke="currentColor"
+                                        strokeWidth="1.6"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    />
                                 </svg>
                             </Link>
                         </Td>
@@ -237,31 +396,96 @@ export default function ConsignatairesTab({ consignataires, optionsPays, options
 
             {ref.mode && (
                 <Drawer
-                    titre={ref.mode === 'creation' ? 'Nouveau consignataire' : 'Modifier le consignataire'}
+                    titre={
+                        ref.mode === 'creation'
+                            ? 'Nouveau consignataire'
+                            : 'Modifier le consignataire'
+                    }
                     soustitre="Identité de la société et rattachements."
-                    valider={ref.mode === 'creation' ? 'Enregistrer' : 'Mettre à jour'}
+                    valider={
+                        ref.mode === 'creation'
+                            ? 'Enregistrer'
+                            : 'Mettre à jour'
+                    }
                     peutValider={ref.peutValider}
                     enCours={ref.enCours}
                     onFermer={ref.fermer}
                     onValider={ref.valider}
                 >
-                    <TextField label="Raison sociale" requis placeholder="ex. SAGA Gabon" valeur={ref.form.name} onChange={(v) => ref.champ('name', v)} erreur={ref.erreurs.name} />
-                    <TextField label="Sigle" majuscules maxLength={10} placeholder="ex. SAGA" valeur={ref.form.sigle} onChange={(v) => ref.champ('sigle', v)} erreur={ref.erreurs.sigle} aide="Abréviation affichée dans les tableaux." />
-                    <TextField label="RCCM / NIF" placeholder="Identifiants légaux" valeur={ref.form.rccm_nif} onChange={(v) => ref.champ('rccm_nif', v)} erreur={ref.erreurs.rccm_nif} />
-                    <SelectField label="Pays d’immatriculation" valeur={ref.form.pays_immatriculation_id} onChange={(v) => ref.champ('pays_immatriculation_id', v)} options={optionsPays} erreur={ref.erreurs.pays_immatriculation_id} />
+                    <TextField
+                        label="Raison sociale"
+                        requis
+                        placeholder="ex. SAGA Gabon"
+                        valeur={ref.form.name}
+                        onChange={(v) => ref.champ('name', v)}
+                        erreur={ref.erreurs.name}
+                    />
+                    <TextField
+                        label="Sigle"
+                        majuscules
+                        maxLength={10}
+                        placeholder="ex. SAGA"
+                        valeur={ref.form.sigle}
+                        onChange={(v) => ref.champ('sigle', v)}
+                        erreur={ref.erreurs.sigle}
+                        aide="Abréviation affichée dans les tableaux."
+                    />
+                    <TextField
+                        label="RCCM / NIF"
+                        placeholder="Identifiants légaux"
+                        valeur={ref.form.rccm_nif}
+                        onChange={(v) => ref.champ('rccm_nif', v)}
+                        erreur={ref.erreurs.rccm_nif}
+                    />
+                    <SelectField
+                        label="Pays d’immatriculation"
+                        valeur={ref.form.pays_immatriculation_id}
+                        onChange={(v) =>
+                            ref.champ('pays_immatriculation_id', v)
+                        }
+                        options={optionsPays}
+                        erreur={ref.erreurs.pays_immatriculation_id}
+                    />
                     <Field label="Adresse" erreur={ref.erreurs.adresse}>
                         <textarea
                             value={ref.form.adresse}
-                            onChange={(e) => ref.champ('adresse', e.target.value)}
+                            onChange={(e) =>
+                                ref.champ('adresse', e.target.value)
+                            }
                             rows={2}
                             maxLength={255}
                             placeholder="Adresse du siège"
                             aria-label="Adresse"
-                            style={{ ...fieldInput, height: 'auto', padding: '8px 10px', resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.45, borderColor: ref.erreurs.adresse ? '#E0B4AD' : '#D8DEE9' }}
+                            style={{
+                                ...fieldInput,
+                                height: 'auto',
+                                padding: '8px 10px',
+                                resize: 'vertical',
+                                fontFamily: 'inherit',
+                                lineHeight: 1.45,
+                                borderColor: ref.erreurs.adresse
+                                    ? '#E0B4AD'
+                                    : '#D8DEE9',
+                            }}
                         />
                     </Field>
-                    <TextField label="Téléphone" chiffres maxLength={30} placeholder="ex. +241 11 22 33 44" valeur={ref.form.telephone} onChange={(v) => ref.champ('telephone', v)} erreur={ref.erreurs.telephone} />
-                    <TextField label="Adresse e-mail" placeholder="ex. consignation@saga-gabon.ga" valeur={ref.form.email} onChange={(v) => ref.champ('email', v)} erreur={ref.erreurs.email} aide="Contact de la société, distinct des comptes de ses agents." />
+                    <TextField
+                        label="Téléphone"
+                        chiffres
+                        maxLength={30}
+                        placeholder="ex. +241 11 22 33 44"
+                        valeur={ref.form.telephone}
+                        onChange={(v) => ref.champ('telephone', v)}
+                        erreur={ref.erreurs.telephone}
+                    />
+                    <TextField
+                        label="Adresse e-mail"
+                        placeholder="ex. consignation@saga-gabon.ga"
+                        valeur={ref.form.email}
+                        onChange={(v) => ref.champ('email', v)}
+                        erreur={ref.erreurs.email}
+                        aide="Contact de la société, distinct des comptes de ses agents."
+                    />
                     <MultiSelectField
                         label="Ports de rattachement"
                         valeurs={ref.form.port_ids}
@@ -291,11 +515,47 @@ export default function ConsignatairesTab({ consignataires, optionsPays, options
                                 : 'La personne qui gère le compte de la société : elle crée les comptes de ses agents et déclare elle-même. Elle recevra un courriel l’invitant à définir son mot de passe — le CGC n’en connaît jamais la valeur. Laissez vide pour la désigner plus tard.'
                         }
                     />
-                    <TextField label="Prénom" placeholder="ex. Nadia" valeur={ref.form.titulaire_first_name} onChange={(v) => ref.champ('titulaire_first_name', v)} erreur={ref.erreurs.titulaire_first_name} />
-                    <TextField label="Nom" placeholder="ex. Bongo" valeur={ref.form.titulaire_last_name} onChange={(v) => ref.champ('titulaire_last_name', v)} erreur={ref.erreurs.titulaire_last_name} />
-                    <TextField label="E-mail professionnel" type="email" autoComplete="off" placeholder="ex. n.bongo@saga-gabon.ga" valeur={ref.form.titulaire_email} onChange={(v) => ref.champ('titulaire_email', v)} erreur={ref.erreurs.titulaire_email} aide="Identifiant de connexion — distinct de l’adresse de la société." />
-                    <TextField label="Téléphone" chiffres maxLength={30} placeholder="ex. +241 06 11 22 33" valeur={ref.form.titulaire_phone} onChange={(v) => ref.champ('titulaire_phone', v)} erreur={ref.erreurs.titulaire_phone} />
-                    <TextField label="Fonction" maxLength={120} placeholder="ex. Responsable escale" valeur={ref.form.titulaire_job_title} onChange={(v) => ref.champ('titulaire_job_title', v)} erreur={ref.erreurs.titulaire_job_title} />
+                    <TextField
+                        label="Prénom"
+                        placeholder="ex. Nadia"
+                        valeur={ref.form.titulaire_first_name}
+                        onChange={(v) => ref.champ('titulaire_first_name', v)}
+                        erreur={ref.erreurs.titulaire_first_name}
+                    />
+                    <TextField
+                        label="Nom"
+                        placeholder="ex. Bongo"
+                        valeur={ref.form.titulaire_last_name}
+                        onChange={(v) => ref.champ('titulaire_last_name', v)}
+                        erreur={ref.erreurs.titulaire_last_name}
+                    />
+                    <TextField
+                        label="E-mail professionnel"
+                        type="email"
+                        autoComplete="off"
+                        placeholder="ex. n.bongo@saga-gabon.ga"
+                        valeur={ref.form.titulaire_email}
+                        onChange={(v) => ref.champ('titulaire_email', v)}
+                        erreur={ref.erreurs.titulaire_email}
+                        aide="Identifiant de connexion — distinct de l’adresse de la société."
+                    />
+                    <TextField
+                        label="Téléphone"
+                        chiffres
+                        maxLength={30}
+                        placeholder="ex. +241 06 11 22 33"
+                        valeur={ref.form.titulaire_phone}
+                        onChange={(v) => ref.champ('titulaire_phone', v)}
+                        erreur={ref.erreurs.titulaire_phone}
+                    />
+                    <TextField
+                        label="Fonction"
+                        maxLength={120}
+                        placeholder="ex. Responsable escale"
+                        valeur={ref.form.titulaire_job_title}
+                        onChange={(v) => ref.champ('titulaire_job_title', v)}
+                        erreur={ref.erreurs.titulaire_job_title}
+                    />
                 </Drawer>
             )}
 

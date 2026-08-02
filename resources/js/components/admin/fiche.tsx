@@ -24,19 +24,47 @@ export const LARGEUR_FICHE = 1120;
  * ramener. Un `Link` et non un `history.back()` — on peut arriver ici par une
  * URL partagée, sans historique derrière soi.
  */
-export function RetourListe({ href, children }: { href: string; children: ReactNode }) {
+export function RetourListe({
+    href,
+    children,
+}: {
+    href: string;
+    children: ReactNode;
+}) {
     return (
         <Link
             href={href}
             className="ea-btn-cancel"
             style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6, height: 30, padding: '0 10px 0 6px',
-                border: '1px solid #D8DEE9', borderRadius: 6, background: '#fff', color: '#3A4356',
-                fontSize: 12.5, fontWeight: 600, textDecoration: 'none', marginBottom: 14,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                height: 30,
+                padding: '0 10px 0 6px',
+                border: '1px solid #D8DEE9',
+                borderRadius: 6,
+                background: '#fff',
+                color: '#3A4356',
+                fontSize: 12.5,
+                fontWeight: 600,
+                textDecoration: 'none',
+                marginBottom: 14,
             }}
         >
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M9.5 3.5L5 8l4.5 4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            <svg
+                width="15"
+                height="15"
+                viewBox="0 0 16 16"
+                fill="none"
+                aria-hidden="true"
+            >
+                <path
+                    d="M9.5 3.5L5 8l4.5 4.5"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
             </svg>
             {children}
         </Link>
@@ -64,23 +92,88 @@ export function FicheEntete({
     aside?: ReactNode;
     children?: ReactNode;
 }) {
-    const visibles = metas.filter((m): m is string => typeof m === 'string' && m.trim() !== '');
+    const visibles = metas.filter(
+        (m): m is string => typeof m === 'string' && m.trim() !== '',
+    );
 
     return (
         <div style={{ ...card, padding: '18px 20px', marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    gap: 20,
+                    flexWrap: 'wrap',
+                }}
+            >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                    <div style={{ width: 48, height: 48, borderRadius: 10, background: '#EEF3FF', border: '1px solid #C3D0F0', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
+                    <div
+                        style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 10,
+                            background: '#EEF3FF',
+                            border: '1px solid #C3D0F0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flex: 'none',
+                        }}
+                    >
                         {icone}
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <h2 style={{ margin: 0, fontSize: 19, fontWeight: 800, color: '#142C73', letterSpacing: '-.01em' }}>{titre}</h2>
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 4,
+                        }}
+                    >
+                        <h2
+                            style={{
+                                margin: 0,
+                                fontSize: 19,
+                                fontWeight: 800,
+                                color: '#142C73',
+                                letterSpacing: '-.01em',
+                            }}
+                        >
+                            {titre}
+                        </h2>
                         {visibles.length > 0 && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 12, color: '#5A6478' }}>
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 10,
+                                    flexWrap: 'wrap',
+                                    fontSize: 12,
+                                    color: '#5A6478',
+                                }}
+                            >
                                 {visibles.map((meta, i) => (
-                                    <span key={meta} style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-                                        {i > 0 && <span style={{ color: '#D8DEE9' }}>·</span>}
-                                        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{meta}</span>
+                                    <span
+                                        key={meta}
+                                        style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: 10,
+                                        }}
+                                    >
+                                        {i > 0 && (
+                                            <span style={{ color: '#D8DEE9' }}>
+                                                ·
+                                            </span>
+                                        )}
+                                        <span
+                                            style={{
+                                                fontVariantNumeric:
+                                                    'tabular-nums',
+                                            }}
+                                        >
+                                            {meta}
+                                        </span>
                                     </span>
                                 ))}
                             </div>
@@ -120,15 +213,66 @@ export function BlocFiche({
 }) {
     return (
         <div style={{ ...card, marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '13px 18px', borderBottom: '1px solid #E7EBF2' }}>
-                <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#1A1F2E' }}>{titre}</h3>
-                {compte && <span style={{ fontSize: 11.5, color: '#8A93A6', fontVariantNumeric: 'tabular-nums' }}>{compte}</span>}
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '13px 18px',
+                    borderBottom: '1px solid #E7EBF2',
+                }}
+            >
+                <h3
+                    style={{
+                        margin: 0,
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: '#1A1F2E',
+                    }}
+                >
+                    {titre}
+                </h3>
+                {compte && (
+                    <span
+                        style={{
+                            fontSize: 11.5,
+                            color: '#8A93A6',
+                            fontVariantNumeric: 'tabular-nums',
+                        }}
+                    >
+                        {compte}
+                    </span>
+                )}
                 {badge}
                 <div style={{ flex: 1 }} />
                 {action}
             </div>
-            {plat ? children : <div style={{ padding: '14px 18px', display: 'flex', flexWrap: 'wrap', gap: 10 }}>{children}</div>}
-            {note && <div style={{ padding: '0 18px 14px', fontSize: 11.5, color: '#8A93A6', lineHeight: 1.45 }}>{note}</div>}
+            {plat ? (
+                children
+            ) : (
+                <div
+                    style={{
+                        padding: '14px 18px',
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: 10,
+                    }}
+                >
+                    {children}
+                </div>
+            )}
+            {note && (
+                <div
+                    style={{
+                        padding: '0 18px 14px',
+                        fontSize: 11.5,
+                        color: '#8A93A6',
+                        lineHeight: 1.45,
+                    }}
+                >
+                    {note}
+                </div>
+            )}
         </div>
     );
 }
@@ -138,13 +282,28 @@ export function BlocFiche({
  * marque le tableau *principal* d'un écran ; à l'intérieur d'une carte, il
  * entrerait en concurrence avec le titre du bloc.
  */
-export function ThFiche({ children, w, right }: { children?: ReactNode; w?: number; right?: boolean }) {
+export function ThFiche({
+    children,
+    w,
+    right,
+}: {
+    children?: ReactNode;
+    w?: number;
+    right?: boolean;
+}) {
     return (
         <th
             style={{
-                background: '#F0F3F9', color: '#3A4356', fontSize: 10.5, fontWeight: 700, letterSpacing: '.04em',
-                textTransform: 'uppercase', textAlign: right ? 'right' : 'left', padding: '8px 18px',
-                borderBottom: '1px solid #D8DEE9', width: w,
+                background: '#F0F3F9',
+                color: '#3A4356',
+                fontSize: 10.5,
+                fontWeight: 700,
+                letterSpacing: '.04em',
+                textTransform: 'uppercase',
+                textAlign: right ? 'right' : 'left',
+                padding: '8px 18px',
+                borderBottom: '1px solid #D8DEE9',
+                width: w,
             }}
         >
             {children}
@@ -170,11 +329,48 @@ export function CarteRattachement({
     badge?: ReactNode;
 }) {
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', border: '1px solid #D8DEE9', borderRadius: 8, background: '#FBFCFE', minWidth: 230 }}>
+        <div
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '9px 12px',
+                border: '1px solid #D8DEE9',
+                borderRadius: 8,
+                background: '#FBFCFE',
+                minWidth: 230,
+            }}
+        >
             {pastille}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
-                <span style={{ fontSize: 12.5, fontWeight: 700, color: '#1A1F2E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{titre}</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11, color: '#8A93A6' }}>
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 1,
+                    minWidth: 0,
+                }}
+            >
+                <span
+                    style={{
+                        fontSize: 12.5,
+                        fontWeight: 700,
+                        color: '#1A1F2E',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                    }}
+                >
+                    {titre}
+                </span>
+                <span
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 7,
+                        fontSize: 11,
+                        color: '#8A93A6',
+                    }}
+                >
                     {soustitre}
                     {badge}
                 </span>
@@ -201,5 +397,9 @@ export const pastilleStyle: CSSProperties = {
 
 /** État vide d'un bloc — on dit ce qui manque, pas seulement qu'il n'y a rien. */
 export function BlocVide({ children }: { children: ReactNode }) {
-    return <div style={{ padding: '4px 0', fontSize: 12.5, color: '#8A93A6' }}>{children}</div>;
+    return (
+        <div style={{ padding: '4px 0', fontSize: 12.5, color: '#8A93A6' }}>
+            {children}
+        </div>
+    );
 }

@@ -33,14 +33,27 @@ const btn: CSSProperties = {
     fontVariantNumeric: 'tabular-nums',
 };
 
-const btnActif: CSSProperties = { ...btn, borderColor: '#1D3E9C', background: '#1D3E9C', color: '#fff', fontWeight: 700 };
-const btnInactif: CSSProperties = { ...btn, color: '#C3CBDA', cursor: 'not-allowed' };
+const btnActif: CSSProperties = {
+    ...btn,
+    borderColor: '#1D3E9C',
+    background: '#1D3E9C',
+    color: '#fff',
+    fontWeight: 700,
+};
+const btnInactif: CSSProperties = {
+    ...btn,
+    color: '#C3CBDA',
+    cursor: 'not-allowed',
+};
 
 /**
  * Numéros à afficher, avec ellipses : toujours la première et la dernière page,
  * plus une fenêtre de trois autour de la page courante.
  */
-function numerosVisibles(page: number, dernierePage: number): Array<number | '…'> {
+function numerosVisibles(
+    page: number,
+    dernierePage: number,
+): Array<number | '…'> {
     if (dernierePage <= 7) {
         return Array.from({ length: dernierePage }, (_, i) => i + 1);
     }
@@ -78,12 +91,31 @@ export default function Pagination({ total, page, parPage, onPage }: Props) {
     const dernier = Math.min(page * parPage, total);
 
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderTop: '1px solid #E7EBF2', background: '#FBFCFE', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 12, color: '#5A6478', fontVariantNumeric: 'tabular-nums' }}>
+        <div
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '10px 16px',
+                borderTop: '1px solid #E7EBF2',
+                background: '#FBFCFE',
+                flexWrap: 'wrap',
+            }}
+        >
+            <span
+                style={{
+                    fontSize: 12,
+                    color: '#5A6478',
+                    fontVariantNumeric: 'tabular-nums',
+                }}
+            >
                 {premier}–{dernier} sur {total}
             </span>
             <div style={{ flex: 1 }} />
-            <nav aria-label="Pagination" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <nav
+                aria-label="Pagination"
+                style={{ display: 'flex', alignItems: 'center', gap: 5 }}
+            >
                 <button
                     type="button"
                     onClick={() => onPage(page - 1)}
@@ -97,7 +129,14 @@ export default function Pagination({ total, page, parPage, onPage }: Props) {
                 </button>
                 {numerosVisibles(page, dernierePage).map((n, i) =>
                     n === '…' ? (
-                        <span key={`ellipse-${i}`} style={{ fontSize: 12.5, color: '#8A93A6', padding: '0 2px' }}>
+                        <span
+                            key={`ellipse-${i}`}
+                            style={{
+                                fontSize: 12.5,
+                                color: '#8A93A6',
+                                padding: '0 2px',
+                            }}
+                        >
                             …
                         </span>
                     ) : (
@@ -120,7 +159,9 @@ export default function Pagination({ total, page, parPage, onPage }: Props) {
                     disabled={page === dernierePage}
                     title="Page suivante"
                     aria-label="Page suivante"
-                    className={page === dernierePage ? undefined : 'ea-icon-btn'}
+                    className={
+                        page === dernierePage ? undefined : 'ea-icon-btn'
+                    }
                     style={page === dernierePage ? btnInactif : btn}
                 >
                     ›

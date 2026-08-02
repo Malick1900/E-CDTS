@@ -1,8 +1,8 @@
 import { router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import type { ConfirmEtat } from './confirm-dialog';
-import { PAR_PAGE  } from './types';
-import type {LigneAdmin} from './types';
+import { PAR_PAGE } from './types';
+import type { LigneAdmin } from './types';
 
 /*
  * Mécanique commune aux onglets de gestion du panneau d'administration :
@@ -37,7 +37,10 @@ type Options<L extends LigneAdmin, F extends Formulaire> = {
     /** Champs obligatoires renseignés ? Conditionne le bouton de validation. */
     valide: (form: F) => boolean;
     /** Mots de la confirmation d'activation, `prochain` étant l'état visé. */
-    bascule: (ligne: L, prochain: boolean) => { titre: string; corps: string; statLabel: string; statValue: string };
+    bascule: (
+        ligne: L,
+        prochain: boolean,
+    ) => { titre: string; corps: string; statLabel: string; statValue: string };
     /**
      * Signal du bouton « Ajouter » du bandeau : il vit dans l'AdminShell, hors
      * de l'onglet. La page hôte incrémente ce compteur au clic et le remet à 0
@@ -101,7 +104,11 @@ export function useCrudTab<L extends LigneAdmin, F extends Formulaire>({
     const pageCourante = Math.min(page, dernierePage);
 
     const lignesPage = useMemo(
-        () => filtrees.slice((pageCourante - 1) * PAR_PAGE, pageCourante * PAR_PAGE),
+        () =>
+            filtrees.slice(
+                (pageCourante - 1) * PAR_PAGE,
+                pageCourante * PAR_PAGE,
+            ),
         [filtrees, pageCourante],
     );
 
@@ -123,7 +130,8 @@ export function useCrudTab<L extends LigneAdmin, F extends Formulaire>({
         setErreurs({});
     };
 
-    const champ = <K extends keyof F>(cle: K, valeur: F[K]) => setForm((precedent) => ({ ...precedent, [cle]: valeur }));
+    const champ = <K extends keyof F>(cle: K, valeur: F[K]) =>
+        setForm((precedent) => ({ ...precedent, [cle]: valeur }));
 
     const peutValider = valide(form);
 
@@ -161,7 +169,11 @@ export function useCrudTab<L extends LigneAdmin, F extends Formulaire>({
             danger: !prochain,
             onOk: () => {
                 setConfirm(null);
-                router.patch(`${base}/${ligne.id}/activation`, {}, { preserveScroll: true, preserveState: true });
+                router.patch(
+                    `${base}/${ligne.id}/activation`,
+                    {},
+                    { preserveScroll: true, preserveState: true },
+                );
             },
         });
     };

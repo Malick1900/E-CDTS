@@ -2,7 +2,10 @@ import { router } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import { BandeauInfo, card, Th } from '@/components/admin/ui';
-import type { GroupePermissions, RoleMatriceRow } from '@/components/admin/users/types';
+import type {
+    GroupePermissions,
+    RoleMatriceRow,
+} from '@/components/admin/users/types';
 
 /*
  * Matrice « Rôles & permissions » (ADR-0025).
@@ -51,7 +54,10 @@ export default function RolesTab({ roles, catalogue }: Props) {
      */
     const basculer = (role: RoleMatriceRow, permission: string) => {
         setBrouillon((actuel) => {
-            const base = actuel?.role === role.name ? new Set(actuel.permissions) : new Set(enregistre.get(role.name) ?? []);
+            const base =
+                actuel?.role === role.name
+                    ? new Set(actuel.permissions)
+                    : new Set(enregistre.get(role.name) ?? []);
 
             if (base.has(permission)) {
                 base.delete(permission);
@@ -70,7 +76,10 @@ export default function RolesTab({ roles, catalogue }: Props) {
 
         const initial = enregistre.get(role.name) ?? new Set<string>();
 
-        return initial.size !== brouillon.permissions.size || [...brouillon.permissions].some((p) => !initial.has(p));
+        return (
+            initial.size !== brouillon.permissions.size ||
+            [...brouillon.permissions].some((p) => !initial.has(p))
+        );
     };
 
     const enregistrer = (role: RoleMatriceRow) => {
@@ -95,7 +104,9 @@ export default function RolesTab({ roles, catalogue }: Props) {
     /** Les colonnes regroupées par population, dans leur ordre d'affichage. */
     const populations = useMemo(
         () =>
-            roles.reduce<{ groupe: RoleMatriceRow['groupe']; colonnes: number }[]>((acc, role) => {
+            roles.reduce<
+                { groupe: RoleMatriceRow['groupe']; colonnes: number }[]
+            >((acc, role) => {
                 const dernier = acc[acc.length - 1];
 
                 if (dernier?.groupe === role.groupe) {
@@ -110,16 +121,34 @@ export default function RolesTab({ roles, catalogue }: Props) {
     );
 
     return (
-        <div style={{ padding: '18px 26px 26px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div
+            style={{
+                padding: '18px 26px 26px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 14,
+            }}
+        >
             <BandeauInfo titre="Ce que cet écran modifie">
-                Les permissions sont définies par le code : on ne peut ni en créer, ni en supprimer, ni ajouter ou renommer un rôle. Seule la
-                <strong> composition</strong> des rôles se modifie ici. Trois colonnes échappent à l'édition : <strong>Administrateur</strong>, qui porte
-                par définition tout ce qui a un sens côté CGC, et les deux rôles clients, qui découlent de la position occupée dans une société. Le rôle
-                technique <strong>super-admin</strong> n'y figure pas.
+                Les permissions sont définies par le code : on ne peut ni en
+                créer, ni en supprimer, ni ajouter ou renommer un rôle. Seule la
+                <strong> composition</strong> des rôles se modifie ici. Trois
+                colonnes échappent à l'édition : <strong>Administrateur</strong>
+                , qui porte par définition tout ce qui a un sens côté CGC, et
+                les deux rôles clients, qui découlent de la position occupée
+                dans une société. Le rôle technique <strong>super-admin</strong>{' '}
+                n'y figure pas.
             </BandeauInfo>
 
             <div style={{ ...card, overflowX: 'auto' }}>
-                <table style={{ width: '100%', minWidth: 620 + roles.length * largeurColonne, borderCollapse: 'separate', borderSpacing: 0 }}>
+                <table
+                    style={{
+                        width: '100%',
+                        minWidth: 620 + roles.length * largeurColonne,
+                        borderCollapse: 'separate',
+                        borderSpacing: 0,
+                    }}
+                >
                     <thead>
                         {/* Deux populations dans un même tableau : sans cette
                             ligne, rien ne dirait que les deux dernières colonnes
@@ -128,7 +157,9 @@ export default function RolesTab({ roles, catalogue }: Props) {
                             <ThGroupe />
                             {populations.map(({ groupe, colonnes }) => (
                                 <ThGroupe key={groupe} span={colonnes}>
-                                    {groupe === 'interne' ? 'Comptes internes CGC' : 'Comptes clients'}
+                                    {groupe === 'interne'
+                                        ? 'Comptes internes CGC'
+                                        : 'Comptes clients'}
                                 </ThGroupe>
                             ))}
                         </tr>
@@ -136,7 +167,14 @@ export default function RolesTab({ roles, catalogue }: Props) {
                             <Th first>Permission</Th>
                             {roles.map((role) => (
                                 <Th key={role.name} w={largeurColonne} center>
-                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, justifyContent: 'center' }}>
+                                    <span
+                                        style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: 5,
+                                            justifyContent: 'center',
+                                        }}
+                                    >
                                         {role.name}
                                         {!role.recomposable && <CadenasIcon />}
                                     </span>
@@ -146,32 +184,86 @@ export default function RolesTab({ roles, catalogue }: Props) {
                     </thead>
                     <tbody>
                         {catalogue.map((groupe) => (
-                            <GroupeLignes key={groupe.domaine} groupe={groupe} roles={roles} cochee={cochee} basculer={basculer} />
+                            <GroupeLignes
+                                key={groupe.domaine}
+                                groupe={groupe}
+                                roles={roles}
+                                cochee={cochee}
+                                basculer={basculer}
+                            />
                         ))}
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td style={{ padding: '12px 16px', borderTop: '1px solid #E7EBF2', fontSize: 11.5, color: '#8A93A6' }}>
-                                {brouillon ? 'Modifications non enregistrées' : 'Aucune modification en attente'}
+                            <td
+                                style={{
+                                    padding: '12px 16px',
+                                    borderTop: '1px solid #E7EBF2',
+                                    fontSize: 11.5,
+                                    color: '#8A93A6',
+                                }}
+                            >
+                                {brouillon
+                                    ? 'Modifications non enregistrées'
+                                    : 'Aucune modification en attente'}
                             </td>
                             {roles.map((role) => (
-                                <td key={role.name} style={{ padding: '10px 8px', borderTop: '1px solid #E7EBF2', textAlign: 'center', verticalAlign: 'top' }}>
+                                <td
+                                    key={role.name}
+                                    style={{
+                                        padding: '10px 8px',
+                                        borderTop: '1px solid #E7EBF2',
+                                        textAlign: 'center',
+                                        verticalAlign: 'top',
+                                    }}
+                                >
                                     {modifiee(role) ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, alignItems: 'stretch' }}>
+                                        <div
+                                            style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: 5,
+                                                alignItems: 'stretch',
+                                            }}
+                                        >
                                             <button
                                                 type="button"
-                                                onClick={() => enregistrer(role)}
+                                                onClick={() =>
+                                                    enregistrer(role)
+                                                }
                                                 disabled={enCours}
                                                 className="ea-btn-primary"
-                                                style={{ height: 30, border: 'none', borderRadius: 6, background: '#1D3E9C', color: '#fff', fontSize: 12, fontWeight: 700, cursor: enCours ? 'progress' : 'pointer' }}
+                                                style={{
+                                                    height: 30,
+                                                    border: 'none',
+                                                    borderRadius: 6,
+                                                    background: '#1D3E9C',
+                                                    color: '#fff',
+                                                    fontSize: 12,
+                                                    fontWeight: 700,
+                                                    cursor: enCours
+                                                        ? 'progress'
+                                                        : 'pointer',
+                                                }}
                                             >
                                                 Enregistrer
                                             </button>
                                             <button
                                                 type="button"
-                                                onClick={() => setBrouillon(null)}
+                                                onClick={() =>
+                                                    setBrouillon(null)
+                                                }
                                                 disabled={enCours}
-                                                style={{ height: 26, border: '1px solid #D8DEE9', borderRadius: 6, background: '#fff', color: '#5A6478', fontSize: 11.5, fontWeight: 600, cursor: 'pointer' }}
+                                                style={{
+                                                    height: 26,
+                                                    border: '1px solid #D8DEE9',
+                                                    borderRadius: 6,
+                                                    background: '#fff',
+                                                    color: '#5A6478',
+                                                    fontSize: 11.5,
+                                                    fontWeight: 600,
+                                                    cursor: 'pointer',
+                                                }}
                                             >
                                                 Annuler
                                             </button>
@@ -184,10 +276,22 @@ export default function RolesTab({ roles, catalogue }: Props) {
                 </table>
             </div>
 
-            <p style={{ margin: '0 2px', fontSize: 11.5, color: '#8A93A6', lineHeight: 1.5, maxWidth: 900 }}>
-                Une permission retirée s'applique dès la connexion suivante des comptes portant ce rôle. Un rôle peut être entièrement décoché : c'est la
-                façon de neutraliser un profil sans le supprimer. Les deux colonnes clientes sont là pour être lues, pas modifiées : un compte client
-                reçoit son rôle de sa position dans sa société — titulaire ou agent — et la société détermine ensuite sur quels armements il opère.
+            <p
+                style={{
+                    margin: '0 2px',
+                    fontSize: 11.5,
+                    color: '#8A93A6',
+                    lineHeight: 1.5,
+                    maxWidth: 900,
+                }}
+            >
+                Une permission retirée s'applique dès la connexion suivante des
+                comptes portant ce rôle. Un rôle peut être entièrement décoché :
+                c'est la façon de neutraliser un profil sans le supprimer. Les
+                deux colonnes clientes sont là pour être lues, pas modifiées :
+                un compte client reçoit son rôle de sa position dans sa société
+                — titulaire ou agent — et la société détermine ensuite sur quels
+                armements il opère.
             </p>
         </div>
     );
@@ -210,24 +314,58 @@ function GroupeLignes({
             <tr>
                 <td
                     colSpan={roles.length + 1}
-                    style={{ padding: '9px 16px 8px', background: '#F5F7FA', borderBottom: '1px solid #E7EBF2', fontSize: 10.5, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#5A6478' }}
+                    style={{
+                        padding: '9px 16px 8px',
+                        background: '#F5F7FA',
+                        borderBottom: '1px solid #E7EBF2',
+                        fontSize: 10.5,
+                        fontWeight: 700,
+                        letterSpacing: '.06em',
+                        textTransform: 'uppercase',
+                        color: '#5A6478',
+                    }}
                 >
                     {groupe.domaine}
                 </td>
             </tr>
             {groupe.permissions.map((permission) => (
                 <tr key={permission.value}>
-                    <td style={{ padding: '10px 16px', borderBottom: '1px solid #E7EBF2', fontSize: 12.5, color: '#1A1F2E' }}>{permission.label}</td>
+                    <td
+                        style={{
+                            padding: '10px 16px',
+                            borderBottom: '1px solid #E7EBF2',
+                            fontSize: 12.5,
+                            color: '#1A1F2E',
+                        }}
+                    >
+                        {permission.label}
+                    </td>
                     {roles.map((role) => (
-                        <td key={role.name} style={{ padding: '10px 12px', borderBottom: '1px solid #E7EBF2', textAlign: 'center' }}>
+                        <td
+                            key={role.name}
+                            style={{
+                                padding: '10px 12px',
+                                borderBottom: '1px solid #E7EBF2',
+                                textAlign: 'center',
+                            }}
+                        >
                             <input
                                 type="checkbox"
                                 checked={cochee(role, permission.value)}
                                 disabled={!role.recomposable}
-                                onChange={() => basculer(role, permission.value)}
+                                onChange={() =>
+                                    basculer(role, permission.value)
+                                }
                                 aria-label={`${permission.label} — ${role.name}`}
                                 title={role.motif_fige ?? undefined}
-                                style={{ width: 16, height: 16, accentColor: '#1D3E9C', cursor: role.recomposable ? 'pointer' : 'not-allowed' }}
+                                style={{
+                                    width: 16,
+                                    height: 16,
+                                    accentColor: '#1D3E9C',
+                                    cursor: role.recomposable
+                                        ? 'pointer'
+                                        : 'not-allowed',
+                                }}
                             />
                         </td>
                     ))}
@@ -238,7 +376,13 @@ function GroupeLignes({
 }
 
 /** Bandeau de population, au-dessus des en-têtes de colonnes. */
-const ThGroupe = ({ span = 1, children }: { span?: number; children?: ReactNode }) => (
+const ThGroupe = ({
+    span = 1,
+    children,
+}: {
+    span?: number;
+    children?: ReactNode;
+}) => (
     <th
         colSpan={span}
         style={{
@@ -258,8 +402,27 @@ const ThGroupe = ({ span = 1, children }: { span?: number; children?: ReactNode 
 );
 
 const CadenasIcon = () => (
-    <svg width="11" height="11" viewBox="0 0 14 14" fill="none" style={{ flex: 'none', opacity: 0.85 }}>
-        <rect x="3" y="6.2" width="8" height="5.6" rx="1.2" stroke="currentColor" strokeWidth="1.4" />
-        <path d="M4.9 6.2V4.7a2.1 2.1 0 0 1 4.2 0v1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    <svg
+        width="11"
+        height="11"
+        viewBox="0 0 14 14"
+        fill="none"
+        style={{ flex: 'none', opacity: 0.85 }}
+    >
+        <rect
+            x="3"
+            y="6.2"
+            width="8"
+            height="5.6"
+            rx="1.2"
+            stroke="currentColor"
+            strokeWidth="1.4"
+        />
+        <path
+            d="M4.9 6.2V4.7a2.1 2.1 0 0 1 4.2 0v1.5"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+        />
     </svg>
 );

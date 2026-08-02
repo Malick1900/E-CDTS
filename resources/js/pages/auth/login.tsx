@@ -1,11 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
-import {
-    Anchor,
-    FileText,
-    Lock,
-    ReceiptText,
-    ShieldCheck,
-} from 'lucide-react';
+import { Anchor, FileText, Lock, ReceiptText, ShieldCheck } from 'lucide-react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -297,7 +291,7 @@ export default function Login({ status, canResetPassword }: Props) {
                                     Contacter le CGC
                                 </a>
                             </span>
-                            <span className="tabular-nums text-[#A6AFC0]">
+                            <span className="text-[#A6AFC0] tabular-nums">
                                 e-CDTS v1.4
                             </span>
                         </div>

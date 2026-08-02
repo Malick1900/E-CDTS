@@ -3,7 +3,15 @@ import { Drawer, SelectField, TextField } from '@/components/admin/drawer';
 import TableCard from '@/components/admin/table-card';
 import { PAR_PAGE } from '@/components/admin/types';
 import type { Option } from '@/components/admin/types';
-import { CodeChip, RowActions, StatutBadge, Td, TdTitre, Th, Vide } from '@/components/admin/ui';
+import {
+    CodeChip,
+    RowActions,
+    StatutBadge,
+    Td,
+    TdTitre,
+    Th,
+    Vide,
+} from '@/components/admin/ui';
 import { useCrudTab } from '@/components/admin/use-crud-tab';
 import type { PortRow } from './types';
 import { PortIcon } from './ui';
@@ -14,12 +22,24 @@ import { PortIcon } from './ui';
  * que la règle de numérotation n'est pas figée.
  */
 
-type Form = { name: string; code: string; pays_id: number | null; prefixe_numerotation: string };
+type Form = {
+    name: string;
+    code: string;
+    pays_id: number | null;
+    prefixe_numerotation: string;
+};
 
-const VIERGE: Form = { name: '', code: '', pays_id: null, prefixe_numerotation: '' };
+const VIERGE: Form = {
+    name: '',
+    code: '',
+    pays_id: null,
+    prefixe_numerotation: '',
+};
 
 const filtre = (p: PortRow, q: string) =>
-    p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q) || (p.pays_name ?? '').toLowerCase().includes(q);
+    p.name.toLowerCase().includes(q) ||
+    p.code.toLowerCase().includes(q) ||
+    (p.pays_name ?? '').toLowerCase().includes(q);
 
 const depuis = (p: PortRow): Form => ({
     name: p.name,
@@ -39,8 +59,25 @@ const bascule = (p: PortRow, prochain: boolean) => ({
     statValue: `${p.name} · ${p.code}`,
 });
 
-export default function PortsTab({ ports, optionsPays, signalCreation }: { ports: PortRow[]; optionsPays: Option[]; signalCreation: number }) {
-    const ref = useCrudTab({ base: '/admin/referentiels/ports', lignes: ports, filtre, vierge: VIERGE, depuis, valide, bascule, signalCreation });
+export default function PortsTab({
+    ports,
+    optionsPays,
+    signalCreation,
+}: {
+    ports: PortRow[];
+    optionsPays: Option[];
+    signalCreation: number;
+}) {
+    const ref = useCrudTab({
+        base: '/admin/referentiels/ports',
+        lignes: ports,
+        filtre,
+        vierge: VIERGE,
+        depuis,
+        valide,
+        bascule,
+        signalCreation,
+    });
 
     return (
         <>
@@ -51,7 +88,11 @@ export default function PortsTab({ ports, optionsPays, signalCreation }: { ports
                 total={ref.total}
                 unite={['port', 'ports']}
                 largeurMin={880}
-                vide={ref.recherche ? 'Aucun port ne correspond à la recherche.' : 'Aucun port — ajoutez-en un avec « Nouveau port ».'}
+                vide={
+                    ref.recherche
+                        ? 'Aucun port ne correspond à la recherche.'
+                        : 'Aucun port — ajoutez-en un avec « Nouveau port ».'
+                }
                 page={ref.page}
                 parPage={PAR_PAGE}
                 onPage={ref.setPage}
@@ -63,7 +104,9 @@ export default function PortsTab({ ports, optionsPays, signalCreation }: { ports
                         <Th w={160}>Pays</Th>
                         <Th w={150}>Préfixe dossier</Th>
                         <Th w={120}>Statut</Th>
-                        <Th w={104} center>Actions</Th>
+                        <Th w={104} center>
+                            Actions
+                        </Th>
                     </tr>
                 }
             >
@@ -74,29 +117,75 @@ export default function PortsTab({ ports, optionsPays, signalCreation }: { ports
                             <CodeChip>{p.code}</CodeChip>
                         </Td>
                         <Td>{p.pays_name ?? <Vide />}</Td>
-                        <Td style={{ fontVariantNumeric: 'tabular-nums' }}>{p.prefixe_numerotation ?? <Vide />}</Td>
+                        <Td style={{ fontVariantNumeric: 'tabular-nums' }}>
+                            {p.prefixe_numerotation ?? <Vide />}
+                        </Td>
                         <Td>
                             <StatutBadge actif={p.actif} />
                         </Td>
-                        <RowActions actif={p.actif} onEdit={() => ref.ouvrirEdition(p)} onToggle={() => ref.demanderBascule(p)} />
+                        <RowActions
+                            actif={p.actif}
+                            onEdit={() => ref.ouvrirEdition(p)}
+                            onToggle={() => ref.demanderBascule(p)}
+                        />
                     </tr>
                 ))}
             </TableCard>
 
             {ref.mode && (
                 <Drawer
-                    titre={ref.mode === 'creation' ? 'Nouveau port' : 'Modifier le port'}
+                    titre={
+                        ref.mode === 'creation'
+                            ? 'Nouveau port'
+                            : 'Modifier le port'
+                    }
                     soustitre="Référentiel Ports — code UN/LOCODE."
-                    valider={ref.mode === 'creation' ? 'Enregistrer' : 'Mettre à jour'}
+                    valider={
+                        ref.mode === 'creation'
+                            ? 'Enregistrer'
+                            : 'Mettre à jour'
+                    }
                     peutValider={ref.peutValider}
                     enCours={ref.enCours}
                     onFermer={ref.fermer}
                     onValider={ref.valider}
                 >
-                    <TextField label="Nom du port" requis placeholder="ex. Owendo" valeur={ref.form.name} onChange={(v) => ref.champ('name', v)} erreur={ref.erreurs.name} />
-                    <TextField label="Code UN/LOCODE" requis majuscules maxLength={10} placeholder="ex. GAOWE" valeur={ref.form.code} onChange={(v) => ref.champ('code', v)} erreur={ref.erreurs.code} aide="Identifiant international du port, unique dans le référentiel." />
-                    <SelectField label="Pays" valeur={ref.form.pays_id} onChange={(v) => ref.champ('pays_id', v)} options={optionsPays} erreur={ref.erreurs.pays_id} />
-                    <TextField label="Préfixe de numérotation" majuscules maxLength={10} placeholder="ex. OWE" valeur={ref.form.prefixe_numerotation} onChange={(v) => ref.champ('prefixe_numerotation', v)} erreur={ref.erreurs.prefixe_numerotation} aide="Préfixe des numéros de dossier ouverts sur ce port. Facultatif." />
+                    <TextField
+                        label="Nom du port"
+                        requis
+                        placeholder="ex. Owendo"
+                        valeur={ref.form.name}
+                        onChange={(v) => ref.champ('name', v)}
+                        erreur={ref.erreurs.name}
+                    />
+                    <TextField
+                        label="Code UN/LOCODE"
+                        requis
+                        majuscules
+                        maxLength={10}
+                        placeholder="ex. GAOWE"
+                        valeur={ref.form.code}
+                        onChange={(v) => ref.champ('code', v)}
+                        erreur={ref.erreurs.code}
+                        aide="Identifiant international du port, unique dans le référentiel."
+                    />
+                    <SelectField
+                        label="Pays"
+                        valeur={ref.form.pays_id}
+                        onChange={(v) => ref.champ('pays_id', v)}
+                        options={optionsPays}
+                        erreur={ref.erreurs.pays_id}
+                    />
+                    <TextField
+                        label="Préfixe de numérotation"
+                        majuscules
+                        maxLength={10}
+                        placeholder="ex. OWE"
+                        valeur={ref.form.prefixe_numerotation}
+                        onChange={(v) => ref.champ('prefixe_numerotation', v)}
+                        erreur={ref.erreurs.prefixe_numerotation}
+                        aide="Préfixe des numéros de dossier ouverts sur ce port. Facultatif."
+                    />
                 </Drawer>
             )}
 

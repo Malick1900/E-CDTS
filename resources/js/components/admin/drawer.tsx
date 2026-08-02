@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState  } from 'react';
-import type {ReactNode} from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { fieldInput, fieldLabel, fieldSelect, SearchIcon } from './ui';
 
 /*
@@ -20,7 +20,16 @@ type DrawerProps = {
     children: ReactNode;
 };
 
-export function Drawer({ titre, soustitre, valider, peutValider, enCours, onFermer, onValider, children }: DrawerProps) {
+export function Drawer({
+    titre,
+    soustitre,
+    valider,
+    peutValider,
+    enCours,
+    onFermer,
+    onValider,
+    children,
+}: DrawerProps) {
     // Échap ferme le tiroir : comportement attendu d'une boîte de dialogue, au
     // même titre que le clic sur le voile.
     useEffect(() => {
@@ -35,19 +44,89 @@ export function Drawer({ titre, soustitre, valider, peutValider, enCours, onFerm
         return () => window.removeEventListener('keydown', surTouche);
     }, [onFermer]);
 
-    const actif = peutValider && ! enCours;
+    const actif = peutValider && !enCours;
 
     return (
         <>
-            <div onClick={onFermer} style={{ position: 'fixed', inset: 0, background: 'rgba(20,31,46,.42)', zIndex: 50, animation: 'ecdtsFade .18s ease' }} />
-            <div role="dialog" aria-modal="true" aria-label={titre} style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: 452, maxWidth: '100%', background: '#fff', zIndex: 51, boxShadow: '-14px 0 40px rgba(20,44,115,.22)', display: 'flex', flexDirection: 'column', animation: 'ecdtsPanel .22s ease' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', borderBottom: '1px solid #E7EBF2', flex: 'none' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#1A1F2E' }}>{titre}</h3>
-                        <span style={{ fontSize: 11.5, color: '#5A6478' }}>{soustitre}</span>
+            <div
+                onClick={onFermer}
+                style={{
+                    position: 'fixed',
+                    inset: 0,
+                    background: 'rgba(20,31,46,.42)',
+                    zIndex: 50,
+                    animation: 'ecdtsFade .18s ease',
+                }}
+            />
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-label={titre}
+                style={{
+                    position: 'fixed',
+                    top: 0,
+                    right: 0,
+                    bottom: 0,
+                    width: 452,
+                    maxWidth: '100%',
+                    background: '#fff',
+                    zIndex: 51,
+                    boxShadow: '-14px 0 40px rgba(20,44,115,.22)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    animation: 'ecdtsPanel .22s ease',
+                }}
+            >
+                <div
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        padding: '16px 20px',
+                        borderBottom: '1px solid #E7EBF2',
+                        flex: 'none',
+                    }}
+                >
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 2,
+                        }}
+                    >
+                        <h3
+                            style={{
+                                margin: 0,
+                                fontSize: 16,
+                                fontWeight: 800,
+                                color: '#1A1F2E',
+                            }}
+                        >
+                            {titre}
+                        </h3>
+                        <span style={{ fontSize: 11.5, color: '#5A6478' }}>
+                            {soustitre}
+                        </span>
                     </div>
                     <div style={{ flex: 1 }} />
-                    <button type="button" onClick={onFermer} title="Fermer" aria-label="Fermer" className="ea-close" style={{ width: 30, height: 30, border: 'none', background: '#F0F2F7', color: '#5A6478', borderRadius: 6, fontSize: 16, cursor: 'pointer', lineHeight: 1 }}>
+                    <button
+                        type="button"
+                        onClick={onFermer}
+                        title="Fermer"
+                        aria-label="Fermer"
+                        className="ea-close"
+                        style={{
+                            width: 30,
+                            height: 30,
+                            border: 'none',
+                            background: '#F0F2F7',
+                            color: '#5A6478',
+                            borderRadius: 6,
+                            fontSize: 16,
+                            cursor: 'pointer',
+                            lineHeight: 1,
+                        }}
+                    >
                         ✕
                     </button>
                 </div>
@@ -60,18 +139,83 @@ export function Drawer({ titre, soustitre, valider, peutValider, enCours, onFerm
                             onValider();
                         }
                     }}
-                    style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}
+                    style={{
+                        flex: '1 1 auto',
+                        minHeight: 0,
+                        display: 'flex',
+                        flexDirection: 'column',
+                    }}
                 >
-                    <div style={{ flex: '1 1 auto', minHeight: 0, overflow: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>{children}</div>
+                    <div
+                        style={{
+                            flex: '1 1 auto',
+                            minHeight: 0,
+                            overflow: 'auto',
+                            padding: '16px 20px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 14,
+                        }}
+                    >
+                        {children}
+                    </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 20px', borderTop: '1px solid #E7EBF2', flex: 'none', background: '#FBFCFE' }}>
-                        <span style={{ fontSize: 11.5, color: '#8A93A6', flex: 1 }}>
-                            Champs marqués <span style={{ color: '#C0392B' }}>*</span> obligatoires.
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 10,
+                            padding: '14px 20px',
+                            borderTop: '1px solid #E7EBF2',
+                            flex: 'none',
+                            background: '#FBFCFE',
+                        }}
+                    >
+                        <span
+                            style={{
+                                fontSize: 11.5,
+                                color: '#8A93A6',
+                                flex: 1,
+                            }}
+                        >
+                            Champs marqués{' '}
+                            <span style={{ color: '#C0392B' }}>*</span>{' '}
+                            obligatoires.
                         </span>
-                        <button type="button" onClick={onFermer} className="ea-btn-cancel" style={{ height: 38, padding: '0 16px', border: '1px solid #C3CBDA', borderRadius: 6, background: '#fff', color: '#3A4356', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                        <button
+                            type="button"
+                            onClick={onFermer}
+                            className="ea-btn-cancel"
+                            style={{
+                                height: 38,
+                                padding: '0 16px',
+                                border: '1px solid #C3CBDA',
+                                borderRadius: 6,
+                                background: '#fff',
+                                color: '#3A4356',
+                                fontSize: 13,
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                            }}
+                        >
                             Annuler
                         </button>
-                        <button type="submit" disabled={! actif} className={actif ? 'ea-btn-primary' : undefined} style={{ height: 38, padding: '0 18px', border: 'none', borderRadius: 6, background: actif ? '#1D3E9C' : '#C3CBDA', color: '#fff', fontSize: 13, fontWeight: 700, cursor: actif ? 'pointer' : 'not-allowed' }}>
+                        <button
+                            type="submit"
+                            disabled={!actif}
+                            className={actif ? 'ea-btn-primary' : undefined}
+                            style={{
+                                height: 38,
+                                padding: '0 18px',
+                                border: 'none',
+                                borderRadius: 6,
+                                background: actif ? '#1D3E9C' : '#C3CBDA',
+                                color: '#fff',
+                                fontSize: 13,
+                                fontWeight: 700,
+                                cursor: actif ? 'pointer' : 'not-allowed',
+                            }}
+                        >
                             {enCours ? 'Enregistrement…' : valider}
                         </button>
                     </div>
@@ -84,15 +228,35 @@ export function Drawer({ titre, soustitre, valider, peutValider, enCours, onFerm
 // ── Primitives de champ ───────────────────────────────────────────
 
 /** Libellé + contrôle + message d'erreur serveur. */
-export function Field({ label, requis, aide, erreur, children }: { label: string; requis?: boolean; aide?: string; erreur?: string; children: ReactNode }) {
+export function Field({
+    label,
+    requis,
+    aide,
+    erreur,
+    children,
+}: {
+    label: string;
+    requis?: boolean;
+    aide?: string;
+    erreur?: string;
+    children: ReactNode;
+}) {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
             <span style={fieldLabel}>
                 {label} {requis && <span style={{ color: '#C0392B' }}>*</span>}
             </span>
             {children}
-            {aide && !erreur && <span style={{ fontSize: 11, color: '#8A93A6', lineHeight: 1.4 }}>{aide}</span>}
-            {erreur && <span style={{ fontSize: 11, color: '#C0392B' }}>{erreur}</span>}
+            {aide && !erreur && (
+                <span
+                    style={{ fontSize: 11, color: '#8A93A6', lineHeight: 1.4 }}
+                >
+                    {aide}
+                </span>
+            )}
+            {erreur && (
+                <span style={{ fontSize: 11, color: '#C0392B' }}>{erreur}</span>
+            )}
         </div>
     );
 }
@@ -104,9 +268,37 @@ export function Field({ label, requis, aide, erreur, children }: { label: string
  */
 export function Section({ titre, aide }: { titre: string; aide?: string }) {
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 6, borderTop: '1px solid #E7EBF2' }}>
-            <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.05em', color: '#8A93A6', textTransform: 'uppercase' }}>{titre}</span>
-            {aide ? <span style={{ fontSize: 11.5, color: '#5A6478', lineHeight: 1.45 }}>{aide}</span> : null}
+        <div
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+                paddingTop: 6,
+                borderTop: '1px solid #E7EBF2',
+            }}
+        >
+            <span
+                style={{
+                    fontSize: 10.5,
+                    fontWeight: 700,
+                    letterSpacing: '.05em',
+                    color: '#8A93A6',
+                    textTransform: 'uppercase',
+                }}
+            >
+                {titre}
+            </span>
+            {aide ? (
+                <span
+                    style={{
+                        fontSize: 11.5,
+                        color: '#5A6478',
+                        lineHeight: 1.45,
+                    }}
+                >
+                    {aide}
+                </span>
+            ) : null}
         </div>
     );
 }
@@ -128,7 +320,20 @@ type TextFieldProps = {
     autoComplete?: string;
 };
 
-export function TextField({ label, valeur, onChange, requis, erreur, aide, placeholder, maxLength, majuscules, chiffres, type = 'text', autoComplete }: TextFieldProps) {
+export function TextField({
+    label,
+    valeur,
+    onChange,
+    requis,
+    erreur,
+    aide,
+    placeholder,
+    maxLength,
+    majuscules,
+    chiffres,
+    type = 'text',
+    autoComplete,
+}: TextFieldProps) {
     return (
         <Field label={label} requis={requis} aide={aide} erreur={erreur}>
             <input
@@ -192,11 +397,24 @@ const SEUIL_RECHERCHE = 8;
  * - un champ de recherche apparaît au-delà du seuil, pour ne pas imposer de
  *   faire défiler une boîte de 190 pixels à la recherche d'une compagnie.
  */
-export function MultiSelectField({ label, valeurs, onChange, options, erreur, aide, vide, unite }: MultiSelectFieldProps) {
+export function MultiSelectField({
+    label,
+    valeurs,
+    onChange,
+    options,
+    erreur,
+    aide,
+    vide,
+    unite,
+}: MultiSelectFieldProps) {
     // On ajoute en fin de liste sans réordonner : un identifiant rattaché à une
     // entrée désactivée — donc absent des options — n'est jamais perdu au passage.
     const basculer = (value: number) => {
-        onChange(valeurs.includes(value) ? valeurs.filter((v) => v !== value) : [...valeurs, value]);
+        onChange(
+            valeurs.includes(value)
+                ? valeurs.filter((v) => v !== value)
+                : [...valeurs, value],
+        );
     };
 
     const compte = valeurs.length;
@@ -211,10 +429,16 @@ export function MultiSelectField({ label, valeurs, onChange, options, erreur, ai
     const visibles = useMemo(() => {
         // Le tri de JS est stable : l'ordre alphabétique reçu du serveur est
         // conservé à l'intérieur de chaque groupe.
-        const ordonnees = [...options].sort((a, b) => Number(cochesInitiaux.has(b.value)) - Number(cochesInitiaux.has(a.value)));
+        const ordonnees = [...options].sort(
+            (a, b) =>
+                Number(cochesInitiaux.has(b.value)) -
+                Number(cochesInitiaux.has(a.value)),
+        );
         const q = recherche.trim().toLowerCase();
 
-        return q === '' ? ordonnees : ordonnees.filter((o) => o.label.toLowerCase().includes(q));
+        return q === ''
+            ? ordonnees
+            : ordonnees.filter((o) => o.label.toLowerCase().includes(q));
     }, [options, cochesInitiaux, recherche]);
 
     return (
@@ -232,17 +456,39 @@ export function MultiSelectField({ label, valeurs, onChange, options, erreur, ai
                                 onChange={(e) => setRecherche(e.target.value)}
                                 placeholder={`Filtrer parmi ${options.length} ${unite[1]}…`}
                                 aria-label={`Filtrer ${label}`}
-                                style={{ ...fieldInput, height: 32, padding: '0 10px 0 30px' }}
+                                style={{
+                                    ...fieldInput,
+                                    height: 32,
+                                    padding: '0 10px 0 30px',
+                                }}
                             />
                         </div>
                     )}
                     <div
                         role="group"
                         aria-label={label}
-                        style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 190, overflowY: 'auto', border: `1px solid ${erreur ? '#E0B4AD' : '#D8DEE9'}`, borderRadius: 6, padding: 8, background: '#fff' }}
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 6,
+                            maxHeight: 190,
+                            overflowY: 'auto',
+                            border: `1px solid ${erreur ? '#E0B4AD' : '#D8DEE9'}`,
+                            borderRadius: 6,
+                            padding: 8,
+                            background: '#fff',
+                        }}
                     >
                         {visibles.length === 0 ? (
-                            <span style={{ fontSize: 12, color: '#8A93A6', padding: '6px 8px' }}>Aucune entrée ne correspond.</span>
+                            <span
+                                style={{
+                                    fontSize: 12,
+                                    color: '#8A93A6',
+                                    padding: '6px 8px',
+                                }}
+                            >
+                                Aucune entrée ne correspond.
+                            </span>
                         ) : (
                             visibles.map((o) => {
                                 const coche = valeurs.includes(o.value);
@@ -250,17 +496,53 @@ export function MultiSelectField({ label, valeurs, onChange, options, erreur, ai
                                 return (
                                     <label
                                         key={o.value}
-                                        style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '6px 8px', borderRadius: 6, cursor: 'pointer', background: coche ? '#F5F8FD' : 'transparent', border: `1px solid ${coche ? '#C3D0F0' : 'transparent'}` }}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 9,
+                                            padding: '6px 8px',
+                                            borderRadius: 6,
+                                            cursor: 'pointer',
+                                            background: coche
+                                                ? '#F5F8FD'
+                                                : 'transparent',
+                                            border: `1px solid ${coche ? '#C3D0F0' : 'transparent'}`,
+                                        }}
                                     >
-                                        <input type="checkbox" checked={coche} onChange={() => basculer(o.value)} style={{ width: 15, height: 15, accentColor: '#1D3E9C', flex: 'none', cursor: 'pointer' }} />
-                                        <span style={{ fontSize: 12.5, color: '#1A1F2E' }}>{o.label}</span>
+                                        <input
+                                            type="checkbox"
+                                            checked={coche}
+                                            onChange={() => basculer(o.value)}
+                                            style={{
+                                                width: 15,
+                                                height: 15,
+                                                accentColor: '#1D3E9C',
+                                                flex: 'none',
+                                                cursor: 'pointer',
+                                            }}
+                                        />
+                                        <span
+                                            style={{
+                                                fontSize: 12.5,
+                                                color: '#1A1F2E',
+                                            }}
+                                        >
+                                            {o.label}
+                                        </span>
                                     </label>
                                 );
                             })
                         )}
                     </div>
-                    <span style={{ fontSize: 11, color: '#8A93A6', fontVariantNumeric: 'tabular-nums' }}>
-                        {compte} {compte > 1 ? unite[1] : unite[0]} sélectionné{compte > 1 ? 's' : ''}
+                    <span
+                        style={{
+                            fontSize: 11,
+                            color: '#8A93A6',
+                            fontVariantNumeric: 'tabular-nums',
+                        }}
+                    >
+                        {compte} {compte > 1 ? unite[1] : unite[0]} sélectionné
+                        {compte > 1 ? 's' : ''}
                     </span>
                 </>
             )}
@@ -268,14 +550,30 @@ export function MultiSelectField({ label, valeurs, onChange, options, erreur, ai
     );
 }
 
-export function SelectField({ label, valeur, onChange, options, requis, erreur, aide, aucun = '— Non renseigné —' }: SelectFieldProps) {
+export function SelectField({
+    label,
+    valeur,
+    onChange,
+    options,
+    requis,
+    erreur,
+    aide,
+    aucun = '— Non renseigné —',
+}: SelectFieldProps) {
     return (
         <Field label={label} requis={requis} aide={aide} erreur={erreur}>
             <select
                 value={valeur ?? ''}
-                onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))}
+                onChange={(e) =>
+                    onChange(
+                        e.target.value === '' ? null : Number(e.target.value),
+                    )
+                }
                 aria-label={label}
-                style={{ ...fieldSelect, borderColor: erreur ? '#E0B4AD' : '#D8DEE9' }}
+                style={{
+                    ...fieldSelect,
+                    borderColor: erreur ? '#E0B4AD' : '#D8DEE9',
+                }}
             >
                 <option value="">{aucun}</option>
                 {options.map((o) => (

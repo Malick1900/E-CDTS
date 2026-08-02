@@ -46,7 +46,11 @@ export const iconBtn: CSSProperties = {
     justifyContent: 'center',
 };
 
-export const fieldLabel: CSSProperties = { fontSize: 11.5, fontWeight: 600, color: '#3A4356' };
+export const fieldLabel: CSSProperties = {
+    fontSize: 11.5,
+    fontWeight: 600,
+    color: '#3A4356',
+};
 
 export const fieldInput: CSSProperties = {
     height: 36,
@@ -74,28 +78,71 @@ export const fieldSelect: CSSProperties = {
 
 // ── Icônes ────────────────────────────────────────────────────────
 export const SearchIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }}>
+    <svg
+        width="14"
+        height="14"
+        viewBox="0 0 14 14"
+        fill="none"
+        style={{
+            position: 'absolute',
+            left: 10,
+            top: '50%',
+            transform: 'translateY(-50%)',
+        }}
+    >
         <circle cx="6" cy="6" r="4.6" stroke="#8A93A6" strokeWidth="1.5" />
-        <path d="M9.5 9.5L13 13" stroke="#8A93A6" strokeWidth="1.5" strokeLinecap="round" />
+        <path
+            d="M9.5 9.5L13 13"
+            stroke="#8A93A6"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+        />
     </svg>
 );
 
 export const EditIcon = () => (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-        <path d="M11.5 2.5l2 2L6 12l-2.5.5L4 10l7.5-7.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+        <path
+            d="M11.5 2.5l2 2L6 12l-2.5.5L4 10l7.5-7.5z"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinejoin="round"
+        />
     </svg>
 );
 
 export const PowerIcon = () => (
     <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-        <path d="M8 2.2v5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M4.7 4.4a4.6 4.6 0 1 0 6.6 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path
+            d="M8 2.2v5"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+        />
+        <path
+            d="M4.7 4.4a4.6 4.6 0 1 0 6.6 0"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+        />
     </svg>
 );
 
 // ── Cellules de tableau ───────────────────────────────────────────
 /** En-tête navy. `w` fige la largeur, `first` aligne sur la gouttière du corps. */
-export function Th({ children, w, center, accent, first }: { children?: ReactNode; w?: number; center?: boolean; accent?: boolean; first?: boolean }) {
+export function Th({
+    children,
+    w,
+    center,
+    accent,
+    first,
+}: {
+    children?: ReactNode;
+    w?: number;
+    center?: boolean;
+    accent?: boolean;
+    first?: boolean;
+}) {
     return (
         <th
             style={{
@@ -118,21 +165,50 @@ export function Th({ children, w, center, accent, first }: { children?: ReactNod
 }
 
 /** Cellule de corps. Les variantes passent par `style` plutôt que par des props. */
-export function Td({ children, style }: { children?: ReactNode; style?: CSSProperties }) {
+export function Td({
+    children,
+    style,
+}: {
+    children?: ReactNode;
+    style?: CSSProperties;
+}) {
     return (
-        <td style={{ padding: '10px 12px', borderBottom: '1px solid #E7EBF2', fontSize: 12.5, color: '#3A4356', verticalAlign: 'middle', ...style }}>
+        <td
+            style={{
+                padding: '10px 12px',
+                borderBottom: '1px solid #E7EBF2',
+                fontSize: 12.5,
+                color: '#3A4356',
+                verticalAlign: 'middle',
+                ...style,
+            }}
+        >
             {children}
         </td>
     );
 }
 
 /** Première cellule d'une ligne : gouttière plus large, libellé en gras. */
-export function TdTitre({ children, icon }: { children: ReactNode; icon?: ReactNode }) {
+export function TdTitre({
+    children,
+    icon,
+}: {
+    children: ReactNode;
+    icon?: ReactNode;
+}) {
     return (
         <Td style={{ padding: '10px 16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 {icon}
-                <span style={{ fontSize: 13.5, fontWeight: 700, color: '#1A1F2E' }}>{children}</span>
+                <span
+                    style={{
+                        fontSize: 13.5,
+                        fontWeight: 700,
+                        color: '#1A1F2E',
+                    }}
+                >
+                    {children}
+                </span>
             </div>
         </Td>
     );
@@ -142,7 +218,18 @@ export function TdTitre({ children, icon }: { children: ReactNode; icon?: ReactN
 /** Code court mis en valeur (code ISO, UN/LOCODE, sigle…). */
 export function CodeChip({ children }: { children: ReactNode }) {
     return (
-        <span style={{ fontSize: 12, fontWeight: 800, color: '#1D3E9C', background: '#EEF3FF', border: '1px solid #C3D0F0', borderRadius: 5, padding: '2px 9px', fontVariantNumeric: 'tabular-nums' }}>
+        <span
+            style={{
+                fontSize: 12,
+                fontWeight: 800,
+                color: '#1D3E9C',
+                background: '#EEF3FF',
+                border: '1px solid #C3D0F0',
+                borderRadius: 5,
+                padding: '2px 9px',
+                fontVariantNumeric: 'tabular-nums',
+            }}
+        >
             {children}
         </span>
     );
@@ -152,13 +239,27 @@ export function StatutBadge({ actif }: { actif: boolean }) {
     return (
         <span
             style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 700, borderRadius: 5, padding: '2px 9px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 11.5,
+                fontWeight: 700,
+                borderRadius: 5,
+                padding: '2px 9px',
                 color: actif ? '#0A7D46' : '#8A93A6',
                 background: actif ? '#E4F6EC' : '#F0F2F7',
                 border: `1px solid ${actif ? '#BCE6CD' : '#D8DEE9'}`,
             }}
         >
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: actif ? '#009E60' : '#A6AFC0', flex: 'none' }} />
+            <span
+                style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    background: actif ? '#009E60' : '#A6AFC0',
+                    flex: 'none',
+                }}
+            />
             {actif ? 'Actif' : 'Inactif'}
         </span>
     );
@@ -169,7 +270,13 @@ export function StatutBadge({ actif }: { actif: boolean }) {
  * attente de décision, un armement représenté par plusieurs sociétés. Orangé,
  * là où `BandeauInfo` est bleu — ici on demande un regard, pas un cadrage.
  */
-export function BadgeAlerte({ children, majuscules }: { children: ReactNode; majuscules?: boolean }) {
+export function BadgeAlerte({
+    children,
+    majuscules,
+}: {
+    children: ReactNode;
+    majuscules?: boolean;
+}) {
     return (
         <span
             style={{
@@ -195,11 +302,32 @@ export function BadgeAlerte({ children, majuscules }: { children: ReactNode; maj
  * Modifier + basculer l'activation. Strictement identiques d'un écran à
  * l'autre : aucune ligne n'est supprimable (ADR-0012).
  */
-export function RowActions({ actif, onEdit, onToggle }: { actif: boolean; onEdit: () => void; onToggle: () => void }) {
+export function RowActions({
+    actif,
+    onEdit,
+    onToggle,
+}: {
+    actif: boolean;
+    onEdit: () => void;
+    onToggle: () => void;
+}) {
     return (
         <Td>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                <button type="button" onClick={onEdit} title="Modifier" className="ea-icon-btn" style={iconBtn}>
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                }}
+            >
+                <button
+                    type="button"
+                    onClick={onEdit}
+                    title="Modifier"
+                    className="ea-icon-btn"
+                    style={iconBtn}
+                >
                     <EditIcon />
                 </button>
                 <button
@@ -229,17 +357,68 @@ export function Vide() {
  *
  * Volontairement bleu et non orangé : ce n'est pas une alerte, c'est un cadre.
  */
-export function BandeauInfo({ titre, children }: { titre: string; children: ReactNode }) {
+export function BandeauInfo({
+    titre,
+    children,
+}: {
+    titre: string;
+    children: ReactNode;
+}) {
     return (
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 11, padding: '11px 14px', background: '#EEF3FF', border: '1px solid #C3D0F0', borderRadius: 8 }}>
-            <svg width="17" height="17" viewBox="0 0 20 20" fill="none" style={{ flex: 'none', marginTop: 1, color: '#1D3E9C' }}>
-                <circle cx="10" cy="10" r="7.7" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M10 9v4.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        <div
+            style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 11,
+                padding: '11px 14px',
+                background: '#EEF3FF',
+                border: '1px solid #C3D0F0',
+                borderRadius: 8,
+            }}
+        >
+            <svg
+                width="17"
+                height="17"
+                viewBox="0 0 20 20"
+                fill="none"
+                style={{ flex: 'none', marginTop: 1, color: '#1D3E9C' }}
+            >
+                <circle
+                    cx="10"
+                    cy="10"
+                    r="7.7"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                />
+                <path
+                    d="M10 9v4.4"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                />
                 <circle cx="10" cy="6.4" r="1" fill="currentColor" />
             </svg>
             <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 700, color: '#142C73', marginBottom: 2 }}>{titre}</div>
-                <p style={{ margin: 0, fontSize: 12, color: '#3A4356', lineHeight: 1.5 }}>{children}</p>
+                <div
+                    style={{
+                        fontSize: 12.5,
+                        fontWeight: 700,
+                        color: '#142C73',
+                        marginBottom: 2,
+                    }}
+                >
+                    {titre}
+                </div>
+                <p
+                    style={{
+                        margin: 0,
+                        fontSize: 12,
+                        color: '#3A4356',
+                        lineHeight: 1.5,
+                    }}
+                >
+                    {children}
+                </p>
             </div>
         </div>
     );
