@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\Users\TitulaireController;
 use App\Http\Controllers\MonEspace\AffectationController as MonEspaceAffectationController;
 use App\Http\Controllers\MonEspace\AgentController as MonEspaceAgentController;
 use App\Http\Controllers\MonEspaceController;
+use App\Http\Controllers\ProfilController;
 use Illuminate\Support\Facades\Route;
 
 // e-CDTS est un portail fermé (ADR-0021) : la racine n'a rien à montrer à un
@@ -42,6 +43,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('devis', 'activite/devis')
         ->middleware('can:'.Permission::DevisConsulter->value)
         ->name('devis');
+
+    // Sa propre fiche. Aucune permission : tout compte connecté y a droit, et
+    // le compte connecté est à lui seul le périmètre — il n'y a pas
+    // d'identifiant dans l'URL. Le changement de mot de passe y est limité en
+    // fréquence : c'est le seul endroit du portail où l'on peut essayer un
+    // secret à l'aveugle depuis une session déjà ouverte.
+    Route::get('profil', [ProfilController::class, 'index'])->name('profil');
+    Route::patch('profil', [ProfilController::class, 'update'])->name('profil.update');
+    Route::put('profil/mot-de-passe', [ProfilController::class, 'motDePasse'])
+        ->middleware('throttle:6,1')
+        ->name('profil.mot-de-passe');
 
     // L'espace d'administration de sa propre société (lot 2). La permission
     // ouvre la porte ; c'est le controller qui borne ce qu'on voit derrière —
@@ -171,5 +183,3 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::inertia('audit', 'admin/audit')->name('audit');
     });
 });
-
-require __DIR__.'/settings.php';

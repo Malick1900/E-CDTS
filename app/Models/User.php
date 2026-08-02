@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\StatutValidation;
+use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -13,7 +14,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Carbon;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
@@ -26,18 +26,19 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $phone
  * @property string|null $job_title
  * @property string $email
- * @property Carbon|null $email_verified_at
+ * @property CarbonImmutable|null $email_verified_at
  * @property bool $is_active
- * @property Carbon|null $last_login_at
+ * @property CarbonImmutable|null $last_login_at
  * @property string $password
+ * @property CarbonImmutable|null $password_changed_at
  * @property string|null $remember_token
  * @property int|null $consignataire_id
  * @property StatutValidation|null $statut_validation
  * @property int|null $valide_par_user_id
- * @property Carbon|null $valide_le
+ * @property CarbonImmutable|null $valide_le
  * @property string|null $motif_refus
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
  */
 #[Fillable([
     'name',
@@ -72,9 +73,31 @@ class User extends Authenticatable
             'is_active' => 'boolean',
             'last_login_at' => 'datetime',
             'password' => 'hashed',
+            'password_changed_at' => 'datetime',
             'statut_validation' => StatutValidation::class,
             'valide_le' => 'datetime',
         ];
+    }
+
+    /**
+     * Horodate tout changement de mot de passe, d'où qu'il vienne.
+     *
+     * Ici et non dans le contrôleur du profil, parce que le mot de passe change
+     * par trois portes — l'écran Profil, le lien de réinitialisation envoyé à
+     * l'agent validé (ADR-0035), et le « mot de passe oublié ». Trois portes,
+     * trois oublis possibles ; le modèle les tient toutes.
+     *
+     * `updating` et non `saving` : à la création, le mot de passe n'a pas
+     * changé, il vient d'être attribué. Un compte agent en attente affiche donc
+     * « jamais modifié » tant qu'il n'a pas suivi son lien.
+     */
+    protected static function booted(): void
+    {
+        static::updating(function (User $user): void {
+            if ($user->isDirty('password')) {
+                $user->password_changed_at = now();
+            }
+        });
     }
 
     /**

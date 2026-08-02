@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Enums\Profil;
 use App\Models\User;
+use App\Support\PolitiqueMotDePasse;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -53,14 +54,9 @@ class AppServiceProvider extends ServiceProvider
             app()->isProduction(),
         );
 
-        Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
-                ->mixedCase()
-                ->letters()
-                ->numbers()
-                ->symbols()
-                ->uncompromised()
-            : null,
-        );
+        // Énoncée dans `PolitiqueMotDePasse` et non ici : l'écran Profil affiche
+        // les mêmes exigences pendant la saisie, et deux listes finiraient par
+        // diverger.
+        Password::defaults(fn (): Password => PolitiqueMotDePasse::regle());
     }
 }

@@ -20,6 +20,27 @@
 
 ---
 
+## ADR-0036 — Un écran de profil unique, et la dépose des écrans `settings` du starter kit — 2026-08-02
+**Statut :** Acceptée — **prolonge ADR-0030** (coquille unique) et **ADR-0012** (jamais de suppression dure).
+**Contexte :** la plateforme avait toujours, hérités du starter kit React, trois écrans `/settings/*` en anglais et au style shadcn : *Profile* (nom + adresse + **suppression de son propre compte**), *Security* (mot de passe, derrière une confirmation de mot de passe) et *Appearance* (thème clair/sombre). Ils n'appartenaient à aucun module d'e-CDTS, ne portaient pas le chrome institutionnel, et l'entrée « Profil » du menu compte y menait. Trois anomalies s'y logeaient : une URL anglaise au milieu d'un routage francophone, un thème sombre qu'aucun écran e-CDTS ne respecte, et surtout une route `DELETE /settings/profile` qui effaçait durement un compte — en contradiction frontale avec ADR-0012.
+**Décision :**
+- **Un seul écran, `/profil`**, dans la coquille d'activité, servant les deux populations : consignataires (titulaires et agents) et internes CGC. Ce qui change entre les deux n'est pas l'écran mais l'organisation dont on relève et la teinte de la pastille de rôle.
+- **Trois champs modifiables** — prénom, nom, numéro de téléphone. Le nom affiché ailleurs sur la plateforme s'en **recompose** ; il n'a pas de saisie propre.
+- **Tout le reste s'affiche sans s'écrire** : rôle, identifiant de connexion, fonction déclarée, et — pour un compte client — les **armements sur lesquels il opère**. Cette dernière carte ne figure pas dans la maquette : elle est ajoutée parce qu'un agent n'avait, jusqu'ici, *aucun* écran où lire sa propre portée (ADR-0009), la matrice d'affectation appartenant à son titulaire.
+- **Le mot de passe se change sur le même écran**, en exigeant l'ancien. La session en cours n'est pas invalidée, et l'écran le dit.
+- **Les exigences de mot de passe viennent du serveur** (`App\Support\PolitiqueMotDePasse`) et se cochent au fil de la saisie. La politique est énoncée une seule fois : la validation et l'affichage la lisent au même endroit.
+- **Nouvelle colonne `users.password_changed_at`**, horodatée par le **modèle** — pas par le contrôleur — de sorte que les trois portes de changement (écran Profil, lien personnel d'ADR-0035, « mot de passe oublié ») soient couvertes sans qu'aucune puisse être oubliée.
+- **Les trois écrans `settings` sont déposés**, avec leurs contrôleurs, requêtes, tests et la route de suppression de compte.
+**Alternatives écartées :**
+- *Garder `/settings/profile` et n'en changer que le contenu* — écarté : une URL anglaise isolée dans un routage entièrement francophone, sans bénéfice.
+- *Laisser vivre `DELETE /settings/profile` en se contentant de ne plus l'afficher* — écarté : une route reste appelable. Un compte qui s'efface lui-même emporte la traçabilité de ce qu'il a déclaré, ce qu'ADR-0012 interdit précisément.
+- *Recopier la liste des exigences de mot de passe dans le composant React* — écarté : elles se durcissent en production (12 caractères, symboles, contrôle contre les fuites) et se relâchent ailleurs. Une liste figée finirait par annoncer autre chose que ce qui est refusé, et la personne n'aurait aucun moyen de comprendre le refus.
+- *Rendre l'adresse de connexion modifiable* — écarté : elle désigne la personne à qui l'accès a été ouvert. La changer soi-même déplacerait ce compte vers quelqu'un d'autre sans que personne ne statue (ADR-0013).
+**Conséquences :**
+- `ActivityShell` accepte désormais un écran **sans bande de titre** : `title` est facultatif, et son absence supprime tout l'en-tête. C'est la carte d'identité du profil qui nomme l'écran — deux bandeaux bleus superposés étaient illisibles.
+- Le thème clair/sombre n'a plus d'écran de réglage. Le crochet `use-appearance` et son middleware restent en place ; les écrans e-CDTS ne l'ont jamais respecté, leur identité étant institutionnelle et fixe.
+- Les propriétés de date du modèle `User` sont désormais documentées `CarbonImmutable` — ce qu'elles sont réellement depuis `Date::use(CarbonImmutable::class)`. L'ancienne annotation `Carbon` était fausse ; l'affectation de `password_changed_at` l'a révélé.
+
 ## ADR-0035 — Le lien de définition du mot de passe ne va qu'à son titulaire — 2026-08-02
 **Statut :** Acceptée — **complète ADR-0013** (la société crée, le CGC valide) et **ADR-0027** (ouverture du compte titulaire).
 **Contexte :** un compte agent est créé par sa société avec un mot de passe aléatoire de 10 caractères que **personne ne connaît** — il n'est jamais affiché ni transmis. L'agent n'avait donc aucun chemin d'entrée : le courriel de validation le renvoyait vers « Mot de passe oublié », un détour qu'il fallait comprendre seul. Or ce courriel part à **trois destinataires** (l'agent, le titulaire de sa société, l'adresse de contact) : y placer un lien de définition revenait à le distribuer à trois personnes.

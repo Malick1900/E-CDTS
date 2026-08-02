@@ -2,7 +2,6 @@ import { Link, router, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { logout } from '@/routes';
-import { edit as profileEdit } from '@/routes/profile';
 import '../../css/ecdts-admin.css';
 
 /*
@@ -32,8 +31,13 @@ type Tab = { key: string; label: string; badge?: number };
 type ActivityShellProps = {
     /** Clé de l'entrée de navigation courante (voir `HandleInertiaRequests`). */
     active: string;
-    title: string;
-    subtitle: string;
+    /**
+     * Titre de l'écran. Absent, la bande d'en-tête — fil d'Ariane, titre, carte
+     * de contexte — n'est pas rendue du tout : l'écran porte alors son propre
+     * en-tête et deux se superposeraient (cas du profil).
+     */
+    title?: string;
+    subtitle?: string;
     /** Maillons intermédiaires du fil d'Ariane, entre « Tableau de bord » et le titre. */
     crumbs?: string[];
     /** Sous-écrans d'un même module — absents pour un écran d'un seul tenant. */
@@ -418,7 +422,7 @@ export default function ActivityShell({
                                 ) : null}
                             </div>
                             <Link
-                                href={profileEdit()}
+                                href="/profil"
                                 onClick={() => setOpenMenu(false)}
                                 className="ea-menuitem"
                                 style={{
@@ -511,206 +515,216 @@ export default function ActivityShell({
             </header>
 
             {/* ══ En-tête d'écran ══ */}
-            <section
-                style={{
-                    background: '#FFFFFF',
-                    borderBottom: '1px solid #D8DEE9',
-                    flex: 'none',
-                    position: 'relative',
-                }}
-            >
-                <div style={{ padding: '14px 26px 0' }}>
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            fontSize: 12,
-                            color: '#5A6478',
-                            marginBottom: 11,
-                        }}
-                    >
-                        <Link
-                            href="/dashboard"
-                            style={{ color: '#5A6478', textDecoration: 'none' }}
-                        >
-                            Tableau de bord
-                        </Link>
-                        {[...crumbs, title].map((crumb, i, all) => (
-                            <span key={crumb} style={{ display: 'contents' }}>
-                                <span style={{ color: '#B4BCC9' }}>›</span>
-                                <span
-                                    style={{
-                                        fontWeight:
-                                            i === all.length - 1 ? 600 : 400,
-                                        color:
-                                            i === all.length - 1
-                                                ? '#1A1F2E'
-                                                : '#5A6478',
-                                    }}
-                                >
-                                    {crumb}
-                                </span>
-                            </span>
-                        ))}
-                    </div>
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            justifyContent: 'space-between',
-                            gap: 24,
-                            flexWrap: 'wrap',
-                            paddingBottom: 13,
-                        }}
-                    >
+            {title ? (
+                <section
+                    style={{
+                        background: '#FFFFFF',
+                        borderBottom: '1px solid #D8DEE9',
+                        flex: 'none',
+                        position: 'relative',
+                    }}
+                >
+                    <div style={{ padding: '14px 26px 0' }}>
                         <div
                             style={{
                                 display: 'flex',
-                                flexDirection: 'column',
-                                gap: 3,
-                                maxWidth: 680,
+                                alignItems: 'center',
+                                gap: 6,
+                                fontSize: 12,
+                                color: '#5A6478',
+                                marginBottom: 11,
                             }}
                         >
-                            <h1
+                            <Link
+                                href="/dashboard"
                                 style={{
-                                    margin: 0,
-                                    fontSize: 22,
-                                    fontWeight: 800,
-                                    color: '#142C73',
-                                    letterSpacing: '-.01em',
-                                    lineHeight: 1.1,
-                                }}
-                            >
-                                {title}
-                            </h1>
-                            <p
-                                style={{
-                                    margin: 0,
-                                    fontSize: 12.5,
                                     color: '#5A6478',
-                                    lineHeight: 1.45,
+                                    textDecoration: 'none',
                                 }}
                             >
-                                {subtitle}
-                            </p>
+                                Tableau de bord
+                            </Link>
+                            {[...crumbs, title].map((crumb, i, all) => (
+                                <span
+                                    key={crumb}
+                                    style={{ display: 'contents' }}
+                                >
+                                    <span style={{ color: '#B4BCC9' }}>›</span>
+                                    <span
+                                        style={{
+                                            fontWeight:
+                                                i === all.length - 1
+                                                    ? 600
+                                                    : 400,
+                                            color:
+                                                i === all.length - 1
+                                                    ? '#1A1F2E'
+                                                    : '#5A6478',
+                                        }}
+                                    >
+                                        {crumb}
+                                    </span>
+                                </span>
+                            ))}
                         </div>
-
-                        {/* Carte de contexte : « chez qui » on est. Rien pour un
-                            interne CGC, qui n'est chez personne (ADR-0030). */}
-                        {contexte ? (
+                        <div
+                            style={{
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                justifyContent: 'space-between',
+                                gap: 24,
+                                flexWrap: 'wrap',
+                                paddingBottom: 13,
+                            }}
+                        >
                             <div
                                 style={{
                                     display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 12,
-                                    background: '#F4F8FE',
-                                    border: '1px solid #D5E1F5',
-                                    borderRadius: 10,
-                                    padding: '9px 15px',
-                                    flex: 'none',
+                                    flexDirection: 'column',
+                                    gap: 3,
+                                    maxWidth: 680,
                                 }}
                             >
+                                <h1
+                                    style={{
+                                        margin: 0,
+                                        fontSize: 22,
+                                        fontWeight: 800,
+                                        color: '#142C73',
+                                        letterSpacing: '-.01em',
+                                        lineHeight: 1.1,
+                                    }}
+                                >
+                                    {title}
+                                </h1>
+                                <p
+                                    style={{
+                                        margin: 0,
+                                        fontSize: 12.5,
+                                        color: '#5A6478',
+                                        lineHeight: 1.45,
+                                    }}
+                                >
+                                    {subtitle}
+                                </p>
+                            </div>
+
+                            {/* Carte de contexte : « chez qui » on est. Rien pour un
+                            interne CGC, qui n'est chez personne (ADR-0030). */}
+                            {contexte ? (
                                 <div
                                     style={{
-                                        width: 36,
-                                        height: 36,
-                                        borderRadius: 8,
-                                        background: '#1D3E9C',
-                                        color: '#fff',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        justifyContent: 'center',
+                                        gap: 12,
+                                        background: '#F4F8FE',
+                                        border: '1px solid #D5E1F5',
+                                        borderRadius: 10,
+                                        padding: '9px 15px',
                                         flex: 'none',
                                     }}
                                 >
-                                    <svg
-                                        width="19"
-                                        height="19"
-                                        viewBox="0 0 20 20"
-                                        fill="none"
-                                    >
-                                        <path
-                                            d="M3.5 17.5V4.4a1 1 0 0 1 1-1h6.5a1 1 0 0 1 1 1v13.1"
-                                            stroke="currentColor"
-                                            strokeWidth="1.5"
-                                            strokeLinejoin="round"
-                                        />
-                                        <path
-                                            d="M12 8.2h3.5a1 1 0 0 1 1 1v8.3"
-                                            stroke="currentColor"
-                                            strokeWidth="1.5"
-                                            strokeLinejoin="round"
-                                        />
-                                        <path
-                                            d="M2 17.6h16"
-                                            stroke="currentColor"
-                                            strokeWidth="1.5"
-                                            strokeLinecap="round"
-                                        />
-                                        <path
-                                            d="M5.9 6.6h3M5.9 9.6h3M5.9 12.6h3"
-                                            stroke="currentColor"
-                                            strokeWidth="1.4"
-                                            strokeLinecap="round"
-                                        />
-                                    </svg>
-                                </div>
-                                <div
-                                    style={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: 1,
-                                    }}
-                                >
-                                    <span
+                                    <div
                                         style={{
-                                            fontSize: 9.5,
-                                            fontWeight: 700,
-                                            letterSpacing: '.1em',
-                                            textTransform: 'uppercase',
-                                            color: '#5A7BC0',
+                                            width: 36,
+                                            height: 36,
+                                            borderRadius: 8,
+                                            background: '#1D3E9C',
+                                            color: '#fff',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            flex: 'none',
                                         }}
                                     >
-                                        Espace de
-                                    </span>
-                                    <span
+                                        <svg
+                                            width="19"
+                                            height="19"
+                                            viewBox="0 0 20 20"
+                                            fill="none"
+                                        >
+                                            <path
+                                                d="M3.5 17.5V4.4a1 1 0 0 1 1-1h6.5a1 1 0 0 1 1 1v13.1"
+                                                stroke="currentColor"
+                                                strokeWidth="1.5"
+                                                strokeLinejoin="round"
+                                            />
+                                            <path
+                                                d="M12 8.2h3.5a1 1 0 0 1 1 1v8.3"
+                                                stroke="currentColor"
+                                                strokeWidth="1.5"
+                                                strokeLinejoin="round"
+                                            />
+                                            <path
+                                                d="M2 17.6h16"
+                                                stroke="currentColor"
+                                                strokeWidth="1.5"
+                                                strokeLinecap="round"
+                                            />
+                                            <path
+                                                d="M5.9 6.6h3M5.9 9.6h3M5.9 12.6h3"
+                                                stroke="currentColor"
+                                                strokeWidth="1.4"
+                                                strokeLinecap="round"
+                                            />
+                                        </svg>
+                                    </div>
+                                    <div
                                         style={{
-                                            fontSize: 15,
-                                            fontWeight: 800,
-                                            color: '#142C73',
-                                            lineHeight: 1.15,
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: 1,
                                         }}
                                     >
-                                        {contexte.societe}
-                                    </span>
-                                    {contexte.immatriculation ? (
                                         <span
                                             style={{
-                                                fontSize: 11,
-                                                color: '#5A6478',
+                                                fontSize: 9.5,
+                                                fontWeight: 700,
+                                                letterSpacing: '.1em',
+                                                textTransform: 'uppercase',
+                                                color: '#5A7BC0',
                                             }}
                                         >
-                                            RCCM / NIF{' '}
-                                            {contexte.immatriculation}
+                                            Espace de
                                         </span>
-                                    ) : null}
+                                        <span
+                                            style={{
+                                                fontSize: 15,
+                                                fontWeight: 800,
+                                                color: '#142C73',
+                                                lineHeight: 1.15,
+                                            }}
+                                        >
+                                            {contexte.societe}
+                                        </span>
+                                        {contexte.immatriculation ? (
+                                            <span
+                                                style={{
+                                                    fontSize: 11,
+                                                    color: '#5A6478',
+                                                }}
+                                            >
+                                                RCCM / NIF{' '}
+                                                {contexte.immatriculation}
+                                            </span>
+                                        ) : null}
+                                    </div>
                                 </div>
-                            </div>
-                        ) : null}
+                            ) : null}
+                        </div>
                     </div>
-                </div>
-                <div
-                    style={{
-                        height: 9,
-                        backgroundImage:
-                            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='9' viewBox='0 0 72 9'%3E%3Cpath d='M0 4.5 Q9 0.5 18 4.5 T36 4.5 T54 4.5 T72 4.5' fill='none' stroke='%237EC8F0' stroke-opacity='0.5' stroke-width='1.4'/%3E%3C/svg%3E\")",
-                        backgroundRepeat: 'repeat-x',
-                        backgroundPosition: 'bottom 2px left 0',
-                        marginTop: 2,
-                    }}
-                />
-            </section>
+                    <div
+                        style={{
+                            height: 9,
+                            backgroundImage:
+                                "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='9' viewBox='0 0 72 9'%3E%3Cpath d='M0 4.5 Q9 0.5 18 4.5 T36 4.5 T54 4.5 T72 4.5' fill='none' stroke='%237EC8F0' stroke-opacity='0.5' stroke-width='1.4'/%3E%3C/svg%3E\")",
+                            backgroundRepeat: 'repeat-x',
+                            backgroundPosition: 'bottom 2px left 0',
+                            marginTop: 2,
+                        }}
+                    />
+                </section>
+            ) : null}
 
             {/* ══ Onglets internes ══ */}
             {tabs && tabs.length > 0 ? (

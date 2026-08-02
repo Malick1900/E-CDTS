@@ -2,7 +2,6 @@ import { Link, router, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { logout } from '@/routes';
-import { edit as profileEdit } from '@/routes/profile';
 import '../../../css/ecdts-admin.css';
 
 /*
@@ -935,7 +934,7 @@ export default function AdminShell({
                                                 ) : null}
                                             </div>
                                             <Link
-                                                href={profileEdit()}
+                                                href="/profil"
                                                 onClick={() =>
                                                     setOpenMenu(null)
                                                 }
