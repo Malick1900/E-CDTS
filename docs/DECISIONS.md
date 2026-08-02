@@ -20,6 +20,24 @@
 
 ---
 
+## ADR-0037 — Le français est une propriété de la plateforme, pas un réglage d'environnement — 2026-08-03
+**Statut :** Acceptée.
+**Contexte :** un identifiant erroné sur l'écran de connexion renvoyait *« These credentials do not match our records. »* à un consignataire gabonais. Deux causes empilées : `config/app.php` lisait `env('APP_LOCALE', 'fr')` alors que le `.env` hérité du starter kit portait `APP_LOCALE=en` ; et même en français, le répertoire `lang/fr/` n'existait pas — Laravel serait retombé sur les chaînes anglaises embarquées dans `vendor`. Aucun test n'a signalé quoi que ce soit : `AuthenticationTest` comparait le message rendu à `__('auth.failed')`, expression qui vaut le message anglais quand la langue est l'anglais. La suite était verte et l'écran était en anglais.
+**Décision :**
+- **`'locale' => 'fr'` écrit en dur** dans `config/app.php`. La langue de travail d'une plateforme d'État gabonaise n'est pas une variable que chaque déploiement redéfinit. Le repli reste `en` : il ne sert que de filet si une chaîne du framework n'a pas encore sa traduction, et une phrase anglaise vaut mieux qu'une clé brute affichée à l'administré.
+- **Traduction intégrale des messages du framework** dans `lang/fr/` — `validation.php`, `auth.php`, `passwords.php`, `pagination.php` — plus les chaînes à clé JSON des courriels de réinitialisation et de vérification dans `lang/fr.json`.
+- **Une table `attributes`** dans `lang/fr/validation.php` pour les champs communs à plusieurs écrans, afin qu'un refus nomme le champ dans les mots de l'écran (« adresse de connexion ») et non dans ceux de la table (« email »). Les formulaires au vocabulaire propre gardent leur `attributes()` local, qui l'emporte.
+- **Les écrans d'authentification restés en anglais** — mot de passe oublié, nouveau mot de passe, vérification d'adresse, confirmation — sont traduits.
+- **Un test compare désormais la phrase française elle-même** (`tests/Feature/LangueTest.php`), jamais le helper de traduction.
+**Alternatives écartées :**
+- *Corriger seulement le `.env`* — écarté : le fichier n'est pas versionné. La correction ne survit ni à un nouveau poste ni à une mise en production.
+- *Garder `env('APP_LOCALE', 'fr')`* — écarté : le défaut était déjà `fr` et n'a rien empêché. Tant que la langue dépend de l'environnement, l'oubli d'une ligne suffit à servir l'anglais à l'administré.
+- *Basculer le repli sur `fr`* — écarté : une clé sans traduction s'afficherait telle quelle (`validation.foo`) au lieu de sa phrase anglaise, ce qui est moins lisible, pas plus.
+- *Traduire au fil de l'eau, écran par écran* — écarté : c'est précisément ce qui a produit une page de connexion française portant un message d'erreur anglais.
+**Conséquences :**
+- La langue ne se surcharge plus par environnement. Le jour où une seconde langue devient nécessaire, c'est une décision de produit qui rouvre cette ADR, pas une ligne de `.env`.
+- Toute nouvelle chaîne du framework non traduite s'affichera en anglais. Le filet est volontaire, mais il ne dispense pas de compléter `lang/fr/`.
+
 ## ADR-0036 — Un écran de profil unique, et la dépose des écrans `settings` du starter kit — 2026-08-02
 **Statut :** Acceptée — **prolonge ADR-0030** (coquille unique) et **ADR-0012** (jamais de suppression dure).
 **Contexte :** la plateforme avait toujours, hérités du starter kit React, trois écrans `/settings/*` en anglais et au style shadcn : *Profile* (nom + adresse + **suppression de son propre compte**), *Security* (mot de passe, derrière une confirmation de mot de passe) et *Appearance* (thème clair/sombre). Ils n'appartenaient à aucun module d'e-CDTS, ne portaient pas le chrome institutionnel, et l'entrée « Profil » du menu compte y menait. Trois anomalies s'y logeaient : une URL anglaise au milieu d'un routage francophone, un thème sombre qu'aucun écran e-CDTS ne respecte, et surtout une route `DELETE /settings/profile` qui effaçait durement un compte — en contradiction frontale avec ADR-0012.

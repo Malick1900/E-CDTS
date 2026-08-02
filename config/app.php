@@ -81,10 +81,17 @@ return [
     /*
      * Le portail s'adresse à des administrations et à des sociétés gabonaises :
      * le français est la langue de travail, y compris pour les courriels
-     * envoyés aux consignataires. Le repli anglais reste en place pour les
-     * chaînes du framework qui ne sont pas encore traduites.
+     * envoyés aux consignataires.
+     *
+     * Écrit en dur et non `env('APP_LOCALE')` : la langue d'une plateforme
+     * d'État n'est pas un réglage d'environnement. Tant qu'elle en dépendait,
+     * un `.env` hérité du starter kit suffisait à renvoyer l'anglais du
+     * framework à l'administré — c'est exactement ce qui s'est produit sur la
+     * page de connexion. Le repli anglais reste en place : il ne sert que de
+     * filet si une chaîne du framework n'a pas encore sa traduction, et vaut
+     * mieux qu'une clé brute affichée à l'écran.
      */
-    'locale' => env('APP_LOCALE', 'fr'),
+    'locale' => 'fr',
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
