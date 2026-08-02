@@ -100,7 +100,7 @@ export default function ArmementsTab({
             placeholder="Rechercher un nom, un sigle, un gérant, un RCCM…"
             total={total}
             unite={['armement', 'armements']}
-            largeurMin={1180}
+            largeurMin={1290}
             vide={
                 armements.length === 0
                     ? 'Votre société ne représente aucun armement. C’est le CGC qui les rattache à votre fiche.'
@@ -117,6 +117,7 @@ export default function ArmementsTab({
                     <Th w={180}>Immatriculation</Th>
                     <Th w={160}>Gérant</Th>
                     <Th w={210}>Siège</Th>
+                    <Th w={110}>Navires</Th>
                     <Th w={230}>Agents affectés</Th>
                 </tr>
             }
@@ -213,6 +214,34 @@ export default function ArmementsTab({
                         <Td>{armement.gerant ?? <Vide />}</Td>
 
                         <Td>{armement.adresse ?? <Vide />}</Td>
+
+                        <Td style={{ fontVariantNumeric: 'tabular-nums' }}>
+                            {armement.navires === 0 ? (
+                                <span style={{ color: '#8A93A6' }}>Aucun</span>
+                            ) : (
+                                <>
+                                    <span
+                                        style={{
+                                            fontSize: 13,
+                                            fontWeight: 700,
+                                            color: '#1A1F2E',
+                                        }}
+                                    >
+                                        {armement.navires}
+                                    </span>
+                                    <span
+                                        style={{
+                                            fontSize: 11.5,
+                                            color: '#5A6478',
+                                        }}
+                                    >
+                                        {armement.navires > 1
+                                            ? ' navires'
+                                            : ' navire'}
+                                    </span>
+                                </>
+                            )}
+                        </Td>
 
                         <Td>
                             {noms.length === 0 ? (

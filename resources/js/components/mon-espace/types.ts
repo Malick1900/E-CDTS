@@ -38,6 +38,8 @@ export type MonAgentRow = {
  * ce qui laisse la matrice d'affectation s'en servir telle quelle.
  */
 export type MonArmementRow = ArmementBadge & {
+    /** Taille de la flotte au référentiel, tous ports confondus. */
+    navires: number;
     /** Pavillon de l'armateur — le pays d'où il opère. */
     pays_origine: string | null;
     /** Pays où la compagnie est immatriculée ; souvent distinct du pavillon. */

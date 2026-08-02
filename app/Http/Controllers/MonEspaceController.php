@@ -143,12 +143,17 @@ class MonEspaceController extends Controller
     {
         return array_values($societe->armements()
             ->with(['paysOrigine:id,name', 'paysImmatriculation:id,name'])
+            ->withCount('navires')
             ->orderBy('name')
             ->get()
             ->map(fn (Armement $armement): array => [
                 'id' => $armement->id,
                 'name' => $armement->name,
                 'sigle' => $armement->sigle,
+                // La flotte de l'armement au référentiel — tous ports confondus,
+                // et non les seuls navires attendus : c'est la taille du mandat
+                // qu'on annonce, pas un programme d'escales.
+                'navires' => (int) $armement->navires_count,
                 'pays_origine' => $armement->paysOrigine?->name,
                 'pays_immatriculation' => $armement->paysImmatriculation?->name,
                 'gerant' => $armement->gerant,

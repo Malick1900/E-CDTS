@@ -108,7 +108,7 @@ class MonEspaceTest extends TestCase
                     // La fiche que lit l'onglet « Mes armements » : le pavillon
                     // et l'état du référentiel s'y ajoutent à la pastille.
                     ->hasAll([
-                        'id', 'name', 'sigle', 'pays_origine',
+                        'id', 'name', 'sigle', 'navires', 'pays_origine',
                         'pays_immatriculation', 'gerant', 'rccm_nif',
                         'adresse', 'actif',
                     ])
