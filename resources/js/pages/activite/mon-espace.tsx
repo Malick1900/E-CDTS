@@ -1,21 +1,74 @@
 import { Head } from '@inertiajs/react';
+import { useState } from 'react';
 import AVenir from '@/components/a-venir';
 import ActivityShell from '@/components/activity-shell';
+import Toast from '@/components/admin/toast';
+import AffectationsTab from '@/components/mon-espace/affectations-tab';
+import AgentsTab from '@/components/mon-espace/agents-tab';
+import ArmementsTab from '@/components/mon-espace/armements-tab';
+import type {
+    MonAgentRow,
+    MonArmementRow,
+} from '@/components/mon-espace/types';
 
 /*
- * L'espace d'administration de sa propre société — le lot 2. La route existe
- * dès maintenant parce que l'entrée « Administration » d'un titulaire y mène
- * (ADR-0030) : sans elle, la navigation promettrait un 404.
+ * L'espace d'administration de sa propre société (lot 2).
+ *
+ * Quatre sous-écrans, du plus quotidien au plus rare : ses agents, ce sur quoi
+ * ils opèrent, les armements que la société représente, puis sa fiche. Les
+ * onglets sont posés d'abord, et chacun se remplit ensuite — la charpente avant
+ * le contenu, comme pour le reste de la coquille (ADR-0030).
+ *
+ * Rien n'est décidé ici sur le périmètre : le serveur n'envoie déjà que ce qui
+ * relève de la société du compte connecté.
  */
-export default function MonEspace() {
+
+type Onglet = 'agents' | 'affectations' | 'armements' | 'societe';
+
+type Props = {
+    compteurs: { agents: number; armements: number };
+    agents: MonAgentRow[];
+    /** Les armements que la société représente — colonnes de la matrice. */
+    armements: MonArmementRow[];
+};
+
+export default function MonEspace({ compteurs, agents, armements }: Props) {
+    const [onglet, setOnglet] = useState<Onglet>('agents');
+
     return (
         <ActivityShell
             active="administration"
             title="Administration"
             subtitle="Gérez vos agents, leurs habilitations et les informations de votre société."
+            tabs={[
+                { key: 'agents', label: 'Mes agents', badge: compteurs.agents },
+                { key: 'affectations', label: 'Affectations' },
+                {
+                    key: 'armements',
+                    label: 'Mes armements',
+                    badge: compteurs.armements,
+                },
+                { key: 'societe', label: 'Ma société' },
+            ]}
+            activeTab={onglet}
+            onTab={(cle) => setOnglet(cle as Onglet)}
         >
             <Head title="Administration" />
-            <AVenir message="La gestion de vos agents et des informations de votre société sera disponible prochainement." />
+            <Toast />
+
+            {onglet === 'agents' ? <AgentsTab agents={agents} /> : null}
+
+            {onglet === 'affectations' ? (
+                <AffectationsTab agents={agents} armements={armements} />
+            ) : null}
+
+            {onglet === 'armements' ? (
+                <ArmementsTab agents={agents} armements={armements} />
+            ) : null}
+
+            {onglet === 'societe' ? (
+                <AVenir message="La fiche de votre société, telle que le CGC la détient, s'affichera ici." />
+            ) : null}
         </ActivityShell>
     );
 }

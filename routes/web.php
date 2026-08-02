@@ -13,6 +13,9 @@ use App\Http\Controllers\Admin\Users\AgentController;
 use App\Http\Controllers\Admin\Users\ConsignataireController;
 use App\Http\Controllers\Admin\Users\RoleController;
 use App\Http\Controllers\Admin\Users\TitulaireController;
+use App\Http\Controllers\MonEspace\AffectationController as MonEspaceAffectationController;
+use App\Http\Controllers\MonEspace\AgentController as MonEspaceAgentController;
+use App\Http\Controllers\MonEspaceController;
 use Illuminate\Support\Facades\Route;
 
 // e-CDTS est un portail fermé (ADR-0021) : la racine n'a rien à montrer à un
@@ -40,11 +43,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('can:'.Permission::DevisConsulter->value)
         ->name('devis');
 
-    // L'espace d'administration de sa propre société — le lot 2. L'entrée de
-    // nav existe déjà pour un titulaire : sans cette route, elle mènerait à un 404.
-    Route::inertia('mon-espace', 'activite/mon-espace')
+    // L'espace d'administration de sa propre société (lot 2). La permission
+    // ouvre la porte ; c'est le controller qui borne ce qu'on voit derrière —
+    // la société se déduit du compte, jamais de l'URL.
+    Route::get('mon-espace', [MonEspaceController::class, 'index'])
         ->middleware('can:'.Permission::MesAgentsGerer->value)
         ->name('mon-espace');
+
+    // Les écritures de cet espace. La société crée et suspend ses agents, le
+    // CGC les valide (ADR-0013) : d'où un CRUD ici et des routes de décision
+    // là-bas. La suppression n'existe que pour une demande jamais examinée.
+    Route::prefix('mon-espace')
+        ->name('mon-espace.')
+        ->middleware('can:'.Permission::MesAgentsGerer->value)
+        ->group(function () {
+            Route::post('agents', [MonEspaceAgentController::class, 'store'])->name('agents.store');
+            Route::patch('agents/{agent}', [MonEspaceAgentController::class, 'update'])->name('agents.update');
+            Route::patch('agents/{agent}/activation', [MonEspaceAgentController::class, 'toggleActive'])->name('agents.activation');
+            Route::patch('agents/{agent}/soumission', [MonEspaceAgentController::class, 'resoumettre'])->name('agents.soumission');
+            Route::delete('agents/{agent}', [MonEspaceAgentController::class, 'destroy'])->name('agents.destroy');
+
+            // Une case de la matrice d'affectation : les deux identifiants sont
+            // dans l'URL, et tous deux sont vérifiés contre la société (ADR-0009).
+            Route::patch('affectations/{agent}/{armement}', [MonEspaceAffectationController::class, 'toggle'])
+                ->name('affectations.toggle');
+        });
 
     // Administration CGC — un module = une route. Les modules encore alimentés
     // par des données factices restent en Route::inertia ; ils seront câblés un
@@ -122,7 +145,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             // Pas de route d'affectation des armements : elle appartient au
             // titulaire de la société, seul porteur de `mes-agents.gerer`
-            // (ADR-0030). Le CGC continue de voir qui opère sur quoi — c'est
+            // (ADR-0031). Le CGC continue de voir qui opère sur quoi — c'est
             // utile au support et à l'audit — mais ne l'écrit plus.
         });
 
