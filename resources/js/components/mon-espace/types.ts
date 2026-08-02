@@ -43,3 +43,27 @@ export type MonArmementRow = ArmementBadge & {
     /** Un armement désactivé au référentiel ne portera plus d'escale nouvelle. */
     actif: boolean;
 };
+
+/** Un port où la société est habilitée à exercer (ADR-0014). */
+export type MonPortRow = {
+    id: number;
+    name: string;
+    code: string;
+    pays: string | null;
+};
+
+/**
+ * La fiche de la société, telle que le CGC la détient. Sans identifiant : cet
+ * écran ne s'adresse qu'à une seule société, celle du compte connecté, et
+ * n'écrit rien.
+ */
+export type MonSocieteFiche = {
+    name: string;
+    sigle: string | null;
+    rccm_nif: string | null;
+    pays_immatriculation: string | null;
+    adresse: string | null;
+    telephone: string | null;
+    email: string | null;
+    ports: MonPortRow[];
+};

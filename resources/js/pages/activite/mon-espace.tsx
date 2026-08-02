@@ -1,14 +1,15 @@
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
-import AVenir from '@/components/a-venir';
 import ActivityShell from '@/components/activity-shell';
 import Toast from '@/components/admin/toast';
 import AffectationsTab from '@/components/mon-espace/affectations-tab';
 import AgentsTab from '@/components/mon-espace/agents-tab';
 import ArmementsTab from '@/components/mon-espace/armements-tab';
+import SocieteTab from '@/components/mon-espace/societe-tab';
 import type {
     MonAgentRow,
     MonArmementRow,
+    MonSocieteFiche,
 } from '@/components/mon-espace/types';
 
 /*
@@ -30,9 +31,16 @@ type Props = {
     agents: MonAgentRow[];
     /** Les armements que la société représente — colonnes de la matrice. */
     armements: MonArmementRow[];
+    /** La fiche du dossier client, en lecture seule. */
+    societe: MonSocieteFiche;
 };
 
-export default function MonEspace({ compteurs, agents, armements }: Props) {
+export default function MonEspace({
+    compteurs,
+    agents,
+    armements,
+    societe,
+}: Props) {
     const [onglet, setOnglet] = useState<Onglet>('agents');
 
     return (
@@ -66,9 +74,7 @@ export default function MonEspace({ compteurs, agents, armements }: Props) {
                 <ArmementsTab agents={agents} armements={armements} />
             ) : null}
 
-            {onglet === 'societe' ? (
-                <AVenir message="La fiche de votre société, telle que le CGC la détient, s'affichera ici." />
-            ) : null}
+            {onglet === 'societe' ? <SocieteTab societe={societe} /> : null}
         </ActivityShell>
     );
 }

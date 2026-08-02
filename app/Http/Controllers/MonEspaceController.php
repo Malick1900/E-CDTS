@@ -6,6 +6,7 @@ use App\Concerns\BorneASaSociete;
 use App\Enums\StatutValidation;
 use App\Models\Armement;
 use App\Models\Consignataire;
+use App\Models\Port;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -29,6 +30,8 @@ class MonEspaceController extends Controller
     public function index(Request $request): Response
     {
         $societe = $this->societe($request);
+        $societe->load(['paysImmatriculation:id,name', 'ports.pays:id,name']);
+
         $armements = $this->armements($societe);
 
         return Inertia::render('activite/mon-espace', [
@@ -40,7 +43,43 @@ class MonEspaceController extends Controller
             ],
             'agents' => $this->agents($request, $societe),
             'armements' => $armements,
+            'societe' => $this->fiche($societe),
         ]);
+    }
+
+    /**
+     * La fiche de la société, telle que le CGC la détient — en lecture seule.
+     *
+     * Elle n'est pas modifiable ici, et ce n'est pas un manque : la raison
+     * sociale, le RCCM · NIF et les ports desservis sont ce sur quoi le CGC a
+     * ouvert le compte, sur pièces. Les laisser corriger côté client rendrait
+     * le dossier divergent de ce qui a été vérifié. Le titulaire constate, et
+     * signale ce qui a changé.
+     *
+     * @return array<string, mixed>
+     */
+    private function fiche(Consignataire $societe): array
+    {
+        return [
+            'name' => $societe->name,
+            'sigle' => $societe->sigle,
+            'rccm_nif' => $societe->rccm_nif,
+            'pays_immatriculation' => $societe->paysImmatriculation?->name,
+            'adresse' => $societe->adresse,
+            'telephone' => $societe->telephone,
+            'email' => $societe->email,
+            // Les ports où la société exerce (ADR-0014). Ce ne sont pas des
+            // décorations : ils bornent les escales qu'elle pourra déclarer.
+            'ports' => array_values($societe->ports
+                ->sortBy('name')
+                ->map(fn (Port $port): array => [
+                    'id' => $port->id,
+                    'name' => $port->name,
+                    'code' => $port->code,
+                    'pays' => $port->pays?->name,
+                ])
+                ->all()),
+        ];
     }
 
     /**

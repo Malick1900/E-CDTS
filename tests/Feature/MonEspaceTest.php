@@ -7,6 +7,7 @@ use App\Enums\RoleClient;
 use App\Enums\StatutValidation;
 use App\Models\Armement;
 use App\Models\Consignataire;
+use App\Models\Port;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -107,6 +108,35 @@ class MonEspaceTest extends TestCase
                     // La fiche que lit l'onglet « Mes armements » : le pavillon
                     // et l'état du référentiel s'y ajoutent à la pastille.
                     ->hasAll(['id', 'name', 'sigle', 'pays', 'actif'])
+                )
+            );
+    }
+
+    /**
+     * L'onglet « Ma société » lit le dossier du compte connecté et lui seul,
+     * ports desservis compris — ceux d'une concurrente diraient où elle opère.
+     */
+    public function test_la_fiche_societe_est_celle_du_compte_connecte(): void
+    {
+        $mienne = $this->societe();
+        $mienne->ports()->attach(Port::factory()->count(2)->create());
+
+        $autre = $this->societe();
+        $autre->ports()->attach(Port::factory()->count(3)->create());
+
+        $this->actingAs($mienne->titulaire)
+            ->get(route('mon-espace'))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('societe.name', $mienne->name)
+                ->has('societe', fn (AssertableInertia $societe) => $societe
+                    ->hasAll([
+                        'name', 'sigle', 'rccm_nif', 'pays_immatriculation',
+                        'adresse', 'telephone', 'email', 'ports',
+                    ])
+                    ->has('ports', 2, fn (AssertableInertia $port) => $port
+                        ->hasAll(['id', 'name', 'code', 'pays'])
+                    )
                 )
             );
     }
