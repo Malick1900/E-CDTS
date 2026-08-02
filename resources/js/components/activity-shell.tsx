@@ -22,7 +22,8 @@ type NavEntry = { key: string; label: string; href: string };
 
 type Coquille = {
     navigation: NavEntry[];
-    qualite: string;
+    /** La société d'un compte client — null pour un interne CGC, qui n'est chez personne. */
+    qualite: string | null;
     contexte: { societe: string; immatriculation: string | null } | null;
 };
 
@@ -62,7 +63,7 @@ export default function ActivityShell({
         ?.user;
     const coquille = (page.props as { coquille?: Coquille }).coquille;
     const nom = user?.name ?? 'Mon compte';
-    const qualite = coquille?.qualite ?? '';
+    const qualite = coquille?.qualite ?? null;
     const contexte = coquille?.contexte ?? null;
 
     const [openMenu, setOpenMenu] = useState(false);
@@ -324,16 +325,18 @@ export default function ActivityShell({
                             >
                                 {nom}
                             </span>
-                            <span
-                                style={{
-                                    fontSize: 11,
-                                    color: '#5A6478',
-                                    lineHeight: 1.2,
-                                    whiteSpace: 'nowrap',
-                                }}
-                            >
-                                {qualite}
-                            </span>
+                            {qualite ? (
+                                <span
+                                    style={{
+                                        fontSize: 11,
+                                        color: '#5A6478',
+                                        lineHeight: 1.2,
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                >
+                                    {qualite}
+                                </span>
+                            ) : null}
                         </div>
                         <svg
                             width="14"
@@ -394,9 +397,13 @@ export default function ActivityShell({
                                 >
                                     {nom}
                                 </div>
-                                <div style={{ fontSize: 11, color: '#5A6478' }}>
-                                    {qualite}
-                                </div>
+                                {qualite ? (
+                                    <div
+                                        style={{ fontSize: 11, color: '#5A6478' }}
+                                    >
+                                        {qualite}
+                                    </div>
+                                ) : null}
                             </div>
                             <Link
                                 href={profileEdit()}

@@ -182,15 +182,15 @@ class NavigationTest extends TestCase
             ->get(route('dashboard'))
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->where('coquille.contexte.societe', $consignataire->name)
-                ->where('coquille.qualite', $consignataire->name.' — Compte maître')
+                ->where('coquille.qualite', $consignataire->name)
             );
 
-        // Un interne du CGC n'est chez personne : pas de carte.
+        // Un interne du CGC n'est chez personne : ni carte, ni puce.
         $this->actingAs($this->interne(Profil::Superviseur))
             ->get(route('dashboard'))
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->where('coquille.contexte', null)
-                ->where('coquille.qualite', 'Superviseur — CGC')
+                ->where('coquille.qualite', null)
             );
     }
 

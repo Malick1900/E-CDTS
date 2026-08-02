@@ -62,7 +62,7 @@ class HandleInertiaRequests extends Middleware
      *
      * Null pour un visiteur : les écrans d'authentification n'ont pas de chrome.
      *
-     * @return array{navigation: list<array{key: string, label: string, href: string}>, qualite: string, contexte: array{societe: string, immatriculation: string|null}|null}|null
+     * @return array{navigation: list<array{key: string, label: string, href: string}>, qualite: string|null, contexte: array{societe: string, immatriculation: string|null}|null}|null
      */
     private function coquille(?User $user): ?array
     {
@@ -127,20 +127,17 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * Le sous-titre de la puce utilisateur : sa position pour un compte client,
-     * son profil pour un interne CGC.
+     * Le sous-titre de la puce utilisateur : la société pour un compte client,
+     * rien pour un interne CGC.
+     *
+     * Un client a besoin de lire au nom de qui il déclare — il peut avoir un
+     * compte chez plusieurs consignataires. Un interne, lui, est chez lui : son
+     * profil n'apprend rien à celui qui le porte, et l'écrire sous son nom ne
+     * ferait qu'exposer l'organisation du CGC à quiconque regarde l'écran.
      */
-    private function qualite(User $user): string
+    private function qualite(User $user): ?string
     {
-        $societe = $user->consignataire;
-
-        if ($societe) {
-            return $societe->titulaire_user_id === $user->id
-                ? $societe->name.' — Compte maître'
-                : $societe->name.' — Agent déclarant';
-        }
-
-        return ($user->getRoleNames()->first() ?? 'Compte interne').' — CGC';
+        return $user->consignataire?->name;
     }
 
     /**
