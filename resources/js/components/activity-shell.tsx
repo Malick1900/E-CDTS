@@ -27,6 +27,8 @@ type Coquille = {
     contexte: { societe: string; immatriculation: string | null } | null;
 };
 
+type Tab = { key: string; label: string; badge?: number };
+
 type ActivityShellProps = {
     /** Clé de l'entrée de navigation courante (voir `HandleInertiaRequests`). */
     active: string;
@@ -34,6 +36,10 @@ type ActivityShellProps = {
     subtitle: string;
     /** Maillons intermédiaires du fil d'Ariane, entre « Tableau de bord » et le titre. */
     crumbs?: string[];
+    /** Sous-écrans d'un même module — absents pour un écran d'un seul tenant. */
+    tabs?: Tab[];
+    activeTab?: string;
+    onTab?: (key: string) => void;
     children: ReactNode;
 };
 
@@ -56,6 +62,9 @@ export default function ActivityShell({
     title,
     subtitle,
     crumbs = [],
+    tabs,
+    activeTab,
+    onTab,
     children,
 }: ActivityShellProps) {
     const page = usePage();
@@ -399,7 +408,10 @@ export default function ActivityShell({
                                 </div>
                                 {qualite ? (
                                     <div
-                                        style={{ fontSize: 11, color: '#5A6478' }}
+                                        style={{
+                                            fontSize: 11,
+                                            color: '#5A6478',
+                                        }}
                                     >
                                         {qualite}
                                     </div>
@@ -699,6 +711,72 @@ export default function ActivityShell({
                     }}
                 />
             </section>
+
+            {/* ══ Onglets internes ══ */}
+            {tabs && tabs.length > 0 ? (
+                <div
+                    style={{
+                        background: '#fff',
+                        borderBottom: '1px solid #D8DEE9',
+                        padding: '0 26px',
+                        display: 'flex',
+                        gap: 2,
+                        flex: 'none',
+                    }}
+                >
+                    {tabs.map((t) => {
+                        const on = t.key === activeTab;
+
+                        return (
+                            <button
+                                key={t.key}
+                                type="button"
+                                onClick={() => onTab?.(t.key)}
+                                className={on ? undefined : 'ea-tab'}
+                                style={{
+                                    padding: '12px 16px 11px',
+                                    border: 'none',
+                                    borderBottom: on
+                                        ? '2.5px solid #1D3E9C'
+                                        : '2.5px solid transparent',
+                                    background: 'transparent',
+                                    cursor: 'pointer',
+                                    fontSize: 13,
+                                    fontWeight: on ? 700 : 600,
+                                    color: on ? '#1D3E9C' : '#5A6478',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 7,
+                                }}
+                            >
+                                {t.label}
+                                {typeof t.badge === 'number' ? (
+                                    <span
+                                        style={{
+                                            minWidth: 18,
+                                            height: 18,
+                                            padding: '0 5px',
+                                            borderRadius: 9,
+                                            background: on
+                                                ? '#1D3E9C'
+                                                : '#D8DEE9',
+                                            color: on ? '#fff' : '#5A6478',
+                                            fontSize: 11,
+                                            fontWeight: 700,
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontVariantNumeric: 'tabular-nums',
+                                        }}
+                                    >
+                                        {t.badge}
+                                    </span>
+                                ) : null}
+                            </button>
+                        );
+                    })}
+                </div>
+            ) : null}
 
             {/* ══ Zone défilante ══ */}
             <main
