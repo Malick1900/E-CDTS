@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -123,6 +125,26 @@ class User extends Authenticatable
     public function estAgent(): bool
     {
         return $this->consignataire_id !== null;
+    }
+
+    /**
+     * Ce compte peut-il conférer ce rôle à quelqu'un ? (ADR-0033)
+     *
+     * On ne donne pas ce qu'on n'a pas : un rôle n'est attribuable que par un
+     * compte qui porte déjà chacune de ses permissions. Sans cette règle, un
+     * Superviseur — qui gère les utilisateurs mais pas les rôles (ADR-0025) —
+     * se créait un compte Administrateur et reprenait par la porte de service
+     * tout ce que cette séparation lui refusait.
+     *
+     * La règle suit le contenu réel des rôles, pas leur nom : recomposer un rôle
+     * déplace aussitôt qui peut l'attribuer. Le super-admin n'est pas gêné, il
+     * outrepasse via Gate::before — `can()` lui répond oui pour tout.
+     */
+    public function peutConferer(Role $role): bool
+    {
+        return $role->permissions->every(
+            fn (Permission $permission): bool => $this->can($permission->name),
+        );
     }
 
     /**

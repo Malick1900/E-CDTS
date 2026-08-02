@@ -20,6 +20,24 @@
 
 ---
 
+## ADR-0033 — On ne donne pas ce qu'on n'a pas : l'attribution d'un rôle est bornée par ses propres permissions — 2026-08-02
+**Statut :** Acceptée (arbitrage du porteur, 2026-08-02) — **ferme une faille d'ADR-0025**, dont elle rend la séparation effective.
+**Contexte :** ADR-0025 a séparé `utilisateurs.gerer` de `roles.gerer` précisément « pour qu'un Superviseur ne puisse pas s'octroyer n'importe quelle permission en deux clics ». La séparation était contournable en un clic : le Superviseur, qui gère les comptes internes, voyait dans le formulaire de création **toutes** les cases de rôles, dont *Administrateur*. Il se créait un compte administrateur — ou s'ajoutait le rôle à lui-même — et reprenait tout ce que la séparation lui refusait. Constaté par le porteur sur l'écran « Nouvel utilisateur ».
+**Décision :**
+- **Un rôle n'est attribuable que par un compte qui porte déjà chacune de ses permissions.** La règle porte sur le contenu réel des rôles, pas sur leurs noms : recomposer un rôle déplace aussitôt qui peut l'attribuer.
+- **Le retrait est le symétrique de l'attribution** : on ne modifie pas un compte dont on ne saurait pas conférer les rôles. Sans cela, le Superviseur ne créait pas d'Administrateur mais le rétrogradait — ou, plus direct encore, lui changeait son mot de passe pour prendre sa place, `UserUpdateRequest` acceptant ce champ. La porte se ferme donc au niveau du **compte**, pas de la charge utile : édition, changement de mot de passe et désactivation d'un Administrateur sont refusés au Superviseur d'un seul geste.
+- La règle est posée **aux deux niveaux**, comme pour les rôles clients (ADR-0031) : l'écran ne propose plus ce qui n'est pas conférable, et la validation le refuse — une requête forgée n'a pas d'écran à contourner.
+- Le super-admin n'est pas concerné : il outrepasse via `Gate::before`, donc `can()` lui répond oui pour tout.
+**Alternatives écartées :**
+- *Interdire nommément le rôle « Administrateur » aux non-Administrateurs* — trois lignes, très lisible, mais elle se périme au premier rôle recomposé : un Conférencier à qui l'on confierait `roles.gerer` resterait attribuable par un Superviseur.
+- *« On n'attribue qu'un rôle qu'on porte soi-même »* — écartée : elle interdirait au Superviseur de créer un Conférencier, ce qui est son travail.
+- *Ne fermer que l'attribution, laisser le retrait ouvert* — écartée par le porteur : elle laisse intacte la neutralisation d'un administrateur, et surtout le vol de son compte par changement de mot de passe.
+**Conséquences :**
+- Un Superviseur peut créer et éditer Conférencier, Agent dépouilleur, Consultant et Superviseur — dont les permissions sont incluses dans les siennes — mais ni voir ni toucher un compte Administrateur. C'est un **rétrécissement réel de ses pouvoirs**, assumé.
+- La liste des comptes porte un drapeau `peut_modifier` par ligne : l'écran grise ce que la `UserPolicy` refuserait, au lieu de laisser cliquer vers un 403.
+- Le coût est une jointure de plus (`roles.permissions`) sur la liste des comptes internes, et une lecture du rôle par entrée validée. Négligeable à l'échelle des comptes CGC.
+- **Non traité :** rien n'empêche encore un Administrateur de se retirer à lui-même le rôle Administrateur ; l'anti-auto-blocage d'ADR-0012 ne couvre que `utilisateurs.gerer`.
+
 ## ADR-0032 — Ce que la page de connexion révèle : l'état du compte, jamais son existence — 2026-07-31
 **Statut :** Acceptée (grilling du porteur, 2026-07-31) — **complète ADR-0013, ADR-0024 et ADR-0026**.
 **Contexte :** deux colonnes gouvernent l'accès d'un compte agent (ADR-0026) mais **une seule était lue à la connexion**. `is_active` bloquait, muettement — « sans révéler la cause exacte ». `statut_validation` ne bloquait pas du tout : un agent créé par sa société et **pas encore validé par le CGC** pouvait se connecter et atterrir sur un écran vide, alors que le circuit d'ADR-0013 dit précisément qu'il ne peut rien faire avant validation. Le porteur a demandé des messages explicites, y compris pour un compte inexistant.

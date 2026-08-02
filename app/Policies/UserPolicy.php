@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Enums\Permission;
 use App\Enums\Profil;
 use App\Models\User;
+use Spatie\Permission\Models\Role;
 
 /**
  * Autorisations du module « Utilisateurs & habilitations ».
@@ -33,6 +34,20 @@ class UserPolicy
             return false;
         }
 
-        return ! $cible->hasRole(Profil::SuperAdmin->value);
+        if ($cible->hasRole(Profil::SuperAdmin->value)) {
+            return false;
+        }
+
+        // On ne touche pas à un compte qu'on ne saurait pas recomposer (ADR-0033).
+        // Le retrait est le symétrique de l'attribution : interdire au Superviseur
+        // de créer un Administrateur sans lui interdire d'en éditer un le laisserait
+        // le rétrograder — ou lui changer son mot de passe pour prendre sa place.
+        foreach ($cible->roles as $role) {
+            if (! $role instanceof Role || ! $user->peutConferer($role)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

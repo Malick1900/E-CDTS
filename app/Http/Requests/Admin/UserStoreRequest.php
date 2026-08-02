@@ -7,6 +7,7 @@ use App\Concerns\ProfileValidationRules;
 use App\Enums\Profil;
 use App\Enums\RoleClient;
 use App\Models\User;
+use App\Rules\RoleConferable;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -40,6 +41,8 @@ class UserStoreRequest extends FormRequest
                 // Les rôles clients non plus : ils suivent la position dans une
                 // société et n'ont aucun sens sur un compte interne (ADR-0031).
                 Rule::notIn([Profil::SuperAdmin->value, ...RoleClient::values()]),
+                // On n'attribue pas un rôle qu'on ne porte pas soi-même (ADR-0033).
+                new RoleConferable($this->user()),
             ],
         ];
     }

@@ -6,6 +6,7 @@ use App\Concerns\ProfileValidationRules;
 use App\Enums\Profil;
 use App\Enums\RoleClient;
 use App\Models\User;
+use App\Rules\RoleConferable;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -40,6 +41,9 @@ class UserUpdateRequest extends FormRequest
                 'string',
                 Rule::exists('roles', 'name'),
                 Rule::notIn([Profil::SuperAdmin->value, ...RoleClient::values()]),
+                // On n'attribue pas un rôle qu'on ne porte pas soi-même (ADR-0033).
+                // Le retrait, lui, est fermé en amont par la UserPolicy.
+                new RoleConferable($this->user()),
             ],
         ];
     }

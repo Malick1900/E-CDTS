@@ -44,7 +44,7 @@ class UserController extends Controller
         // même table mais relèvent d'un autre onglet et d'un autre circuit.
         $users = User::query()
             ->whereNull('consignataire_id')
-            ->with('roles:id,name')
+            ->with('roles:id,name', 'roles.permissions:id,name')
             ->orderBy('name')
             ->get()
             ->map(fn (User $user): array => [
@@ -59,18 +59,16 @@ class UserController extends Controller
                 'last_login_at' => $user->last_login_at?->toIso8601String(),
                 'is_self' => $request->user()->is($user),
                 'is_protected' => $user->hasRole(Profil::SuperAdmin->value),
+                // Un compte dont on ne pourrait pas attribuer les rôles ne
+                // s'édite pas non plus (ADR-0033) : l'écran grise l'action que
+                // la UserPolicy refuserait de toute façon.
+                'peut_modifier' => $request->user()->can('update', $user),
                 'roles' => $user->roles->pluck('name')->all(),
             ]);
 
         return Inertia::render('admin/utilisateurs', [
             'users' => $users,
-            // Rôles attribuables à un compte interne : ni le rôle technique
-            // super-admin, ni les rôles clients — ceux-là se déduisent de la
-            // position dans une société, ils ne se choisissent pas (ADR-0031).
-            'assignableRoles' => Role::query()
-                ->whereNotIn('name', [Profil::SuperAdmin->value, ...RoleClient::values()])
-                ->orderBy('name')
-                ->pluck('name'),
+            'assignableRoles' => $this->rolesAttribuables($request->user()),
             'consignataires' => $this->consignataires(),
             'agents' => $this->agents(),
             'optionsPays' => $this->options(Pays::query()),
@@ -88,6 +86,30 @@ class UserController extends Controller
                 : null,
             'cataloguePermissions' => $this->cataloguePermissions(),
         ]);
+    }
+
+    /**
+     * Rôles proposés à la composition d'un compte interne.
+     *
+     * En sont exclus le rôle technique super-admin et les rôles clients — ceux-là
+     * se déduisent de la position dans une société, ils ne se choisissent pas
+     * (ADR-0031) — puis tout rôle que le demandeur ne saurait pas conférer :
+     * un Superviseur ne voit donc pas la case « Administrateur » (ADR-0033).
+     *
+     * @return list<string>
+     */
+    private function rolesAttribuables(?User $demandeur): array
+    {
+        return array_values(
+            Role::query()
+                ->whereNotIn('name', [Profil::SuperAdmin->value, ...RoleClient::values()])
+                ->with('permissions:id,name')
+                ->orderBy('name')
+                ->get()
+                ->filter(fn (Role $role): bool => $demandeur?->peutConferer($role) ?? false)
+                ->map(fn (Role $role): string => $role->name)
+                ->all(),
+        );
     }
 
     /**

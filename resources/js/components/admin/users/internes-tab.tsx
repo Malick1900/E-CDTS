@@ -23,6 +23,8 @@ export type UserRow = {
     last_login_at: string | null;
     is_self: boolean;
     is_protected: boolean;
+    /** Faux quand ce compte porte un rôle que vous ne pourriez pas attribuer (ADR-0033). */
+    peut_modifier: boolean;
     roles: string[];
 };
 
@@ -241,7 +243,9 @@ export default function InternesTab({ users, assignableRoles, creatingSignal }: 
                             <tbody>
                                 {filtered.map((user) => {
                                     const st = user.is_active ? STATUT.actif : STATUT.desactive;
-                                    const cannotToggle = user.is_protected || (user.is_active && user.is_self);
+                                    const cannotEdit = user.is_protected || !user.peut_modifier;
+                                    const cannotToggle = cannotEdit || (user.is_active && user.is_self);
+                                    const editTitle = user.is_protected ? 'Compte technique protégé' : !user.peut_modifier ? 'Ce compte porte des rôles que vous ne pouvez pas attribuer' : 'Modifier';
 
                                     return (
                                         <tr key={user.id}>
@@ -290,10 +294,10 @@ export default function InternesTab({ users, assignableRoles, creatingSignal }: 
                                                     <button
                                                         type="button"
                                                         onClick={() => openEdit(user)}
-                                                        disabled={user.is_protected}
-                                                        title={user.is_protected ? 'Compte technique protégé' : 'Modifier'}
+                                                        disabled={cannotEdit}
+                                                        title={editTitle}
                                                         className="ea-icon-btn"
-                                                        style={{ ...iconBtn, color: '#1D3E9C', opacity: user.is_protected ? 0.4 : 1, cursor: user.is_protected ? 'not-allowed' : 'pointer' }}
+                                                        style={{ ...iconBtn, color: '#1D3E9C', opacity: cannotEdit ? 0.4 : 1, cursor: cannotEdit ? 'not-allowed' : 'pointer' }}
                                                     >
                                                         <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                                                             <path d="M11.5 2.5l2 2L6 12l-2.5.5L4 10l7.5-7.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
@@ -303,7 +307,7 @@ export default function InternesTab({ users, assignableRoles, creatingSignal }: 
                                                         type="button"
                                                         onClick={() => toggleActive(user)}
                                                         disabled={cannotToggle}
-                                                        title={user.is_active && user.is_self ? 'Vous ne pouvez pas désactiver votre propre compte' : user.is_active ? 'Désactiver le compte' : 'Réactiver le compte'}
+                                                        title={cannotEdit ? editTitle : user.is_active && user.is_self ? 'Vous ne pouvez pas désactiver votre propre compte' : user.is_active ? 'Désactiver le compte' : 'Réactiver le compte'}
                                                         className={user.is_active ? 'ea-icon-danger' : 'ea-icon-btn'}
                                                         style={{ ...iconBtn, color: user.is_active ? '#C0392B' : '#21771F', borderColor: user.is_active ? '#E0B4AD' : '#BFE4BF', opacity: cannotToggle ? 0.4 : 1, cursor: cannotToggle ? 'not-allowed' : 'pointer' }}
                                                     >
