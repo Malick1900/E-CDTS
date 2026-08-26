@@ -107,7 +107,9 @@
         /* Completeness */
         // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
         "skipLibCheck": true /* Skip type checking all .d.ts files. */,
-        "baseUrl": ".",
+        // Pas de `baseUrl` : l'option est dépréciée et cesse de fonctionner en
+        // TypeScript 7. Sans elle, les `paths` se résolvent relativement à ce
+        // fichier — soit exactement ce que `baseUrl: "."` désignait.
         "paths": {
             "@/*": ["./resources/js/*"]
         },
