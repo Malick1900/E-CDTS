@@ -27,6 +27,9 @@ yarn-error.log
 /playwright-report
 /tests/e2e/.auth
 /tests/e2e/.output
+# Traces du pilotage MCP du navigateur : journaux de console, instantanés de
+# page et fichiers téléchargés au fil des vérifications. Jetables.
+/.playwright-mcp
 /.fleet
 /.idea
 /.nova
