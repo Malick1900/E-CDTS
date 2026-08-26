@@ -1,0 +1,1046 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- NOT FOR RESALE!!!!!!! -->
+<!-- edited with XMLSPY v5 rel. 3 U (http://www.xmlspy.com) by u_site (site) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:element name="Awmds">
+		<xs:annotation>
+			<xs:documentation>AsycudWorld Manifest Data String</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="General_segment">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="General_segment_id">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Customs_office_code">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="5"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Voyage_number">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:maxLength value="17"/>
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Date_of_departure">
+											<xs:simpleType>
+												<xs:restriction base="xs:date"/>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Time_of_departure" type="xs:time" minOccurs="0"/>
+										<!-- PORT_BPI_ID -->
+										<!-- <xs:element name="Port_voyage_id" minOccurs="0">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:pattern value="((19|20)\d{2})(0[1-9]|1[012])(0{3}[1-9]|0{2}[1-9][0-9]|0[1-9][0-9]{2}|[1-9][0-9]{3})"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element> -->
+										<xs:element name="Date_of_arrival" minOccurs="0">
+											<xs:simpleType>
+												<xs:restriction base="xs:date"/>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Time_of_arrival" type="xs:time" minOccurs="0"/>
+										<xs:element name="Date_of_last_discharge" minOccurs="0">
+											<xs:simpleType>
+												<xs:restriction base="xs:date"/>
+											</xs:simpleType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="Totals_segment">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Total_number_of_bols" type="xs:int"/>
+										<xs:element name="Total_number_of_packages" type="xs:double"/>
+										<xs:element name="Total_number_of_containers" type="xs:int"/>
+										<!-- <PATCH ID="Waybill Vehicle Page" VERSION="4.3.2" TYPE="FEA" DATE="May 04, 2017" AUTHOR="Stephan Seepersad"> -->
+										<xs:element name="Total_number_of_vehicles" type="xs:int"/>
+										<!--  </PATCH ID="Waybill Vehicle Page">  -->
+										<xs:element name="Total_gross_mass" type="xs:double"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="Transport_information">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Carrier">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="Carrier_code">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="1"/>
+																<xs:maxLength value="17"/>
+																<!-- CHANGED TO MANDATORY 20-04-19 -->
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+													<xs:element name="Carrier_name" minOccurs="0">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="0"/>
+																<xs:maxLength value="35"/>
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+													<xs:element name="Carrier_address" type="xs:string" minOccurs="0"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="Shipping_Agent">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="Shipping_Agent_code">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="1"/>
+																<xs:maxLength value="17"/>
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+													<xs:element name="Shipping_Agent_name" minOccurs="0">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="0"/>
+																<xs:maxLength value="70"/>
+																<!-- GVA <patch ID="Feature #1041 - Increase company/declarant name and address" version="4.3.1" type="Feature" date="Dec 13, 2015" author="Leonardo Flores"> -->
+																<!-- </patch ID="Feature #1041 - Increase company/declarant name and address"> -->
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="Mode_of_transport_code" minOccurs="1">
+											<!-- CHANGED TO MANDATORY 20-04-19 -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:maxLength value="3"/>
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Identity_of_transporter" minOccurs="1">
+											<!-- CHANGED TO MANDATORY 20-04-19 -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:maxLength value="27"/>
+													<xs:minLength value="0"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Nationality_of_transporter_code" minOccurs="1">
+											<!-- CHANGED 20-04-19 -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:maxLength value="3"/>
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Place_of_transporter" minOccurs="0">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:maxLength value="35"/>
+													<xs:minLength value="0"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Registration_number_of_transport_code" minOccurs="1">
+											<!-- CHANGED TO MANDATORY 21-04-19 -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:maxLength value="35"/>
+													<xs:minLength value="0"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Date_of_registration" minOccurs="0">
+											<xs:simpleType>
+												<xs:restriction base="xs:date"/>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Master_information" type="xs:string" minOccurs="1"/>
+										<!-- CHANGED TO MANDATORY 21-04-19 -->
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="Load_unload_place">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Place_of_departure_code">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="5"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Place_of_destination_code">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="5"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="Tonnage" minOccurs="1">
+								<!-- CHANGED TO MANDATORY 21-04-19 -->
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Tonnage_net_weight" type="xs:double"/>
+										<xs:element name="Tonnage_gross_weight" type="xs:double"/>
+										<!-- ADDED TAG FROM IMPAS XSD 21-04-19 -->
+										<xs:element name="Destination_customs_office_code" minOccurs="0">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="5"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="Attached_Document" minOccurs="0" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Attached_document_code">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="4"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Attached_document_filename">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="5"/>
+													<xs:maxLength value="255"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Attached_document_content" type="xs:base64Binary" minOccurs="1"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<!-- GVA <patch ID="Feature #1039 - NVOCC/IAC" version="4.3.2" type="NEW" date="Sep 4, 2016" author="Leonardo Flores"> -->
+							<xs:element name="Coloader" minOccurs="0" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Coloader_code" minOccurs="1" maxOccurs="1">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="17"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Coloader_name" minOccurs="0">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="0"/>
+													<xs:maxLength value="35"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<!-- </patch ID="Feature #1039 - NVOCC/IAC"> -->
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Bol_segment" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Bol_id">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Bol_reference">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="17"/>
+												</xs:restriction>
+											</xs:simpleType>
+											<xs:unique name="Bol_reference">
+												<xs:selector xpath="Bol_reference"/>
+												<xs:field xpath="Bol_reference"/>
+											</xs:unique>
+										</xs:element>
+										<xs:element name="Line_number">
+											<xs:complexType>
+												<xs:simpleContent>
+													<xs:extension base="xs:int"/>
+												</xs:simpleContent>
+											</xs:complexType>
+											<xs:unique name="Line_number">
+												<xs:selector xpath="Line_number"/>
+												<xs:field xpath="Line_number"/>
+											</xs:unique>
+										</xs:element>
+										<xs:element name="Bol_nature">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="2"/>
+													<xs:enumeration value="22"/>
+													<xs:enumeration value="23"/>
+													<xs:enumeration value="24"/>
+													<xs:enumeration value="28"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Bol_type_code">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="3"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="FAS_Liner_Cargo" minOccurs="0">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:pattern value="[fFlL]"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Unique_carrier_reference" minOccurs="0">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="0"/>
+													<xs:maxLength value="35"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<!-- <PATCH ID="Enable transport segment at waybill level" VERSION="4.3.2" TYPE="CHG" DATE="Mar 28, 2017" AUTHOR="Stephan Seepersad">**/ -->
+							<xs:element name="Transport_information">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Carrier">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="Carrier_code">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="0"/>
+																<xs:maxLength value="17"/>
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+													<xs:element name="Carrier_name" minOccurs="0">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="0"/>
+																<xs:maxLength value="35"/>
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+													<xs:element name="Carrier_address" type="xs:string" minOccurs="0"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="Shipping_Agent" minOccurs="0">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="Shipping_Agent_code">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="0"/>
+																<xs:maxLength value="17"/>
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+													<xs:element name="Shipping_Agent_name" minOccurs="0">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="0"/>
+																<xs:maxLength value="70"/>
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<!-- ADDED TAGS FROM IMPAS XSD 21-04-19 -->
+										<xs:element name="Mode_of_transport_code" minOccurs="0">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:maxLength value="3"/>
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Identity_of_transporter" minOccurs="0">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:maxLength value="27"/>
+													<xs:minLength value="0"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Nationality_of_transporter_code" minOccurs="0">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:maxLength value="3"/>
+													<xs:minLength value="1"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<!-- END OF ADDED TAGS -->
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<!-- </PATCH ID="Enable transport segment at waybill level"> -->
+							<xs:element name="Load_unload_place">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Place_of_loading_code">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="5"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Place_of_unloading_code">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="5"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="Traders_segment">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Exporter">
+											<xs:complexType>
+												<xs:sequence>
+													<!-- GVA <patch ID="#877 - Add missing fields to ASYFCI" version="4.3.0" type="FIX" date="Feb 20, 2015" author="Leonardo Flores"> -->
+													<xs:element name="Exporter_code" minOccurs="0">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="0"/>
+																<xs:maxLength value="17"/>
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+													<!-- </patch ID="#877 - Add missing fields to ASYFCI"> -->
+													<xs:element name="Exporter_name">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="1"/>
+																<xs:maxLength value="70"/>
+																<!-- GVA <patch ID="Feature #1041 - Increase company/declarant name and address" version="4.3.1" type="Feature" date="Dec 13, 2015" author="Leonardo Flores"> -->
+																<!-- </patch ID="Feature #1041 - Increase company/declarant name and address"> -->
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+													<xs:element name="Exporter_address">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="0"/>
+																<xs:maxLength value="70"/>
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="Notify" minOccurs="0">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="Notify_code" minOccurs="0">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="0"/>
+																<xs:maxLength value="17"/>
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+													<xs:element name="Notify_name">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="0"/>
+																<xs:maxLength value="70"/>
+																<!-- GVA <patch ID="Feature #1041 - Increase company/declarant name and address" version="4.3.1" type="Feature" date="Dec 13, 2015" author="Leonardo Flores"> -->
+																<!-- </patch ID="Feature #1041 - Increase company/declarant name and address"> -->
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+													<xs:element name="Notify_address" type="xs:string"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="Consignee">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="Consignee_code" minOccurs="0">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="0"/>
+																<xs:maxLength value="17"/>
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+													<xs:element name="Consignee_name">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="0"/>
+																<xs:maxLength value="70"/>
+																<!-- GVA <patch ID="Feature #1041 - Increase company/declarant name and address" version="4.3.1" type="Feature" date="Dec 13, 2015" author="Leonardo Flores"> -->
+																<!-- </patch ID="Feature #1041 - Increase company/declarant name and address"> -->
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+													<xs:element name="Consignee_address" type="xs:string"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="ctn_segment" minOccurs="0" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Ctn_reference" minOccurs="1">
+											<!-- CHANGED TO MANDATORY 21-04-19 -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="17"/>
+												</xs:restriction>
+											</xs:simpleType>
+											<xs:unique name="Ctn_reference">
+												<xs:selector xpath="Ctn_reference"/>
+												<xs:field xpath="Ctn_reference"/>
+											</xs:unique>
+										</xs:element>
+										<xs:element name="Number_of_packages" type="xs:int" minOccurs="1"/>
+										<!-- CHANGED TO MANDATORY 21-04-19 -->
+										<xs:element name="Type_of_container" minOccurs="1">
+											<!-- CHANGED TO MANDATORY 21-04-19 -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="4"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Empty_Full" minOccurs="1">
+											<!-- CHANGED TO MANDATORY 21-04-19 -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="3"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<!-- ADDED TAG DISPOSITION FROM IMPAS XSD 21-04-19 -->
+										<xs:element name="Disposition" minOccurs="0" maxOccurs="1">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="2"/>
+													<xs:maxLength value="10"/>
+													<xs:enumeration value="CY"/>
+													<xs:enumeration value="CFS"/>
+													<xs:enumeration value="P. UNSTUFF"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Marks1" minOccurs="1">
+											<!-- CHANGED TO MANDATORY 21-04-19 -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="0"/>
+													<xs:maxLength value="10"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Marks2" minOccurs="0">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="0"/>
+													<xs:maxLength value="10"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Marks3" minOccurs="0">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="0"/>
+													<xs:maxLength value="10"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Sealing_Party" minOccurs="1">
+											<!-- CHANGED TO MANDATORY 21-04-19 -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="0"/>
+													<xs:maxLength value="3"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<!-- GVA <patch ID="#877 - Add missing fields to ASYFCI" version="4.3.0" type="FIX" date="Feb 20, 2015" author="Leonardo Flores"> -->
+										<xs:element name="Empty_weight" type="xs:double" minOccurs="1"/>
+										<!-- MANDATORY 21-04-19 -->
+										<xs:element name="Goods_weight" type="xs:double" minOccurs="1"/>
+										<!-- MANDATORY 20-04-19 -->
+										<!-- </patch ID="#877 - Add missing fields to ASYFCI"> -->
+										<!-- <PATCH ID="Add fields to the container" VERSION="4.2.2" TYPE="JM" DATE="Mar 3, 2015" AUTHOR="Leonardo Flores"> -->
+										<xs:element name="Temp_min" type="xs:double" minOccurs="0"/>
+										<xs:element name="Temp_max" type="xs:double" minOccurs="0"/>
+										<xs:element name="Humidity" type="xs:double" minOccurs="0"/>
+										<xs:element name="Dangerous_goods_code" minOccurs="0">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="10"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Ctn_goods_description" minOccurs="1">
+											<!-- MANDATORY 20-04-19 -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="0"/>
+													<xs:maxLength value="2000"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<!-- </PATCH ID="Add fields to the container" -->
+										<!-- REMOVED TO AFTER TAG "CTN HS CODE" -->
+										<!-- <xs:element name="Ctn_volume" minOccurs="1">
+											<xs:simpleType>
+												<xs:restriction base="xs:double"/>
+											</xs:simpleType>
+										</xs:element> -->
+										<!-- <PATCH ID="Container tracking system integration" VERSION="4.2.2" TYPE="JM" DATE="Mar 3, 2015" AUTHOR="Leonardo Flores"> -->
+										<xs:element name="Ctn_hs_code" minOccurs="0">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="6"/>
+													<xs:maxLength value="6"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<!-- ADDED FOLLOWING TAGS FROM IMPAS XSD 21-04-19 -->
+										<xs:element name="Ctn_volume" minOccurs="1">
+											<!-- CHANGED TO MANDATORY -->
+											<xs:simpleType>
+												<xs:restriction base="xs:double">
+													<xs:minInclusive value="0"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Ctn_line_number" minOccurs="1" maxOccurs="1">
+											<!-- CHANGED TO MANDATORY -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:maxLength value="10"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<!-- <PATCH ID="Waybill Vehicle Page" VERSION="4.3.2" TYPE="FEA" DATE="May 04, 2017" AUTHOR="Stephan Seepersad"> -->
+							<xs:element name="Vehicles_segment" minOccurs="0" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Chassis_number" minOccurs="1">
+											<!-- CHANGED TO MANDATORY -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="30"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Engine_number" minOccurs="1">
+											<!-- CHANGED TO MANDATORY -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="30"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Engine_capacity" type="xs:int" minOccurs="1"/>
+										<!-- CHANGED TO MANDATORY 20-04-19 -->
+										<xs:element name="Odometer_reading" type="xs:int" minOccurs="1"/>
+										<!-- CHANGED TO MANDATORY 20-04-19 -->
+										<xs:element name="Make_code" minOccurs="1">
+											<!-- CHANGED TO MANDATORY 20-04-19 -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="20"/>
+													<!-- CHANGE FROM 4 TO 20 20-04-19 -->
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Make_name" minOccurs="1">
+											<!-- CHANGED TO MANDATORY 20-04-19 -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="40"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Manufacturing_year" type="xs:int" minOccurs="1"/>
+										<!-- CHANGED TO MANDATORY 20-04-19 -->
+										<xs:element name="Color" minOccurs="1">
+											<!-- CHANGED TO MANDATORY 21-04-19 -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="30"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Condition" minOccurs="1">
+											<!-- CHANGED TO MANDATORY 21-04-19 -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="20"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<!-- </PATCH ID="Waybill Vehicle Page"> -->
+							<xs:element name="Goods_segment">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Number_of_packages" type="xs:double" minOccurs="1"/>
+										<!-- CHANGED TO MANDATORY 20-04-19 -->
+										<xs:element name="Package_type_code" minOccurs="1">
+											<!-- CHANGED TO MANDATORY 20-04-19 -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="17"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Gross_mass" type="xs:double" minOccurs="1"/>
+										<!-- CHANGED TO MANDATORY 20-04-19 -->
+										<xs:element name="Shipping_marks" type="xs:string" minOccurs="1"/>
+										<!-- CHANGED TO MANDATORY 20-04-19 -->
+										<xs:element name="Goods_description" type="xs:string" minOccurs="1"/>
+										<!-- CHANGED TO MANDATORY 20-04-19 -->
+										<!-- ADDED TAGS FROM IMPAS XSD 21-04-19 -->
+										<xs:element name="Place_of_origin" minOccurs="0">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="0"/>
+													<xs:maxLength value="50"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Place_of_destination" minOccurs="0">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="0"/>
+													<xs:maxLength value="50"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<!-- END OF ADDED TAGS -->
+										<xs:element name="Seals_segment" minOccurs="0">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="Number_of_seals" type="xs:int"/>
+													<xs:element name="Marks_of_seals">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="0"/>
+																<xs:maxLength value="20"/>
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+													<xs:element name="Sealing_party_code" minOccurs="0">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="0"/>
+																<xs:maxLength value="3"/>
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="Volume_in_cubic_meters" type="xs:double" minOccurs="1"/>
+										<xs:element name="Num_of_ctn_for_this_bol" type="xs:int" minOccurs="1"/>
+										<!-- <PATCH ID="Waybill Vehicle Page" VERSION="4.3.2" TYPE="FEA" DATE="May 04, 2017" AUTHOR="Stephan Seepersad"> -->
+										<xs:element name="Num_of_vehicles_for_this_bol" type="xs:int" minOccurs="1"/>
+										<!-- </PATCH ID="Waybill Vehicle Page"> -->
+										<!-- ADDED FOLLOWING TAGS FROM IMPAS XSD 21-04-19 -->
+										<xs:choice minOccurs="0" maxOccurs="1">
+											<xs:element name="Goods_hs_code" minOccurs="0">
+												<xs:simpleType>
+													<xs:restriction base="xs:string">
+														<xs:minLength value="6"/>
+														<xs:maxLength value="6"/>
+													</xs:restriction>
+												</xs:simpleType>
+											</xs:element>
+											<xs:element name="Commodity_Segment" minOccurs="0">
+												<xs:complexType>
+													<xs:sequence>
+														<xs:element name="Commodity_Code" minOccurs="1" maxOccurs="unbounded">
+															<xs:complexType>
+																<xs:sequence>
+																	<xs:element name="HS_Code">
+																		<xs:simpleType>
+																			<xs:restriction base="xs:string">
+																				<xs:minLength value="6"/>
+																				<xs:maxLength value="6"/>
+																			</xs:restriction>
+																		</xs:simpleType>
+																	</xs:element>
+																	<xs:element name="HS_Description">
+																		<xs:simpleType>
+																			<xs:restriction base="xs:string">
+																				<xs:minLength value="1"/>
+																				<xs:maxLength value="500"/>
+																			</xs:restriction>
+																		</xs:simpleType>
+																	</xs:element>
+																	<xs:element name="Number_of_packages" type="xs:double" minOccurs="0"/>
+																	<xs:element name="Package_type_code" minOccurs="0">
+																		<xs:simpleType>
+																			<xs:restriction base="xs:string">
+																				<xs:minLength value="1"/>
+																				<xs:maxLength value="17"/>
+																			</xs:restriction>
+																		</xs:simpleType>
+																	</xs:element>
+																	<xs:element name="Container_Reference" minOccurs="0">
+																		<xs:simpleType>
+																			<xs:restriction base="xs:string">
+																				<xs:minLength value="1"/>
+																				<xs:maxLength value="17"/>
+																			</xs:restriction>
+																		</xs:simpleType>
+																	</xs:element>
+																</xs:sequence>
+															</xs:complexType>
+														</xs:element>
+													</xs:sequence>
+												</xs:complexType>
+											</xs:element>
+										</xs:choice>
+										<!-- END OF ADDED TAGS -->
+										<xs:element name="Information" minOccurs="0">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="0"/>
+													<xs:maxLength value="70"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<!-- GVA <patch ID="#595 Add Split segment to ASYFCI XML" version="4.2.2" type="IMPROVEMENT" date="Jun 10, 2014" author="Leonardo Flores"> -->
+							<xs:element name="Split_segment" minOccurs="0" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Number_of_packages" type="xs:double"/>
+										<xs:element name="Package_type_code">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="17"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Gross_mass" type="xs:double"/>
+										<xs:element name="Shipping_marks" type="xs:string"/>
+										<xs:element name="Goods_description" type="xs:string"/>
+										<xs:element name="Container" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="Reference">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="1"/>
+																<xs:maxLength value="17"/>
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+													<xs:element name="Unloaded" type="xs:boolean"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<!-- </patch ID="Add Split segment to ASYFCI XML"> -->
+							<xs:element name="Value_segment" maxOccurs="1">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Freight_segment" minOccurs="0">
+											<!-- CHANGED TO MANDATORY 20-04-19 -->
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="PC_indicator" minOccurs="0">
+														<!-- CHANGED TO MANDATORY 20-04-19 -->
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="0"/>
+																<xs:maxLength value="3"/>
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+													<xs:element name="Freight_value" type="xs:double" minOccurs="0"/>
+													<!-- CHANGED TO MANDATORY 21-04-19 -->
+													<xs:element name="Freight_currency" minOccurs="0">
+														<!-- CHANGED TO MANDATORY 21-04-19 -->
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="0"/>
+																<xs:maxLength value="3"/>
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="Customs_segment" minOccurs="0">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="Customs_value" type="xs:double" minOccurs="0"/>
+													<xs:element name="Customs_currency" minOccurs="0">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="0"/>
+																<xs:maxLength value="3"/>
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="Insurance_segment" minOccurs="0">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="Insurance_value" type="xs:double" minOccurs="0"/>
+													<xs:element name="Insurance_currency" minOccurs="0">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="0"/>
+																<xs:maxLength value="3"/>
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="Transport_segment" minOccurs="0">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="Transport_value" type="xs:double" minOccurs="0"/>
+													<xs:element name="Transport_currency" minOccurs="0">
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="0"/>
+																<xs:maxLength value="3"/>
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="Location" minOccurs="1">
+								<!-- CHANGED TO MANDATORY 20-04-19 -->
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Location_code" minOccurs="1">
+											<!-- CHANGED TO MANDATORY 20-04-19 -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="0"/>
+													<xs:maxLength value="17"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="Location_info" minOccurs="0">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="0"/>
+													<xs:maxLength value="35"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<!-- GVA <patch ID="Feature #1055 - Advance security access for cargo control" version="4.3.2" type="NEW" date="Sep 4, 2016" author="Leonardo Flores"> -->
+							<xs:element name="Authorize" minOccurs="0">
+								<xs:complexType>
+									<xs:sequence>
+										<!-- GVA <patch ID="Improvement #1156 - Allow no Dec or Cmp in XMl integration" version="4.3.2" type="NEW" date="Oct 24, 2016" author="JD"> -->
+										<xs:element name="Company_code" minOccurs="0">
+											<!-- GVA <patch ID="Improvement #1156 - Allow no Dec or Cmp in XMl integration"/> -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="17"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<!-- GVA <patch ID="Improvement #1156 - Allow no Dec or Cmp in XMl integration" version="4.3.2" type="NEW" date="Oct 24, 2016" author="JD"> -->
+										<xs:element name="Declarant_code" minOccurs="0">
+											<!-- GVA <patch ID="Improvement #1156 - Allow no Dec or Cmp in XMl integration"/> -->
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:minLength value="1"/>
+													<xs:maxLength value="17"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<!-- </patch ID="Feature #1055 - Advance security access for cargo control"> -->
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Exemple de manifeste canonique e-CDTS — valide contre manifeste-canonique.xsd
+
+  Echantillon volontairement construit autour des CAS DURS identifies sur les
+  6 manifestes reels (cf. docs/MANIFESTE-XML.md) :
+
+    BL 1 — pur conteneur sec ......................... aujourd'hui : auto
+    BL 2 — conteneur frigo, master d'un groupage ..... aujourd'hui : lien implicite
+    BL 3 — house BL sur la MEME boite ................ aujourd'hui : dedup fragile
+    BL 4 — MIXTE conteneur + vehicules ............... aujourd'hui : qualification manuelle
+    BL 5 — vrac liquide sans cubage .................. aujourd'hui : auto degrade
+
+  Les trois derniers deviennent calculables sans intervention humaine.
+-->
+<manifeste xmlns="urn:e-cdts:manifeste:1.0"
+           version="1.0"
+           profil-source="MSC"
+           fichier-source="AWMDS_OW100_FL512A_20260708.xml"
+           horodatage-import="2026-07-08T15:42:00">
+
+  <escale>
+    <bureau code="OW100">Owendo</bureau>
+    <navire>
+      <nom>MSC SPRING III</nom>
+      <imo>9876543</imo>
+      <pavillon code="PA"/>
+    </navire>
+    <voyage numero="FL512A"/>
+    <arrivee>2026-07-08T06:30:00</arrivee>
+    <depart>2026-07-10T22:00:00</depart>
+    <sens>import</sens>
+    <!-- Absent de tout manifeste douanier : injecte depuis le referentiel escale. -->
+    <mode-exploitation source="referentiel">ligne-reguliere</mode-exploitation>
+  </escale>
+
+  <!-- Checksum du parseur : un ecart = fichier refuse, jamais facture partiellement. -->
+  <controles>
+    <total-bl>5</total-bl>
+    <total-conteneurs>4</total-conteneurs>
+    <total-masse-brute unite="KG">1014700</total-masse-brute>
+    <total-volume unite="M3">148.5</total-volume>
+  </controles>
+
+  <!-- Parc de boites : chaque conteneur decrit UNE fois.
+       "TOTAL TC" du PV = count(conteneur) = 4, sans deduplication a coder.
+       Le forfait conteneur se liquide ICI, pas sur les lignes de BL : une boite
+       groupee entre deux BL ne paie qu'un seul forfait. -->
+  <conteneurs>
+    <conteneur reference="TCLU1234561" taille="20" nature="sec" statut="plein" code-iso="22G1">
+      <tare unite="KG">2250</tare>
+      <scelles>SL-884120</scelles>
+    </conteneur>
+    <conteneur reference="TCLU1234577" taille="20" nature="sec" statut="plein" code-iso="22G1">
+      <tare unite="KG">2250</tare>
+      <scelles>SL-884121</scelles>
+    </conteneur>
+    <!-- Nature frigo DECLAREE : plus aucune heuristique sur "FROZEN"/"REEFER",
+         alors que l'ecart de tarif est de 17 632 a 30 856 FCFA sur un 20'. -->
+    <conteneur reference="MSCU7788990" taille="40" nature="frigo" statut="plein" code-iso="45R1">
+      <tare unite="KG">4650</tare>
+      <scelles>SL-884199</scelles>
+    </conteneur>
+    <conteneur reference="MSCU5544332" taille="40" nature="sec" statut="plein" code-iso="42G1">
+      <tare unite="KG">3800</tare>
+    </conteneur>
+  </conteneurs>
+
+  <connaissements>
+
+    <!-- ============ BL 1 : pur conteneur, deux boites 20' seches ============ -->
+    <bl reference="MSCUAB1234561" ligne="1" sens="import">
+      <groupage type="simple"/>
+      <ports>
+        <chargement code="CNSHA" nom="Shanghai"/>
+        <dechargement code="GAOWE" nom="Owendo"/>
+      </ports>
+      <parties>
+        <expediteur nom="NINGBO TRADING CO LTD" identifiant="CN-91330200MA2"/>
+        <destinataire nom="ETS MBOUMBA IMPORT" identifiant="GA-076123456"/>
+      </parties>
+      <references>
+        <bietc>0632858</bietc>
+      </references>
+      <marchandises>
+        <marchandise id="1" conditionnement="conteneurise">
+          <designation>ARTICLES MENAGERS EN PLASTIQUE</designation>
+          <categorie code="IMP04" source="declaree">Conteneur 20' sec</categorie>
+          <assiette>
+            <poids-brut unite="KG">24000</poids-brut>
+            <volume unite="M3">54.0</volume>
+            <colis nombre="1840" type="CARTONS"/>
+          </assiette>
+          <conteneurs-ref>
+            <conteneur-ref reference="TCLU1234561" colis="920">
+              <poids-marchandise unite="KG">12000</poids-marchandise>
+              <volume unite="M3">27.0</volume>
+            </conteneur-ref>
+            <conteneur-ref reference="TCLU1234577" colis="920">
+              <poids-marchandise unite="KG">12000</poids-marchandise>
+              <volume unite="M3">27.0</volume>
+            </conteneur-ref>
+          </conteneurs-ref>
+        </marchandise>
+      </marchandises>
+    </bl>
+
+    <!-- ============ BL 2 : master d'un groupage sur MSCU7788990 ============ -->
+    <bl reference="MSCUAB9900011" ligne="2" sens="import">
+      <groupage type="master"/>
+      <ports>
+        <chargement code="NLRTM" nom="Rotterdam"/>
+        <dechargement code="GAOWE" nom="Owendo"/>
+      </ports>
+      <parties>
+        <expediteur nom="EUROFROST BV" identifiant="NL-812345678B01"/>
+        <destinataire nom="SOGADIS SA" identifiant="GA-076987654"/>
+      </parties>
+      <references>
+        <bietc>0632901</bietc>
+      </references>
+      <marchandises>
+        <marchandise id="1" conditionnement="conteneurise">
+          <designation>VOLAILLE CONGELEE -18C</designation>
+          <categorie code="IMP05" source="declaree">Conteneur 40' refrigere</categorie>
+          <assiette>
+            <poids-brut unite="KG">12000</poids-brut>
+            <volume unite="M3">21.0</volume>
+            <colis nombre="600" type="CARTONS"/>
+          </assiette>
+          <conteneurs-ref>
+            <!-- Part de ce BL dans une boite partagee : le poids vit sur le LIEN. -->
+            <conteneur-ref reference="MSCU7788990" colis="600">
+              <poids-marchandise unite="KG">12000</poids-marchandise>
+              <volume unite="M3">21.0</volume>
+            </conteneur-ref>
+          </conteneurs-ref>
+        </marchandise>
+      </marchandises>
+    </bl>
+
+    <!-- ============ BL 3 : house BL, MEME boite que le BL 2 ============ -->
+    <!-- Aujourd'hui le conteneur se repete a l'identique dans les deux BL sans
+         lien explicite. Ici le rattachement au master est declare, et la boite
+         reste comptee une seule fois dans <conteneurs>. -->
+    <bl reference="MSCUAB9900012" ligne="3" sens="import">
+      <groupage type="house" maitre="MSCUAB9900011"/>
+      <ports>
+        <chargement code="NLRTM" nom="Rotterdam"/>
+        <dechargement code="GAOWE" nom="Owendo"/>
+      </ports>
+      <parties>
+        <expediteur nom="EUROFROST BV" identifiant="NL-812345678B01"/>
+        <destinataire nom="ALIMENTATION DU CAP SA" identifiant="GA-076555111"/>
+      </parties>
+      <marchandises>
+        <marchandise id="1" conditionnement="conteneurise">
+          <designation>POISSON CONGELE -18C</designation>
+          <categorie code="IMP05" source="declaree">Conteneur 40' refrigere</categorie>
+          <assiette>
+            <poids-brut unite="KG">6500</poids-brut>
+            <volume unite="M3">11.5</volume>
+            <colis nombre="320" type="CARTONS"/>
+          </assiette>
+          <conteneurs-ref>
+            <conteneur-ref reference="MSCU7788990" colis="320">
+              <poids-marchandise unite="KG">6500</poids-marchandise>
+              <volume unite="M3">11.5</volume>
+            </conteneur-ref>
+          </conteneurs-ref>
+        </marchandise>
+      </marchandises>
+    </bl>
+
+    <!-- ============ BL 4 : MIXTE — le cas qui bloque aujourd'hui ============ -->
+    <!-- Deux lignes de marchandise, chacune avec son conditionnement et sa
+         propre assiette : la machine n'a plus a repartir un agregat unique. -->
+    <bl reference="MSCUAB4455661" ligne="4" sens="import">
+      <groupage type="simple"/>
+      <ports>
+        <chargement code="BEANR" nom="Anvers"/>
+        <dechargement code="GAOWE" nom="Owendo"/>
+      </ports>
+      <parties>
+        <expediteur nom="ANTWERP MOTORS NV" identifiant="BE-0456789123"/>
+        <destinataire nom="GABON AUTO NEGOCE" identifiant="GA-076222333"/>
+      </parties>
+      <references>
+        <bietc>0632977</bietc>
+      </references>
+      <marchandises>
+        <marchandise id="1" conditionnement="conteneurise">
+          <designation>PIECES DETACHEES AUTOMOBILES</designation>
+          <categorie code="IMP06" source="declaree">Conteneur 40' sec</categorie>
+          <assiette>
+            <poids-brut unite="KG">18000</poids-brut>
+            <volume unite="M3">48.0</volume>
+            <colis nombre="410" type="CAISSES"/>
+          </assiette>
+          <conteneurs-ref>
+            <conteneur-ref reference="MSCU5544332" colis="410">
+              <poids-marchandise unite="KG">18000</poids-marchandise>
+              <volume unite="M3">48.0</volume>
+            </conteneur-ref>
+          </conteneurs-ref>
+        </marchandise>
+        <marchandise id="2" conditionnement="hors-conteneur">
+          <designation>VEHICULES DE TOURISME D'OCCASION</designation>
+          <categorie code="IMP09" source="declaree">Vehicule de tourisme</categorie>
+          <assiette>
+            <poids-brut unite="KG">4200</poids-brut>
+            <volume unite="M3">31.0</volume>
+            <!-- Assiette reelle du IMP09 : le nombre, pas le poids. -->
+            <unites nombre="3" type="VEHICULES"/>
+          </assiette>
+          <vehicules>
+            <vehicule chassis="JTDBR32E620012345" marque="TOYOTA" modele="COROLLA" categorie="tourisme"/>
+            <vehicule chassis="KNADN512BF6789012" marque="KIA" modele="RIO" categorie="tourisme"/>
+            <vehicule chassis="WVWZZZ1KZAW345678" marque="VOLKSWAGEN" modele="GOLF" categorie="tourisme"/>
+          </vehicules>
+        </marchandise>
+      </marchandises>
+    </bl>
+
+    <!-- ============ BL 5 : vrac liquide, cubage reellement absent ============ -->
+    <!-- Cas SAGA / BITU RIVER : pas de conteneur, pas de volume. L'absence est
+         ici EXPLICITE (element omis), donc la regle "unite payante =
+         max(metrique, cubage)" se resout proprement sur la seule tonne. -->
+    <bl reference="SAGABT0099001" ligne="5" sens="import">
+      <groupage type="simple"/>
+      <ports>
+        <chargement code="KRPUS" nom="Busan"/>
+        <dechargement code="GAOWE" nom="Owendo"/>
+      </ports>
+      <parties>
+        <expediteur nom="ASIA BITUMEN TRADING" identifiant="KR-1208812345"/>
+        <destinataire nom="COLAS GABON" identifiant="GA-076444555"/>
+      </parties>
+      <references>
+        <bietc>0675165</bietc>
+      </references>
+      <marchandises>
+        <marchandise id="1" conditionnement="hors-conteneur">
+          <designation>BITUME 60/70 EN VRAC</designation>
+          <categorie code="IMP13" source="declaree">Vrac liquide - metrique</categorie>
+          <assiette>
+            <poids-brut unite="KG">950000</poids-brut>
+          </assiette>
+        </marchandise>
+      </marchandises>
+    </bl>
+
+  </connaissements>
+</manifeste>

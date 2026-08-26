@@ -115,7 +115,7 @@
 - Numéro de manifeste *(extrait du XML, ou saisi en manuel — requis ; fige le libellé du dossier)*
 - Dossier *(→ Dossier)*
 - Mode de saisie *(XML AWMDS / manuel + PDF)*
-- Fichier PDF joint *(mode manuel)*
+- Fichier PDF joint *(mode manuel — **requis, bloquant** : pas de PDF, pas de soumission ; **un seul** fichier multi-pages ; conservé attaché au dossier après clôture. Sans objet en mode XML : le XML fait pièce)*
 - Code bureau de douane
 - Numéro de voyage
 - Date + heure d'arrivée

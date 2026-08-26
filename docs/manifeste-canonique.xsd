@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Manifeste canonique e-CDTS — v1.0
+
+  Cible de normalisation du parseur : tout manifeste AWMDS/ASYCUDA World,
+  quel que soit le profil transporteur (MSC, DELMAS, SAGA...), est converti
+  vers CE format avant toute liquidation.
+
+  Sert aussi de cahier des charges si un flux enrichi est un jour negocie
+  en amont (douane / transporteurs).
+
+  Les 7 corrections structurelles par rapport a l'AWMDS reel sont
+  documentees dans docs/MANIFESTE-XML.md, section "Manifeste canonique".
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns="urn:e-cdts:manifeste:1.0"
+           targetNamespace="urn:e-cdts:manifeste:1.0"
+           elementFormDefault="qualified">
+
+  <!-- ===================== Types simples ===================== -->
+
+  <xs:simpleType name="Sens">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="import"/>
+      <xs:enumeration value="export"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="Conditionnement">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="conteneurise"/>
+      <xs:enumeration value="hors-conteneur"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- CORRECTION 3 : la nature est declaree, jamais deduite de mots-cles.
+       ADR-0038 : le profil gabonais ne transmet que la taille (Type_of_container
+       = "20"/"40", jamais le code ISO 6346 complet). Quand la nature ne peut pas
+       etre LUE, le parseur porte "a-determiner" et la ligne attend une
+       qualification humaine : elle ne part pas en liquidation. L'attribut reste
+       obligatoire — un etat explicite se compte, une absence se perd. -->
+  <xs:simpleType name="NatureConteneur">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="a-determiner"/>
+      <xs:enumeration value="sec"/>
+      <xs:enumeration value="frigo"/>
+      <xs:enumeration value="citerne"/>
+      <xs:enumeration value="open-top"/>
+      <xs:enumeration value="flat"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Tailles du bareme CDTS. Toute autre valeur doit etre rejetee, pas arrondie. -->
+  <xs:simpleType name="TailleConteneur">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="20"/>
+      <xs:enumeration value="40"/>
+      <xs:enumeration value="45"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="StatutConteneur">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="plein"/>
+      <xs:enumeration value="vide"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="TypeGroupage">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="simple"/>
+      <xs:enumeration value="master"/>
+      <xs:enumeration value="house"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ModeExploitation">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="ligne-reguliere"/>
+      <xs:enumeration value="tramping"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="CategorieVehicule">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="tourisme"/>
+      <xs:enumeration value="utilitaire"/>
+      <xs:enumeration value="engin"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Provenance d'une donnee : le parseur doit pouvoir prouver d'ou elle vient. -->
+  <xs:simpleType name="Provenance">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="manifeste"/>    <!-- lu tel quel dans le XML source -->
+      <xs:enumeration value="referentiel"/>  <!-- injecte depuis e-CDTS (escale, navire) -->
+      <xs:enumeration value="declaree"/>     <!-- saisie par le consignataire -->
+      <xs:enumeration value="deduite"/>      <!-- heuristique parseur : TOUJOURS a confirmer -->
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="CodeLocode">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[A-Z]{5}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="Poids">
+    <xs:restriction base="xs:decimal">
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- ===================== Racine ===================== -->
+
+  <xs:element name="manifeste">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="escale" type="Escale"/>
+        <xs:element name="controles" type="Controles"/>
+        <xs:element name="conteneurs" type="ParcConteneurs" minOccurs="0"/>
+        <xs:element name="connaissements" type="Connaissements"/>
+      </xs:sequence>
+      <xs:attribute name="version" type="xs:string" use="required" fixed="1.0"/>
+      <!-- Tracabilite de l'import : indispensable pour rejouer un dossier. -->
+      <xs:attribute name="profil-source" type="xs:string" use="required"/>
+      <xs:attribute name="fichier-source" type="xs:string" use="required"/>
+      <xs:attribute name="horodatage-import" type="xs:dateTime" use="required"/>
+    </xs:complexType>
+
+    <!-- CORRECTION 1 : le n de conteneur est unique dans tout le manifeste.
+         "TOTAL TC" = un simple comptage, la deduplication devient structurelle. -->
+    <xs:key name="cleConteneur">
+      <xs:selector xpath="conteneurs/conteneur"/>
+      <xs:field xpath="@reference"/>
+    </xs:key>
+    <xs:keyref name="refConteneur" refer="cleConteneur">
+      <xs:selector xpath="connaissements/bl/marchandises/marchandise/conteneurs-ref/conteneur-ref"/>
+      <xs:field xpath="@reference"/>
+    </xs:keyref>
+
+    <xs:unique name="cleBl">
+      <xs:selector xpath="connaissements/bl"/>
+      <xs:field xpath="@reference"/>
+    </xs:unique>
+  </xs:element>
+
+  <!-- ===================== Escale ===================== -->
+
+  <xs:complexType name="Escale">
+    <xs:sequence>
+      <xs:element name="bureau" type="Bureau"/>
+      <xs:element name="navire" type="Navire"/>
+      <xs:element name="voyage" type="Voyage"/>
+      <xs:element name="arrivee" type="xs:dateTime"/>
+      <xs:element name="depart" type="xs:dateTime" minOccurs="0"/>
+      <xs:element name="sens" type="Sens"/>
+      <!-- CORRECTION 7 : le mode d'exploitation est ABSENT de tout manifeste douanier.
+           Il vient du referentiel escale e-CDTS. Porte ici pour que le calcul du bois
+           export (EXP11/11B, EXP12/12B) soit auditable sur une seule piece. -->
+      <xs:element name="mode-exploitation" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="ModeExploitation">
+              <xs:attribute name="source" type="Provenance" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Bureau">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <!-- Port de rattachement CDTS : OW100, OW110, GAPOG... -->
+        <xs:attribute name="code" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="Navire">
+    <xs:sequence>
+      <xs:element name="nom" type="xs:string"/>
+      <xs:element name="imo" type="xs:string" minOccurs="0"/>
+      <xs:element name="pavillon" minOccurs="0">
+        <xs:complexType>
+          <xs:attribute name="code" type="xs:string" use="required"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Voyage">
+    <xs:attribute name="numero" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <!-- ===================== Controles ===================== -->
+
+  <!-- CORRECTION 6 : bloc obligatoire. Le parseur compare ses propres totaux a
+       ceux-ci et REFUSE le fichier en cas d'ecart, plutot que de facturer un
+       manifeste tronque en silence. -->
+  <xs:complexType name="Controles">
+    <xs:sequence>
+      <xs:element name="total-bl" type="xs:nonNegativeInteger"/>
+      <xs:element name="total-conteneurs" type="xs:nonNegativeInteger"/>
+      <xs:element name="total-masse-brute" type="Mesure"/>
+      <xs:element name="total-volume" type="Mesure" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Unite toujours explicite : aucune convention implicite KG/tonne. -->
+  <xs:complexType name="Mesure">
+    <xs:simpleContent>
+      <xs:extension base="Poids">
+        <xs:attribute name="unite" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <!-- ===================== Parc conteneurs ===================== -->
+
+  <!-- Chaque boite est decrite UNE fois ici, puis referencee par les BL qui la
+       chargent. Le groupage (1 conteneur <-> N BL) devient un lien explicite. -->
+  <xs:complexType name="ParcConteneurs">
+    <xs:sequence>
+      <xs:element name="conteneur" type="Conteneur" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Conteneur">
+    <xs:sequence>
+      <!-- CORRECTION 2 : la tare est nommee sans ambiguite et reste
+           distincte du poids marchandise, porte au niveau du lien BL. -->
+      <xs:element name="tare" type="Mesure" minOccurs="0"/>
+      <xs:element name="scelles" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="reference" type="xs:string" use="required"/>
+    <xs:attribute name="taille" type="TailleConteneur" use="required"/>
+    <xs:attribute name="nature" type="NatureConteneur" use="required"/>
+    <xs:attribute name="statut" type="StatutConteneur" use="required"/>
+    <xs:attribute name="code-iso" type="xs:string" use="optional"/>
+  </xs:complexType>
+
+  <!-- ===================== Connaissements ===================== -->
+
+  <xs:complexType name="Connaissements">
+    <xs:sequence>
+      <xs:element name="bl" type="Bl" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Bl">
+    <xs:sequence>
+      <xs:element name="groupage" type="Groupage" minOccurs="0"/>
+      <xs:element name="ports" type="Ports"/>
+      <xs:element name="parties" type="Parties"/>
+      <xs:element name="references" type="ReferencesBl" minOccurs="0"/>
+      <xs:element name="marchandises" type="Marchandises"/>
+    </xs:sequence>
+    <xs:attribute name="reference" type="xs:string" use="required"/>
+    <xs:attribute name="ligne" type="xs:positiveInteger" use="required"/>
+    <xs:attribute name="sens" type="Sens" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="Groupage">
+    <xs:attribute name="type" type="TypeGroupage" use="required"/>
+    <!-- Renseigne uniquement si type=house : reference du master BL. -->
+    <xs:attribute name="maitre" type="xs:string" use="optional"/>
+  </xs:complexType>
+
+  <xs:complexType name="Ports">
+    <xs:sequence>
+      <xs:element name="chargement" type="Port"/>
+      <xs:element name="dechargement" type="Port"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Port">
+    <xs:attribute name="code" type="CodeLocode" use="required"/>
+    <xs:attribute name="nom" type="xs:string" use="optional"/>
+  </xs:complexType>
+
+  <xs:complexType name="Parties">
+    <xs:sequence>
+      <xs:element name="expediteur" type="Partie"/>
+      <xs:element name="destinataire" type="Partie"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Partie">
+    <xs:attribute name="nom" type="xs:string" use="required"/>
+    <!-- Identifiant fiscal : permet le rapprochement au referentiel client
+         sans recourir au fuzzy matching sur la raison sociale. -->
+    <xs:attribute name="identifiant" type="xs:string" use="optional"/>
+  </xs:complexType>
+
+  <!-- CORRECTION 5 : le BIETC a une balise dediee, au lieu d'etre tantot noye
+       dans la description (MSC/DELMAS), tantot dans Shipping_marks (SAGA). -->
+  <xs:complexType name="ReferencesBl">
+    <xs:sequence>
+      <xs:element name="bietc" type="xs:string" minOccurs="0"/>
+      <xs:element name="booking" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ===================== Marchandises ===================== -->
+
+  <!-- CORRECTION 4, la plus importante : le BL porte N lignes de marchandise,
+       chacune avec SON conditionnement et SON assiette. Un BL mixte
+       (conteneur + vehicules hors conteneur) devient repartissable par la
+       machine, alors qu'il exige aujourd'hui une qualification manuelle. -->
+  <xs:complexType name="Marchandises">
+    <xs:sequence>
+      <xs:element name="marchandise" type="Marchandise" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Marchandise">
+    <xs:sequence>
+      <xs:element name="designation" type="xs:string"/>
+      <xs:element name="categorie" type="Categorie" minOccurs="0"/>
+      <xs:element name="assiette" type="Assiette"/>
+      <xs:element name="conteneurs-ref" type="ConteneursRef" minOccurs="0"/>
+      <xs:element name="vehicules" type="Vehicules" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:positiveInteger" use="required"/>
+    <xs:attribute name="conditionnement" type="Conditionnement" use="required"/>
+  </xs:complexType>
+
+  <!-- Case du bareme CDTS (IMP01..IMP18 / EXP01..EXP18). L'attribut source dit
+       si elle est declaree par le consignataire ou deduite par le parseur :
+       une categorie "deduite" ne doit jamais partir en facturation sans
+       validation humaine. -->
+  <xs:complexType name="Categorie">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="code" type="xs:string" use="required"/>
+        <xs:attribute name="source" type="Provenance" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <!-- Les quatre assiettes possibles du bareme. Au moins une doit etre
+       exploitable, sinon la ligne part en qualification manuelle. -->
+  <xs:complexType name="Assiette">
+    <xs:sequence>
+      <xs:element name="poids-brut" type="Mesure" minOccurs="0"/>
+      <xs:element name="volume" type="Mesure" minOccurs="0"/>
+      <xs:element name="colis" type="Denombrement" minOccurs="0"/>
+      <xs:element name="unites" type="Denombrement" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Denombrement">
+    <xs:attribute name="nombre" type="xs:nonNegativeInteger" use="required"/>
+    <xs:attribute name="type" type="xs:string" use="optional"/>
+  </xs:complexType>
+
+  <xs:complexType name="ConteneursRef">
+    <xs:sequence>
+      <xs:element name="conteneur-ref" type="ConteneurRef" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Le poids marchandise vit sur le LIEN BL<->conteneur : c'est ce qui rend
+       un conteneur groupe repartissable entre ses BL. -->
+  <xs:complexType name="ConteneurRef">
+    <xs:sequence>
+      <xs:element name="poids-marchandise" type="Mesure" minOccurs="0"/>
+      <xs:element name="volume" type="Mesure" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="reference" type="xs:string" use="required"/>
+    <xs:attribute name="colis" type="xs:nonNegativeInteger" use="optional"/>
+  </xs:complexType>
+
+  <!-- CORRECTION 5 bis : les vehicules sont denombrables sans parser les
+       numeros de chassis dans un texte libre (assiette IMP09/EXP09). -->
+  <xs:complexType name="Vehicules">
+    <xs:sequence>
+      <xs:element name="vehicule" type="Vehicule" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Vehicule">
+    <xs:attribute name="chassis" type="xs:string" use="required"/>
+    <xs:attribute name="marque" type="xs:string" use="optional"/>
+    <xs:attribute name="modele" type="xs:string" use="optional"/>
+    <xs:attribute name="categorie" type="CategorieVehicule" use="required"/>
+  </xs:complexType>
+
+</xs:schema>

@@ -1,0 +1,425 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.0">
+
+  <xs:annotation>
+    <xs:documentation>
+      Structural validation profile for ASYCUDA World Cargo Manifest (Awmds),
+      based on UNCTAD Cargo Manifest XML Message Description v4.3.1A / August 2020
+      and real manifest samples.
+
+      Purpose: validate the GLOBAL XML STRUCTURE rather than enforce completeness
+      of every business field. The root Awmds, one General_segment, and at least one
+      Bol_segment are required. Inside known segments, individual fields and most
+      subsegments are optional, but when present they must stay in the documented
+      hierarchy/order and use the documented datatype/maximum length.
+
+      This profile intentionally does NOT enforce business completeness rules such as
+      mandatory volume, consignee address, master information, valuation data, etc.
+      Such rules should be handled separately by application/business validation.
+    </xs:documentation>
+  </xs:annotation>
+
+  <!-- ================================================================ -->
+  <!-- Primitive formats described by the specification                 -->
+  <!-- ================================================================ -->
+
+  <xs:simpleType name="INT18">
+    <xs:restriction base="xs:integer">
+      <xs:totalDigits value="18"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="N18">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="18"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="DATE_yyyy_MM_dd">
+    <xs:restriction base="xs:date">
+      <xs:pattern value="[0-9]{4}-[0-9]{2}-[0-9]{2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="TIME_hh_mm_ss">
+    <xs:restriction base="xs:time">
+      <xs:pattern value="[0-9]{2}:[0-9]{2}:[0-9]{2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="AN1"><xs:restriction base="xs:string"><xs:maxLength value="1"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="AN2"><xs:restriction base="xs:string"><xs:maxLength value="2"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="AN3"><xs:restriction base="xs:string"><xs:maxLength value="3"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="AN4"><xs:restriction base="xs:string"><xs:maxLength value="4"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="AN5"><xs:restriction base="xs:string"><xs:maxLength value="5"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="AN10"><xs:restriction base="xs:string"><xs:maxLength value="10"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="AN17"><xs:restriction base="xs:string"><xs:maxLength value="17"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="AN20"><xs:restriction base="xs:string"><xs:maxLength value="20"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="AN25"><xs:restriction base="xs:string"><xs:maxLength value="25"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="AN27"><xs:restriction base="xs:string"><xs:maxLength value="27"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="AN35"><xs:restriction base="xs:string"><xs:maxLength value="35"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="AN70"><xs:restriction base="xs:string"><xs:maxLength value="70"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="AN140"><xs:restriction base="xs:string"><xs:maxLength value="140"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="AN250"><xs:restriction base="xs:string"><xs:maxLength value="250"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="AN255"><xs:restriction base="xs:string"><xs:maxLength value="255"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="AN2000"><xs:restriction base="xs:string"><xs:maxLength value="2000"/></xs:restriction></xs:simpleType>
+
+  <xs:simpleType name="NonEmptyAN17">
+    <xs:restriction base="AN17"><xs:minLength value="1"/></xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="BolNatureCode">
+    <xs:restriction base="AN2">
+      <xs:enumeration value="22"/>
+      <xs:enumeration value="23"/>
+      <xs:enumeration value="24"/>
+      <xs:enumeration value="28"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- ================================================================ -->
+  <!-- General manifest segment                                        -->
+  <!-- ================================================================ -->
+
+  <xs:complexType name="GeneralSegmentIdType">
+    <xs:sequence>
+      <xs:element name="Customs_office_code" type="AN5" minOccurs="0"/>
+      <xs:element name="Voyage_number" type="AN17" minOccurs="0"/>
+      <xs:element name="Date_of_departure" type="DATE_yyyy_MM_dd" minOccurs="0"/>
+      <xs:element name="Date_of_arrival" type="DATE_yyyy_MM_dd" minOccurs="0"/>
+      <xs:element name="Time_of_arrival" type="TIME_hh_mm_ss" minOccurs="0"/>
+      <xs:element name="Date_of_last_discharge" type="DATE_yyyy_MM_dd" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TotalsSegmentType">
+    <xs:sequence>
+      <xs:element name="Total_number_of_bols" type="INT18" minOccurs="0"/>
+      <xs:element name="Total_number_of_packages" type="N18" minOccurs="0"/>
+      <xs:element name="Total_number_of_containers" type="INT18" minOccurs="0"/>
+      <xs:element name="Total_gross_mass" type="N18" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="CarrierType">
+    <xs:sequence>
+      <xs:element name="Carrier_code" type="AN17" minOccurs="0"/>
+      <xs:element name="Carrier_name" type="AN35" minOccurs="0"/>
+      <xs:element name="Carrier_address" type="AN140" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ShippingAgentType">
+    <xs:sequence>
+      <xs:element name="Shipping_Agent_code" type="AN17" minOccurs="0"/>
+      <xs:element name="Shipping_Agent_name" type="AN140" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="GeneralTransportInformationType">
+    <xs:sequence>
+      <xs:element name="Carrier" type="CarrierType" minOccurs="0"/>
+      <xs:element name="Shipping_Agent" type="ShippingAgentType" minOccurs="0"/>
+      <xs:element name="Mode_of_transport_code" type="AN3" minOccurs="0"/>
+      <xs:element name="Identity_of_transporter" type="AN27" minOccurs="0"/>
+      <xs:element name="Nationality_of_transporter_code" type="AN3" minOccurs="0"/>
+      <xs:element name="Place_of_transporter" type="AN35" minOccurs="0"/>
+      <xs:element name="Registration_number_of_transport_code" type="AN35" minOccurs="0"/>
+      <xs:element name="Date_of_registration" type="DATE_yyyy_MM_dd" minOccurs="0"/>
+      <xs:element name="Master_information" type="AN70" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="GeneralLoadUnloadPlaceType">
+    <xs:sequence>
+      <xs:element name="Place_of_departure_code" type="AN5" minOccurs="0"/>
+      <xs:element name="Place_of_destination_code" type="AN5" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TonnageType">
+    <xs:sequence>
+      <xs:element name="Tonnage_net_weight" type="N18" minOccurs="0"/>
+      <xs:element name="Tonnage_gross_weight" type="N18" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="AttachedDocumentType">
+    <xs:sequence>
+      <xs:element name="Attached_document_code" type="AN4" minOccurs="0"/>
+      <!-- Present in Annex A but no format is specified in the detailed tag table. -->
+      <xs:element name="Attached_document_description" type="xs:string" minOccurs="0"/>
+      <xs:element name="Attached_document_filename" type="AN255" minOccurs="0"/>
+      <xs:element name="Attached_document_content" type="xs:base64Binary" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ColoaderType">
+    <xs:sequence>
+      <xs:element name="Coloader_code" type="AN17" minOccurs="0"/>
+      <xs:element name="Coloader_name" type="AN35" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PreviousManifestIdType">
+    <xs:sequence>
+      <xs:element name="Customs_office_code" type="AN5" minOccurs="0"/>
+      <xs:element name="Voyage_number" type="AN17" minOccurs="0"/>
+      <xs:element name="Date_of_departure" type="DATE_yyyy_MM_dd" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="GeneralSegmentType">
+    <xs:sequence>
+      <xs:element name="General_segment_id" type="GeneralSegmentIdType" minOccurs="0"/>
+      <xs:element name="Totals_segment" type="TotalsSegmentType" minOccurs="0"/>
+      <xs:element name="Transport_information" type="GeneralTransportInformationType" minOccurs="0"/>
+      <xs:element name="Load_unload_place" type="GeneralLoadUnloadPlaceType" minOccurs="0"/>
+      <xs:element name="Tonnage" type="TonnageType" minOccurs="0"/>
+      <xs:element name="Attached_Document" type="AttachedDocumentType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Coloader" type="ColoaderType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Previous_manifest_id" type="PreviousManifestIdType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ================================================================ -->
+  <!-- Bill of lading / transport document segment                      -->
+  <!-- ================================================================ -->
+
+  <xs:complexType name="BolIdType">
+    <xs:sequence>
+      <xs:element name="Bol_reference" type="AN17" minOccurs="0"/>
+      <xs:element name="Line_number" type="INT18" minOccurs="0"/>
+      <xs:element name="Bol_nature" type="BolNatureCode" minOccurs="0"/>
+      <xs:element name="Bol_type_code" type="AN3" minOccurs="0"/>
+      <!-- Conditional: mandatory for consolidated cargo during degroupage. -->
+      <xs:element name="Master_bol_ref_number" type="AN25" minOccurs="0"/>
+      <xs:element name="Unique_carrier_reference" type="AN35" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Diagram-only BOL transport-information structure; no formats are listed in the tag tables. -->
+  <xs:complexType name="BolTransportInformationType">
+    <xs:sequence>
+      <xs:element name="Carrier" type="CarrierType" minOccurs="0"/>
+      <xs:element name="Shipping_Agent" type="ShippingAgentType" minOccurs="0"/>
+      <xs:element name="Vessel_loading_code" type="xs:string" minOccurs="0"/>
+      <xs:element name="Vessel_discharge_code" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="BolLoadUnloadPlaceType">
+    <xs:sequence>
+      <xs:element name="Place_of_loading_code" type="AN5" minOccurs="0"/>
+      <xs:element name="Place_of_unloading_code" type="AN5" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExporterType">
+    <xs:sequence>
+      <xs:element name="Exporter_code" type="AN17" minOccurs="0"/>
+      <xs:element name="Exporter_name" type="AN70" minOccurs="0"/>
+      <xs:element name="Exporter_address" type="AN250" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="NotifyType">
+    <xs:sequence>
+      <xs:element name="Notify_code" type="AN17" minOccurs="0"/>
+      <xs:element name="Notify_name" type="AN70" minOccurs="0"/>
+      <xs:element name="Notify_address" type="AN250" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ConsigneeType">
+    <xs:sequence><xs:element name="Consignee_code" type="AN17" minOccurs="0"/><xs:element name="Consignee_name" type="AN70" minOccurs="0"/><xs:element name="Consignee_address" type="AN250" minOccurs="0"/></xs:sequence></xs:complexType>
+
+  <xs:complexType name="TradersSegmentType">
+    <xs:sequence>
+      <xs:element name="Exporter" type="ExporterType" minOccurs="0"/>
+      <xs:element name="Notify" type="NotifyType" minOccurs="0"/>
+      <xs:element name="Consignee" type="ConsigneeType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ContainerSegmentType">
+    <xs:sequence>
+      <xs:element name="Ctn_reference" type="AN17" minOccurs="0"/>
+      <xs:element name="Number_of_packages" type="INT18" minOccurs="0"/>
+      <xs:element name="Type_of_container" type="AN4" minOccurs="0"/>
+      <xs:element name="Empty_Full" type="AN3" minOccurs="0"/>
+      <xs:element name="Marks1" type="AN10" minOccurs="0"/>
+      <xs:element name="Marks2" type="AN10" minOccurs="0"/>
+      <xs:element name="Marks3" type="AN10" minOccurs="0"/>
+      <xs:element name="Sealing_Party" type="AN3" minOccurs="0"/>
+      <xs:element name="Empty_weight" type="N18" minOccurs="0"/>
+      <xs:element name="Goods_weight" type="N18" minOccurs="0"/>
+      <!-- Diagram-only optional fields; the PDF does not provide formats. -->
+      <xs:element name="Temp_min" type="xs:string" minOccurs="0"/>
+      <xs:element name="Temp_max" type="xs:string" minOccurs="0"/>
+      <xs:element name="Humidity" type="xs:string" minOccurs="0"/>
+      <xs:element name="Dangerous_goods_code" type="xs:string" minOccurs="0"/>
+      <xs:element name="Ctn_goods_description" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="CommodityCodeType">
+    <xs:sequence>
+      <xs:element name="HS_Code" type="xs:string" minOccurs="0"/>
+      <xs:element name="HS_Description" type="xs:string" minOccurs="0"/>
+      <xs:element name="Number_of_packages" type="xs:string" minOccurs="0"/>
+      <xs:element name="Package_type_code" type="xs:string" minOccurs="0"/>
+      <xs:element name="Container_Reference" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="CommoditySegmentType">
+    <xs:sequence>
+      <xs:element name="Commodity_Code" type="CommodityCodeType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="SealsSegmentType">
+    <xs:sequence>
+      <xs:element name="Number_of_seals" type="INT18" minOccurs="0"/>
+      <xs:element name="Marks_of_seals" type="AN20" minOccurs="0"/>
+      <xs:element name="Sealing_party_code" type="AN3" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="GoodsSegmentType">
+    <xs:sequence>
+      <xs:element name="Number_of_packages" type="N18" minOccurs="0"/>
+      <xs:element name="Package_type_code" type="AN17" minOccurs="0"/>
+      <xs:element name="Gross_mass" type="N18" minOccurs="0"/>
+      <xs:element name="Shipping_marks" type="AN2000" minOccurs="0"/>
+      <xs:element name="Goods_description" type="AN2000" minOccurs="0"/>
+      <!-- Diagram-only optional fields. -->
+      <xs:element name="Place_of_origin" type="xs:string" minOccurs="0"/>
+      <xs:element name="Place_of_destination" type="xs:string" minOccurs="0"/>
+      <xs:element name="Commodity_Segment" type="CommoditySegmentType" minOccurs="0"/>
+      <xs:element name="Seals_segment" type="SealsSegmentType" minOccurs="0"/>
+      <xs:element name="Volume_in_cubic_meters" type="N18" minOccurs="0"/>
+      <xs:element name="Num_of_ctn_for_this_bol" type="INT18" minOccurs="0"/>
+      <xs:element name="Information" type="AN70" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="SplitContainerType">
+    <xs:sequence>
+      <xs:element name="Reference" type="AN17" minOccurs="0"/>
+      <xs:element name="Unloaded" type="xs:boolean" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="SplitSegmentType">
+    <xs:sequence>
+      <xs:element name="Number_of_packages" type="N18" minOccurs="0"/>
+      <xs:element name="Package_type_code" type="AN17" minOccurs="0"/>
+      <xs:element name="Gross_mass" type="N18" minOccurs="0"/>
+      <xs:element name="Shipping_marks" type="AN70" minOccurs="0"/>
+      <xs:element name="Goods_description" type="AN70" minOccurs="0"/>
+      <xs:element name="Container" type="SplitContainerType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="FreightSegmentType">
+    <xs:sequence>
+      <xs:element name="PC_indicator" type="AN3" minOccurs="0"/>
+      <xs:element name="Freight_value" type="N18" minOccurs="0"/>
+      <xs:element name="Freight_currency" type="AN3" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="CustomsSegmentType">
+    <xs:sequence>
+      <xs:element name="Customs_value" type="N18" minOccurs="0"/>
+      <xs:element name="Customs_currency" type="AN3" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="InsuranceSegmentType">
+    <xs:sequence>
+      <xs:element name="Insurance_value" type="N18" minOccurs="0"/>
+      <xs:element name="Insurance_currency" type="AN3" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TransportSegmentType">
+    <xs:sequence>
+      <xs:element name="Transport_value" type="N18" minOccurs="0"/>
+      <xs:element name="Transport_currency" type="AN3" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Annex B also depicts repeated Freight_Cost entries. -->
+  <xs:complexType name="FreightCostType">
+    <xs:sequence>
+      <xs:element name="Code" type="xs:string" minOccurs="0"/>
+      <xs:element name="Description" type="xs:string" minOccurs="0"/>
+      <xs:element name="Payment_Method" type="xs:string" minOccurs="0"/>
+      <xs:element name="Amount" type="xs:string" minOccurs="0"/>
+      <xs:element name="Currency" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ValueSegmentType">
+    <xs:sequence>
+      <xs:element name="Freight_segment" type="FreightSegmentType" minOccurs="0"/>
+      <xs:element name="Customs_segment" type="CustomsSegmentType" minOccurs="0"/>
+      <xs:element name="Insurance_segment" type="InsuranceSegmentType" minOccurs="0"/>
+      <xs:element name="Transport_segment" type="TransportSegmentType" minOccurs="0"/>
+      <xs:element name="Freight_Cost" type="FreightCostType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="LocationType">
+    <xs:sequence>
+      <xs:element name="Location_code" type="AN17" minOccurs="0"/>
+      <xs:element name="Location_info" type="AN35" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="SadExportType">
+    <xs:sequence>
+      <xs:element name="Customs_office" type="AN5" minOccurs="0"/>
+      <xs:element name="Registration_serial" type="AN1" minOccurs="0"/>
+      <xs:element name="Registration_number" type="INT18" minOccurs="0"/>
+      <xs:element name="Registration_date" type="DATE_yyyy_MM_dd" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="AuthorizeType">
+    <xs:sequence><xs:element name="Company_code" type="AN17" minOccurs="0"/><xs:element name="Company_name" type="xs:string" minOccurs="0"/><xs:element name="Declarant_code" type="AN140" minOccurs="0"/></xs:sequence></xs:complexType>
+
+  <xs:complexType name="BolSegmentType">
+    <xs:sequence>
+      <xs:element name="Bol_id" type="BolIdType" minOccurs="0"/>
+      <xs:element name="Transport_information" type="BolTransportInformationType" minOccurs="0"/>
+      <xs:element name="Load_unload_place" type="BolLoadUnloadPlaceType" minOccurs="0"/>
+      <xs:element name="Traders_segment" type="TradersSegmentType" minOccurs="0"/>
+      <xs:element name="ctn_segment" type="ContainerSegmentType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Goods_segment" type="GoodsSegmentType" minOccurs="0"/>
+      <xs:element name="Split_segment" type="SplitSegmentType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Value_segment" type="ValueSegmentType" minOccurs="0"/>
+      <xs:element name="Location" type="LocationType" minOccurs="0"/>
+      <xs:element name="Sad_export" type="SadExportType" minOccurs="0"/>
+      <xs:element name="Authorize" type="AuthorizeType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ================================================================ -->
+  <!-- Root AWMDS message                                               -->
+  <!-- ================================================================ -->
+
+  <xs:element name="Awmds">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="General_segment" type="GeneralSegmentType" minOccurs="1" maxOccurs="1"/>
+        <!-- Annex A depicts 0..unbounded BOL segments. -->
+        <xs:element name="Bol_segment" type="BolSegmentType" minOccurs="1" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>
