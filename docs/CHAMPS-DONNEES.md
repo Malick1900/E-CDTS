@@ -71,27 +71,30 @@
 ## C. Chaîne transactionnelle
 
 ### 8. Situation portuaire (ligne de mouvement navire)
-- Navire *(→ Navire)*
-- Numéro de voyage *(clé unique navire + voyage)*
-- Port
+
+> **Implémentée** le 2026-08-26 — table `mouvements_navire`, cf. **ADR-0039**. Les champs marqués *(non implémenté)* restent au cahier des charges mais n'ont pas de colonne : ils attendent une réponse du CGC.
+
+- Navire *(→ référentiel `navires`, clé étrangère obligatoire — ADR-0039)*
+- Numéro de voyage *(clé unique port + navire + voyage)*
+- Port *(→ référentiel `ports`)*
 - Sens *(import / export)*
-- **Statut navire** : `Navire attendu` · `En rade` · `À quai` · `En zone d'exploitation` · `Sorti`
-- Poste à quai *(un seul navire par poste à un instant t)*
-- ETA (arrivée prévue) · ETD (départ prévu)
-- **Date d'accostage** *(confirmée — ouvre le verrou import)*
-- **Date de départ** *(confirmée — ouvre le verrou export)*
+- **Statut navire** — 6 jalons, liste fermée : `Navire attendu` · `En rade` · `À quai` · `Hors zone` · `En zone d'exploitation` · `Sorti` *(le jalon `Hors zone` validé le 2026-08-26)*
+- Poste à quai *(→ référentiel `postes_quai`, borné par port ; un seul navire par poste à un instant t)*
+- **ETA · ETD** — dates **réelles** d'accostage et de départ *(précisé par le CGC le 2026-08-26 : les sigles sont ceux du port, ce ne sont pas des prévisions)*. Ce sont elles que lit le verrou d'ADR-0009.
 - Consignataire responsable *(information descriptive, pas un filtre)*
-- **État de validation** : saisie/brouillon → **validée/publiée** *(validée par un supérieur avant publication)*
-- Saisi par / validé par *(traçabilité)*
-- **HPE — Heure Prévue d'Entrée** *(heure prévue d'accostage ; renseignée pour les navires en rade — ex. 14H00, 06H00)*
-- **HPS — Heure Prévue de Sortie** *(heure prévue de départ ; renseignée pour les navires à quai — ex. « 05H00 AC », « 02H00 AC »)*
-- Port / terminal de la ligne *(peut différer du port en tête du document — ex. `ANTARES` sur une situation Owendo)*
+- **État de validation** : `publiee_at` nul = brouillon → daté = validée/publiée *(validée par un supérieur avant publication)*
+- Validé par *(`publiee_par` — traçabilité)*
+- ✅ **Date d'accostage / date de départ « confirmées » — tranché le 2026-08-26** : pas de colonnes distinctes, la question n'a pas lieu d'être. `eta` et `etd` SONT ces dates.
+- *(non implémenté)* **HPE — Heure Prévue d'Entrée** *(heure prévue d'accostage ; renseignée pour les navires en rade — ex. 14H00, 06H00)*
+- *(non implémenté)* **HPS — Heure Prévue de Sortie** *(heure prévue de départ ; renseignée pour les navires à quai — ex. « 05H00 AC », « 02H00 AC »)*
+- *(non implémenté)* Port / terminal de la ligne *(peut différer du port en tête du document — ex. `ANTARES` sur une situation Owendo)*
 - *Constat (situation Owendo réelle, 12/11/2024) : les regroupements du document = nos statuts navire (`Quai` · `Zone d'exploitation` · `Sortie` · `Rade d'attente` · `Navires attendus`), plus un bloc « Récapitulatif du week-end ». **Aucun n° de voyage** n'y figure → confirme le rapprochement navire+voyage (ADR-0009). L'app doit pouvoir **régénérer ce rapport** (diffusion OPRAG/Capitainerie, ADR-0005).*
+- ✅ **Poste à quai — tranché le 2026-08-26** : liste **fermée par port** (table `postes_quai`), seule façon de détecter qu'un poste est occupé. Codes amorcés depuis la maquette (`M1`–`M4`, `Minéralier`, `Bois`, `Pétrolier`, `Conventionnel` à Owendo) — ❓ à remplacer par les codes réels du document (`P1`–`P4`, `OCT`, `GSEZ 2`, `ZNE EXPL`…), et à confirmer : un poste peut-il en viser deux (`P3/4`) ?
 - ❓ Signification exacte de **HPE / HPS** et de la mention « **AC** » (à confirmer / accostage ?).
-- ❓ Le « poste à quai » : codé (`P1`–`P4`, `P3/4`, `OCT`, `GSEZ 2`, `ZNE EXPL`…) — liste fermée par port, ou texte libre ? Peut viser deux postes (`P3/4`) ?
 - ❓ `ANTARES` : terminal d'Owendo ou port distinct ? *(→ granularité port / terminal / poste)*
 - ❓ « **Récapitulatif du week-end** » : rôle de cette section (bloc de synthèse) ?
 - ❓ Autres jalons datés voulus (mise à quai, fin d'opérations…) ?
+- ❓ Portée exacte de « **hors zone** » : le navire y tient-il encore son poste ? *(implémenté : non — seuls `À quai` et `En zone d'exploitation` occupent un poste)*
 
 ### 9. Dossier d'escale
 - **Identifiant interne stable** *(immuable, technique — support de toute la traçabilité)*

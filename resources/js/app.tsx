@@ -20,6 +20,11 @@ createInertiaApp({
             case name === 'auth/login':
                 // La connexion porte son propre écran scindé plein page.
                 return null;
+            case name === 'situation-portuaire-publique':
+                // Document public, hors portail (ADR-0011) : il ne doit rien
+                // emprunter à la coquille applicative — pas même sa barre
+                // latérale, qui n'a aucun sens pour un visiteur sans compte.
+                return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
             default:

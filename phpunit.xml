@@ -18,6 +18,10 @@
         </include>
     </source>
     <php>
+        <!-- dompdf charge ses polices et rend la page entière en mémoire :
+             les 128 Mo par défaut ne suffisent pas à l'export de la situation
+             portuaire. -->
+        <ini name="memory_limit" value="512M"/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>

@@ -143,3 +143,42 @@
 .ea-menuitem-danger:hover {
     background: #fbeae7 !important;
 }
+
+/* Vue publique de la situation portuaire : lien de retour et pastilles de port. */
+.ea-backlink-clair:hover {
+    color: #142c73 !important;
+    text-decoration: underline !important;
+}
+
+/*
+ * Version imprimable de la situation portuaire (ADR-0005) : c'est ce que le CGC
+ * transmet à la Capitainerie et à l'OPRAG. On retire la navigation, on aplatit
+ * les fonds — une page qui s'imprime, pas un écran photographié.
+ */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+
+    .ecdts-admin {
+        background: #fff !important;
+    }
+
+    .ecdts-admin table {
+        min-width: 0 !important;
+    }
+
+    .ecdts-admin th {
+        /* Les aplats sombres ne sortent pas des imprimantes de bureau. */
+        background: #eef1f7 !important;
+        color: #142c73 !important;
+    }
+
+    .ecdts-admin thead {
+        display: table-header-group;
+    }
+
+    .ecdts-admin tr {
+        break-inside: avoid;
+    }
+}

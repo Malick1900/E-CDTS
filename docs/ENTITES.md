@@ -86,11 +86,13 @@ L'**escale** est le **dossier du passage d'un navire** pour un voyage donné (nu
 ### Situation portuaire
 État publié des mouvements de navires, alimenté quotidiennement depuis la conférence portuaire. **Source unique** des dates d'accostage/départ lues par les dossiers (ADR-0009).
 
-**Statuts officiels** (liste fermée) :
+**Statuts officiels** (liste fermée, enum `StatutNavire`) :
 
-`en attente` → `en rade` → `à quai` → `hors zone` → `en zone d'exploitation` → `sorti`
+`Navire attendu` → `En rade` → `À quai` → `Hors zone` → `En zone d'exploitation` → `Sorti`
 
-**Consultation publique** : la situation portuaire est **accessible en lecture seule sans connexion**, via un lien depuis la page d'accueil / de connexion. Aucune action possible en accès public.
+**Consultation publique** : la situation portuaire est **accessible en lecture seule sans connexion**, via un lien depuis la page d'accueil / de connexion. Aucune action possible en accès public. Seules les lignes **publiées** y figurent.
+
+**Saisir n'est pas publier** (ADR-0013/0039) : le Conférencier renseigne les lignes, qui restent en brouillon ; un supérieur (`situation-portuaire.valider`) les publie d'un geste distinct. Toute modification ultérieure ramène la ligne au brouillon, et le verrou de transmission d'ADR-0009 ne s'ouvre que sur du publié.
 
 ## 3. Les 5 profils côté CGC
 

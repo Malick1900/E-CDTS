@@ -137,9 +137,10 @@ export default function Login({ status, canResetPassword }: Props) {
                                     Dépôt des dossiers d'escale
                                 </div>
                             </div>
-                            {/* Lien public — écran « situation portuaire » à venir */}
+                            {/* La seule porte ouverte du portail : la situation
+                                portuaire est un document public (ADR-0011). */}
                             <a
-                                href="#"
+                                href="/situation-portuaire-publique"
                                 className="inline-flex items-center gap-2 rounded-lg border border-[#7EC8F0]/40 bg-[#7EC8F0]/10 px-4 py-2.5 text-sm font-semibold text-[#D5DFF5] transition hover:border-[#7EC8F0]/70 hover:bg-[#7EC8F0]/20 hover:text-white"
                             >
                                 <Anchor className="size-4" />

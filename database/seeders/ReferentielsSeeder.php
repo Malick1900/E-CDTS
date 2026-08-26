@@ -4,13 +4,14 @@ namespace Database\Seeders;
 
 use App\Models\Pays;
 use App\Models\Port;
+use App\Models\PosteQuai;
 use App\Models\TypeNavire;
 use Illuminate\Database\Seeder;
 
 /**
  * Amorce des référentiels : pays (pavillons / origines fréquents dans le trafic
  * gabonais et grands pavillons de complaisance), les deux ports gérés par le
- * CGC, et les types de navire.
+ * CGC avec leurs postes d'accostage, et les types de navire.
  *
  * Ce sont des DONNÉES MAÎTRES, pas de la démonstration : elles ont vocation à
  * exister en production. Les armements et les navires, eux, appartiennent au
@@ -111,6 +112,33 @@ class ReferentielsSeeder extends Seeder
 
         foreach ($typesNavire as $code => $name) {
             TypeNavire::updateOrCreate(['code' => $code], ['name' => $name, 'actif' => true]);
+        }
+
+        // Postes d'accostage, par port. La situation portuaire n'en accepte pas
+        // d'autres : c'est cette liste fermée qui permet de dire qu'un poste est
+        // déjà occupé.
+        //
+        // ⚠ Codes repris de la maquette. Le document réel d'Owendo en emploie
+        // d'autres (P1–P4, P3/4, OCT, GSEZ 2, ZNE EXPL) — liste à faire
+        // confirmer par le CGC (CHAMPS-DONNEES.md §8).
+        $postes = [
+            'GAOWE' => ['M1', 'M2', 'M3', 'M4', 'Minéralier', 'Bois', 'Pétrolier', 'Conventionnel'],
+            'GAPOG' => ['Quai Nord', 'Quai Sud', 'Appontement pétrolier'],
+        ];
+
+        foreach ($postes as $codePort => $codes) {
+            $port = Port::where('code', $codePort)->first();
+
+            if ($port === null) {
+                continue;
+            }
+
+            foreach ($codes as $code) {
+                PosteQuai::updateOrCreate(
+                    ['port_id' => $port->id, 'code' => $code],
+                    ['actif' => true],
+                );
+            }
         }
     }
 }

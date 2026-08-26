@@ -17,6 +17,9 @@ use App\Http\Controllers\MonEspace\AffectationController as MonEspaceAffectation
 use App\Http\Controllers\MonEspace\AgentController as MonEspaceAgentController;
 use App\Http\Controllers\MonEspaceController;
 use App\Http\Controllers\ProfilController;
+use App\Http\Controllers\SituationPortuaireController;
+use App\Http\Controllers\SituationPortuaireExportController;
+use App\Http\Controllers\SituationPortuairePubliqueController;
 use Illuminate\Support\Facades\Route;
 
 // e-CDTS est un portail fermé (ADR-0021) : la racine n'a rien à montrer à un
@@ -25,6 +28,13 @@ use Illuminate\Support\Facades\Route;
 // déjà ouverte.
 Route::redirect('/', '/login')->name('home');
 
+// La seule exception au portail fermé : la situation portuaire est un document
+// public (ADR-0011). Elle ne montre que les lignes publiées, et n'offre aucune
+// action — c'est le lien « Voir la situation portuaire » de l'écran de
+// connexion, et la version que le CGC imprime pour ses partenaires.
+Route::get('situation-portuaire-publique', [SituationPortuairePubliqueController::class, 'index'])
+    ->name('situation-portuaire.publique');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     // Coquille d'activité (ADR-0030). Tout le monde arrive ici, quel que soit le
     // type de compte : ce sont la navigation et le contexte qui diffèrent, pas
@@ -32,9 +42,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // module se branchera sur une entrée déjà en place.
     Route::inertia('dashboard', 'activite/dashboard')->name('dashboard');
 
-    Route::inertia('situation-portuaire', 'activite/situation-portuaire')
+    // Situation portuaire. Trois droits s'y superposent (ADR-0013) : consulter
+    // ouvre l'écran, renseigner autorise la saisie, valider autorise la seule
+    // publication — le conférencier saisit, son supérieur publie.
+    Route::get('situation-portuaire', [SituationPortuaireController::class, 'index'])
         ->middleware('can:'.Permission::SituationPortuaireConsulter->value)
         ->name('situation-portuaire');
+
+    Route::middleware('can:'.Permission::SituationPortuaireRenseigner->value)->group(function () {
+        Route::post('situation-portuaire', [SituationPortuaireController::class, 'store'])
+            ->name('situation-portuaire.store');
+        Route::patch('situation-portuaire/{mouvement}', [SituationPortuaireController::class, 'update'])
+            ->name('situation-portuaire.update');
+    });
+
+    // Pas de suppression : une escale inscrite par erreur se corrige, et
+    // l'historique des mouvements est ce que le dossier d'escale référencera.
+    Route::post('situation-portuaire/{port}/publication', [SituationPortuaireController::class, 'publier'])
+        ->middleware('can:'.Permission::SituationPortuaireValider->value)
+        ->name('situation-portuaire.publication');
+
+    // Export PDF du tableau, sur une période choisie. Adossé au droit de
+    // consultation : qui peut lire la situation peut l'emporter sur papier.
+    Route::get('situation-portuaire/{port}/export', [SituationPortuaireExportController::class, 'pdf'])
+        ->middleware('can:'.Permission::SituationPortuaireConsulter->value)
+        ->name('situation-portuaire.export');
 
     Route::inertia('dossiers', 'activite/dossiers')
         ->middleware('can:'.Permission::DossiersConsulter->value)

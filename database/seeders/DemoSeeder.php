@@ -3,12 +3,16 @@
 namespace Database\Seeders;
 
 use App\Enums\ModeExploitation;
+use App\Enums\SensTrafic;
+use App\Enums\StatutNavire;
 use App\Enums\StatutValidation;
 use App\Models\Armement;
 use App\Models\Consignataire;
+use App\Models\MouvementNavire;
 use App\Models\Navire;
 use App\Models\Pays;
 use App\Models\Port;
+use App\Models\PosteQuai;
 use App\Models\TypeNavire;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -193,5 +197,59 @@ class DemoSeeder extends Seeder
         // sont désignés — d'où une passe finale plutôt qu'une pose dans la
         // boucle (ADR-0031).
         Artisan::call('clients:synchroniser-roles');
+
+        $this->situationPortuaire();
+    }
+
+    /**
+     * Une situation portuaire d'exemple : les six jalons représentés, sur les
+     * deux ports, pour que la frise d'escale et le verrou de transmission se
+     * lisent d'un coup d'œil sur un environnement neuf.
+     *
+     * Deux lignes restent en brouillon (`publiee_at` nul) : c'est l'état
+     * courant d'une conférence en cours de saisie, et ce qui alimente le
+     * compteur « modifications non publiées » de l'écran.
+     */
+    private function situationPortuaire(): void
+    {
+        $ports = Port::pluck('id', 'code');
+        $navires = Navire::pluck('id', 'name');
+        $societes = Consignataire::pluck('id', 'name');
+        $postes = PosteQuai::get()->groupBy('port_id')->map(fn (Collection $groupe): Collection => $groupe->pluck('id', 'code'));
+
+        // [port, navire, voyage, sens, statut, poste, ETA, ETD, consignataire, publiée]
+        $lignes = [
+            ['GAOWE', 'Maersk Cadiz', '26-114S', SensTrafic::Import, StatutNavire::Quai, 'M3', '-2 days 06:40', null, 'SAGA Gabon', true],
+            ['GAOWE', 'Nordic Okume', '26-055', SensTrafic::Export, StatutNavire::ZoneExploitation, 'Bois', '-3 days 16:45', null, 'SDV Gabon', true],
+            ['GAOWE', 'CMA CGM Congo', '26-118N', SensTrafic::Export, StatutNavire::HorsZone, 'M1', '-1 days 09:30', null, 'SAGA Gabon', true],
+            ['GAOWE', 'MSC Bilbao', '26-120S', SensTrafic::Import, StatutNavire::Rade, null, '+1 days 14:00', null, 'OMA Gabon', true],
+            ['GAOWE', 'Pacific Ozouri', '26-071', SensTrafic::Export, StatutNavire::Sorti, null, '-6 days 05:20', '-1 days 22:10', 'SDV Gabon', true],
+            // Le brouillon du jour : saisi à la conférence, pas encore validé.
+            ['GAOWE', 'Maersk Nuku', '44-08', SensTrafic::Import, StatutNavire::Attendu, null, '+3 days 08:00', null, 'Getma Gabon', false],
+            ['GAPOG', 'Cap San Owendo', '26-014', SensTrafic::Export, StatutNavire::Quai, 'Quai Nord', '-1 days 02:00', null, 'Getma Gabon', true],
+            ['GAPOG', 'Maersk Cadiz', '12-009', SensTrafic::Import, StatutNavire::Attendu, null, '+2 days 10:00', null, 'SAGA Gabon', false],
+        ];
+
+        foreach ($lignes as [$codePort, $navire, $voyage, $sens, $statut, $poste, $eta, $etd, $societe, $publiee]) {
+            $portId = $ports[$codePort] ?? null;
+            $navireId = $navires[$navire] ?? null;
+
+            if ($portId === null || $navireId === null) {
+                continue;
+            }
+
+            MouvementNavire::updateOrCreate(
+                ['port_id' => $portId, 'navire_id' => $navireId, 'voyage' => $voyage],
+                [
+                    'sens' => $sens,
+                    'statut' => $statut,
+                    'poste_quai_id' => $poste === null ? null : ($postes[$portId][$poste] ?? null),
+                    'eta' => now()->modify($eta),
+                    'etd' => $etd === null ? null : now()->modify($etd),
+                    'consignataire_id' => $societes[$societe] ?? null,
+                    'publiee_at' => $publiee ? now()->setTime(11, 34) : null,
+                ]
+            );
+        }
     }
 }
