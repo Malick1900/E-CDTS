@@ -8,7 +8,7 @@ import type { FlashToast } from '@/types/global';
  * front croit avoir envoyé.
  */
 export default function Toast() {
-    const flash = usePage().props.flash?.toast;
+    const flash = usePage().flash.toast;
 
     // Le toast visible se DÉRIVE du flash : il s'affiche dès la réponse, sans
     // rendu intermédiaire. L'état ne mémorise que le flash déjà expiré, et il
@@ -33,6 +33,9 @@ export default function Toast() {
     }
 
     const erreur = toast.type === 'error';
+    // Un simple constat n'est pas une réussite : il porte un « i » bleu et non
+    // la coche verte, qui promettrait une écriture qui n'a pas eu lieu.
+    const constat = toast.type === 'info';
 
     return (
         <div
@@ -63,21 +66,39 @@ export default function Toast() {
                     width: 18,
                     height: 18,
                     borderRadius: '50%',
-                    background: erreur ? '#E4735F' : '#009E60',
+                    background: erreur
+                        ? '#E4735F'
+                        : constat
+                          ? '#7EC8F0'
+                          : '#009E60',
                     alignItems: 'center',
                     justifyContent: 'center',
                     flex: 'none',
                 }}
             >
-                <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-                    <path
-                        d="M2.5 6.2l2.3 2.3L9.5 3.5"
-                        stroke="#fff"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    />
-                </svg>
+                {constat ? (
+                    <span
+                        aria-hidden="true"
+                        style={{
+                            fontSize: 11,
+                            fontWeight: 800,
+                            color: '#142C73',
+                            lineHeight: 1,
+                        }}
+                    >
+                        i
+                    </span>
+                ) : (
+                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                        <path
+                            d="M2.5 6.2l2.3 2.3L9.5 3.5"
+                            stroke="#fff"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    </svg>
+                )}
             </span>
             {toast.message}
         </div>

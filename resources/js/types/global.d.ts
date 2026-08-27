@@ -19,12 +19,20 @@ export type FlashToast = {
 
 declare module '@inertiajs/core' {
     export interface InertiaConfig {
+        /*
+         * Le flash n'est PAS une prop de page : Inertia le dépose à la racine
+         * de l'objet page, à côté de `props`, et l'expose par `usePage().flash`.
+         * Le déclarer dans `sharedPageProps` rendait `props.flash` toujours
+         * indéfini — et tous les toasts muets.
+         */
+        flashDataType: {
+            /** Absent tant qu'aucun contrôleur n'a appelé `Inertia::flash()`. */
+            toast?: FlashToast;
+        };
         sharedPageProps: {
             name: string;
             auth: Auth;
             sidebarOpen: boolean;
-            /** Absent tant qu'aucun contrôleur n'a appelé `Inertia::flash()`. */
-            flash?: { toast?: FlashToast };
             [key: string]: unknown;
         };
     }
