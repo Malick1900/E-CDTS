@@ -60,7 +60,11 @@ Une conférence portuaire a lieu **chaque jour à 11h à la Capitainerie** ; l'a
 - **Import** : l'élément central est que le navire soit **« à quai »** avec date d'accostage confirmée → le dossier import devient transmissible.
 - **Export** : l'élément central est que le navire soit **au départ (« sorti »)** avec date de départ confirmée → le dossier export devient transmissible.
 
-Le rapprochement dossier ↔ situation portuaire se fait par la clé **navire + n° de voyage** (clé unique de la situation, confirmé 2026-07-03). Le consignataire peut anticiper la création du dossier, mais pas le transmettre avant. À la clôture, le système **lie la référence du dossier au mouvement navire** (traçabilité).
+Le rapprochement dossier ↔ situation portuaire se fait par la clé **navire + n° de voyage** (clé unique de la situation, confirmé 2026-07-03). Le consignataire peut anticiper la création du dossier, mais pas le transmettre avant.
+
+**Deux gestes distincts, à ne pas confondre (précisé 2026-08-26, ADR-0042)** :
+- le **rapprochement** *identifie* la ligne. Il se tente **aux deux écritures** — à la création du dossier et à l'inscription du navire à la situation — parce que l'ordre d'arrivée n'est pas garanti, et le plus souvent c'est le dossier qui précède. Il se pose sur une ligne encore **en brouillon** : identifier n'est pas opposer, c'est la publication qui commande le verrou (ADR-0013) ;
+- le **figement de la clôture** *scelle* la ligne contre laquelle le dossier a été liquidé, pour qu'une correction ultérieure de la situation ne réécrive pas l'histoire. C'est ce que désignait la phrase « à la clôture, le système lie la référence du dossier au mouvement navire » — un scellement, pas une recherche : à ce stade le lien existe depuis longtemps.
 
 ### WF3 — Ouverture du dossier d'escale (§6.2.4)
 L'agent consignataire ouvre un **dossier d'escale** pour un voyage (navire + armement), en choisissant dans les **référentiels navires et armements gérés exclusivement par le CGC** (Q10, Option A — le navire porte notamment son attribut ligne régulière/tramping). Le dossier reste « ouvert » tant que la date à quai/sortie n'est pas confirmée par la situation portuaire. Tableau de bord des dossiers + alertes d'incohérence.
@@ -72,6 +76,7 @@ L'agent consignataire ouvre un **dossier d'escale** pour un voyage (navire + arm
 
 ### WF4 — Transmission du manifeste (§6.2.5)
 L'agent consignataire sélectionne le dossier et téléverse le manifeste : **XML** ; saisie ligne par ligne + PDF pour les consignataires sans format. **Les deux modes d'entrée sont dans la phase 1** (confirmé 2026-07-02). Le système contrôle la conformité (champs requis, formats). États du manifeste : **soumis, en validation, validé, transmis**.
+
 
 **Rattachement du n° de manifeste (précisé 2026-07-09, ADR-0008)** : au premier rattachement d'un manifeste, le **numéro affiché** du dossier passe de provisoire au **n° de manifeste** et se **fige** (l'identifiant interne ne change jamais). Source du numéro : **extrait du XML AWMDS** en mode XML ; **saisi par le consignataire** en mode manuel (recopié de son manifeste papier — champ requis). Les manifestes **additifs/rectificatifs** ultérieurs portent le **même numéro** et ne modifient donc pas le libellé.
 

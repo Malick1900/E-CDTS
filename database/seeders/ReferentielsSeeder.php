@@ -76,15 +76,23 @@ class ReferentielsSeeder extends Seeder
         // Ports gérés par le CGC (liste exacte à compléter). Rattachés au Gabon.
         $gabon = Pays::where('code', 'GA')->first();
 
+        // Le préfixe de numérotation n'est pas le code UN/LOCODE : c'est le
+        // sigle que le CGC écrit sur ses pièces — `ESC-OWD-26-0342` pour un
+        // dossier, `DELBV` / `FALBV` pour un devis ou une facture (WF6).
         $ports = [
-            ['code' => 'GAOWE', 'name' => 'Owendo'],
-            ['code' => 'GAPOG', 'name' => 'Port-Gentil'],
+            ['code' => 'GAOWE', 'name' => 'Owendo', 'prefixe' => 'OWD'],
+            ['code' => 'GAPOG', 'name' => 'Port-Gentil', 'prefixe' => 'POG'],
         ];
 
         foreach ($ports as $port) {
             Port::updateOrCreate(
                 ['code' => $port['code']],
-                ['name' => $port['name'], 'pays_id' => $gabon?->id, 'actif' => true],
+                [
+                    'name' => $port['name'],
+                    'pays_id' => $gabon?->id,
+                    'prefixe_numerotation' => $port['prefixe'],
+                    'actif' => true,
+                ],
             );
         }
 

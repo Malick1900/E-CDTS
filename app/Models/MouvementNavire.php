@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\NormaliseLeVoyage;
 use App\Enums\SensTrafic;
 use App\Enums\StatutNavire;
 use Database\Factories\MouvementNavireFactory;
@@ -54,6 +55,8 @@ class MouvementNavire extends Model
     /** @use HasFactory<MouvementNavireFactory> */
     use HasFactory;
 
+    use NormaliseLeVoyage;
+
     protected $table = 'mouvements_navire';
 
     protected function casts(): array
@@ -65,6 +68,24 @@ class MouvementNavire extends Model
             'etd' => 'datetime',
             'publiee_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Inscrire un navire rapproche les dossiers qui l'attendaient (ADR-0042).
+     *
+     * C'est le versant qui tient la promesse d'ADR-0009 : « la mise à jour de
+     * la situation portuaire ouvre le verrou automatiquement, sans action côté
+     * dossier ». Un dossier s'ouvre le plus souvent avant que le navire ne soit
+     * annoncé à la conférence — sans ce crochet, il resterait orphelin jusqu'à
+     * ce que quelqu'un y pense.
+     *
+     * Sur `created` seulement : ni le navire ni le voyage ne sont modifiables
+     * sur une ligne existante (`MouvementNavireValidationRules`), donc la clé
+     * de rapprochement ne bouge jamais après l'inscription.
+     */
+    protected static function booted(): void
+    {
+        static::created(static fn (self $mouvement) => Escale::rapprocherLesOrphelinsDe($mouvement));
     }
 
     /** @return BelongsTo<Port, $this> */

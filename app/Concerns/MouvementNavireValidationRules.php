@@ -63,13 +63,18 @@ trait MouvementNavireValidationRules
      * L'escale déjà inscrite : même navire, même voyage, même port. C'est
      * l'unicité que porte la base ; on la vérifie ici pour rendre un message
      * plutôt qu'une erreur SQL.
+     *
+     * Sur la forme normalisée (ADR-0042) : « 26-114S » et « 26-114 s » ne sont
+     * pas deux escales du même navire dans le même port, c'est la même écrite
+     * deux fois. Les laisser coexister rendrait de surcroît le rapprochement
+     * des dossiers ambigu, donc impossible.
      */
     protected function verifierUniciteEscale(Validator $validator, int $portId, int $navireId, string $voyage, ?int $ignore = null): void
     {
         $existe = MouvementNavire::query()
             ->where('port_id', $portId)
             ->where('navire_id', $navireId)
-            ->where('voyage', $voyage)
+            ->where('voyage_normalise', MouvementNavire::normaliserVoyage($voyage))
             ->when($ignore !== null, fn ($query) => $query->whereKeyNot($ignore))
             ->exists();
 

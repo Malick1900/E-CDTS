@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\Users\AgentController;
 use App\Http\Controllers\Admin\Users\ConsignataireController;
 use App\Http\Controllers\Admin\Users\RoleController;
 use App\Http\Controllers\Admin\Users\TitulaireController;
+use App\Http\Controllers\DossierEscaleController;
 use App\Http\Controllers\MonEspace\AffectationController as MonEspaceAffectationController;
 use App\Http\Controllers\MonEspace\AgentController as MonEspaceAgentController;
 use App\Http\Controllers\MonEspaceController;
@@ -68,9 +69,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('can:'.Permission::SituationPortuaireConsulter->value)
         ->name('situation-portuaire.export');
 
-    Route::inertia('dossiers', 'activite/dossiers')
-        ->middleware('can:'.Permission::DossiersConsulter->value)
-        ->name('dossiers');
+    // Dossiers d'escale. L'écran d'accueil du module : la liste du périmètre du
+    // compte, et le bouton qui mène à l'ouverture. La permission ouvre la
+    // porte ; c'est le controller qui borne ce qu'on voit derrière — un compte
+    // client ne voit que les dossiers de sa société.
+    Route::middleware('can:'.Permission::DossiersConsulter->value)->group(function () {
+        Route::get('dossiers', [DossierEscaleController::class, 'index'])->name('dossiers');
+
+        // L'ouverture d'un dossier (WF3). Aucune permission propre : consulter
+        // ouvre l'écran, et c'est d'avoir une société — donc d'être un compte
+        // client — qui autorise le geste. Le controller et la form request le
+        // vérifient tous deux ; un interne CGC n'aurait personne à qui
+        // attribuer le dossier.
+        Route::get('dossiers/nouveau', [DossierEscaleController::class, 'create'])->name('dossiers.nouveau');
+        Route::post('dossiers', [DossierEscaleController::class, 'store'])->name('dossiers.store');
+
+        // L'aiguillage. Cliquer un dossier dans la liste, c'est arriver à
+        // l'étape où il en est : l'écran d'accueil ne connaît pas les écrans de
+        // traitement, il envoie ici et l'étape décide (`EtapeDossier::ecran`).
+        // Déclarée APRÈS `dossiers/nouveau`, que le paramètre avalerait.
+        Route::get('dossiers/{escale}', [DossierEscaleController::class, 'show'])->name('dossiers.show');
+    });
 
     Route::inertia('devis', 'activite/devis')
         ->middleware('can:'.Permission::DevisConsulter->value)

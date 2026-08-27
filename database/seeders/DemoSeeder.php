@@ -2,12 +2,14 @@
 
 namespace Database\Seeders;
 
+use App\Enums\EtapeDossier;
 use App\Enums\ModeExploitation;
 use App\Enums\SensTrafic;
 use App\Enums\StatutNavire;
 use App\Enums\StatutValidation;
 use App\Models\Armement;
 use App\Models\Consignataire;
+use App\Models\Escale;
 use App\Models\MouvementNavire;
 use App\Models\Navire;
 use App\Models\Pays;
@@ -199,6 +201,7 @@ class DemoSeeder extends Seeder
         Artisan::call('clients:synchroniser-roles');
 
         $this->situationPortuaire();
+        $this->dossiersEscale();
     }
 
     /**
@@ -250,6 +253,90 @@ class DemoSeeder extends Seeder
                     'publiee_at' => $publiee ? now()->setTime(11, 34) : null,
                 ]
             );
+        }
+    }
+
+    /**
+     * Des dossiers d'escale d'exemple : les six étapes du circuit représentées,
+     * sur les deux ports et chez plusieurs consignataires, pour que l'écran
+     * d'accueil se lise sur un environnement neuf — le tableau plein comme les
+     * pastilles de résumé.
+     *
+     * Plusieurs d'entre eux reprennent un voyage de la situation portuaire :
+     * le rapprochement d'ADR-0042 s'y fait tout seul, à la création. Les autres
+     * sont ouverts en anticipation, avant que le navire ne soit annoncé à la
+     * conférence — ils restent en attente de rapprochement, ce qui est le cas
+     * le plus courant.
+     */
+    private function dossiersEscale(): void
+    {
+        // Les ports en modèles et non en identifiants : la numérotation du
+        // dossier lit leur préfixe (ADR-0008).
+        $ports = Port::get()->keyBy('code');
+        $navires = Navire::get()->keyBy('name');
+        $societes = Consignataire::pluck('id', 'name');
+        $postes = PosteQuai::get()->groupBy('port_id')->map(fn (Collection $groupe): Collection => $groupe->pluck('id', 'code'));
+
+        // [port, navire, voyage, sens, consignataire, poste, étape, ouvert il y a, montant]
+        $dossiers = [
+            ['GAOWE', 'Maersk Cadiz', '26-114S', SensTrafic::Import, 'SAGA Gabon', 'M3', EtapeDossier::Depouillement, 22, null],
+            ['GAOWE', 'CMA CGM Congo', '26-118N', SensTrafic::Export, 'SAGA Gabon', 'M1', EtapeDossier::Facture, 25, 4_320_000],
+            ['GAOWE', 'Nordic Okume', '26-055', SensTrafic::Export, 'SDV Gabon', 'Bois', EtapeDossier::Devis, 23, 2_145_600],
+            ['GAOWE', 'Pacific Ozouri', '26-071', SensTrafic::Export, 'SDV Gabon', 'Bois', EtapeDossier::Cloture, 31, 3_875_200],
+            ['GAOWE', 'MSC Bilbao', '26-120S', SensTrafic::Import, 'OMA Gabon', null, EtapeDossier::Manifeste, 18, null],
+            ['GAOWE', 'Maersk Cadiz', '26-108N', SensTrafic::Export, 'SAGA Gabon', 'M3', EtapeDossier::Cloture, 40, 5_190_400],
+            ['GAOWE', 'Maersk Nuku', '44-08', SensTrafic::Import, 'Getma Gabon', null, EtapeDossier::Ouvert, 4, null],
+            ['GAOWE', 'CMA CGM Congo', '26-124N', SensTrafic::Import, 'SDV Gabon', null, EtapeDossier::Ouvert, 2, null],
+            ['GAOWE', 'MSC Bilbao', '26-116S', SensTrafic::Import, 'OMA Gabon', 'M2', EtapeDossier::Cloture, 47, 6_812_400],
+            ['GAPOG', 'Cap San Owendo', '26-014', SensTrafic::Export, 'Getma Gabon', 'Quai Nord', EtapeDossier::Facture, 27, 5_460_000],
+            ['GAPOG', 'Maersk Cadiz', '12-009', SensTrafic::Import, 'SAGA Gabon', null, EtapeDossier::Ouvert, 6, null],
+            ['GAPOG', 'Cap San Owendo', '25-302', SensTrafic::Export, 'Getma Gabon', 'Quai Sud', EtapeDossier::Cloture, 61, 3_090_800],
+        ];
+
+        foreach ($dossiers as [$codePort, $nomNavire, $voyage, $sens, $societe, $poste, $etape, $jours, $montant]) {
+            $port = $ports[$codePort] ?? null;
+            $navire = $navires[$nomNavire] ?? null;
+            $consignataireId = $societes[$societe] ?? null;
+
+            if ($port === null || $navire === null || $consignataireId === null) {
+                continue;
+            }
+
+            $escale = Escale::firstOrNew([
+                'consignataire_id' => $consignataireId,
+                'navire_id' => $navire->id,
+                'voyage_normalise' => Escale::normaliserVoyage($voyage),
+                'sens' => $sens,
+            ]);
+
+            // La référence ne se recalcule pas à chaque passage du seeder : elle
+            // est stable par définition (ADR-0008).
+            $escale->reference ??= Escale::referenceSuivante($port);
+
+            $ouvertLe = now()->subDays($jours)->setTime(9, 5);
+
+            // Le numéro affiché se fige au rattachement du manifeste (ADR-0008) :
+            // il n'existe donc qu'à partir de la deuxième étape.
+            $numero = $etape === EtapeDossier::Ouvert
+                ? null
+                : sprintf('2026 M %05d', 12_400 + $navire->id * 7 + $jours);
+
+            $escale->fill([
+                'voyage' => $voyage,
+                'port_id' => $port->id,
+                'poste_quai_id' => $poste === null ? null : ($postes[$port->id][$poste] ?? null),
+                'armement_id' => $navire->armement_id,
+                'mode_exploitation' => $navire->mode_exploitation_defaut,
+                'eta_prevue' => $ouvertLe->addDays(3)->setTime(6, 40),
+            ]);
+
+            $escale->etape = $etape;
+            $escale->montant_liquide = $montant;
+            $escale->ouvert_le = $ouvertLe;
+            $escale->numero_affiche = $numero;
+            $escale->numero_fige_le = $numero === null ? null : $ouvertLe->addDays(2);
+
+            $escale->save();
         }
     }
 }
