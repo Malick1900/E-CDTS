@@ -110,6 +110,202 @@ export type DossierOuvert = {
     etape: string;
 };
 
+/*
+ * ── Écran du manifeste (WF4 / WF5) ─────────────────────────────────
+ */
+
+/**
+ * Le dossier tel que la bannière du manifeste le lit.
+ *
+ * Deux sources s'y croisent, et la distinction compte : ce que le
+ * consignataire a déclaré à l'ouverture (`etaAnnoncee`, `posteAnnonce`) et ce
+ * que la situation portuaire constate (`eta`, `etd`, `poste`, `posteStatut`).
+ * La seconde n'existe qu'une fois le dossier rapproché de sa ligne (ADR-0009)
+ * — d'où `rapproche`, qui dit à l'écran laquelle montrer.
+ */
+export type DossierManifeste = {
+    id: number;
+    /** Le n° de manifeste une fois figé, la référence interne avant (ADR-0008). */
+    numero: string;
+    provisoire: boolean;
+    /** La référence interne — libellé d'audit, non communiqué aux tiers. */
+    reference: string;
+    consignataire: string;
+    navire: string;
+    armement: string | null;
+    pavillon: string | null;
+    typeCode: string | null;
+    typeLabel: string | null;
+    voyage: string;
+    sens: string;
+    sensLabel: string;
+    port: string;
+    etape: string;
+    etapeLabel: string;
+    /** L'ETA annoncée à l'ouverture — la seule date que le dossier détienne. */
+    etaAnnoncee: string | null;
+    /** Le poste demandé à l'ouverture, avant toute affectation réelle. */
+    posteAnnonce: string | null;
+    /** Le dossier a-t-il retrouvé sa ligne de situation portuaire ? */
+    rapproche: boolean;
+    /** Accostage réel, lu à la situation portuaire — jamais recopié ici. */
+    eta: string | null;
+    /** Départ réel, même provenance. */
+    etd: string | null;
+    poste: string | null;
+    /** « À quai », « En rade »… — l'état du navire au port. */
+    posteStatut: string | null;
+    /**
+     * Boîtes distinctes du manifeste — nul tant qu'aucun manifeste n'est
+     * rattaché. Le groupage est déduit : une boîte sous deux connaissements
+     * n'en fait pas deux.
+     */
+    conteneurs: number | null;
+};
+
+/**
+ * Un type de la nomenclature, borné au sens du dossier : le bois ne se propose
+ * pas à l'import, les autres emballages pas à l'export.
+ */
+export type TypeRef = {
+    value: string;
+    label: string;
+    /** Un type de boîte, facturé au forfait — six sur dix-neuf. */
+    conteneur: boolean;
+};
+
+/**
+ * Une ligne du tableau de dépouillement.
+ *
+ * Le tableau est à plat — une ligne par conteneur, plus une par part hors
+ * conteneur — alors que la facturation reste au BL pour le poids et au
+ * conteneur pour le forfait. D'où `poidsKg`, `volumeM3` et `colis` renseignés
+ * sur UNE seule ligne par connaissement : les autres les laissent nuls, et le
+ * pied de tableau ne compte le tonnage qu'une fois.
+ */
+export type LigneManifeste = {
+    /** « c:12 » pour un conteneur, « v:34 » pour la part vrac d'un BL. */
+    cle: string;
+    numero: number;
+    bl: string;
+    /** Le connaissement dont la ligne relève — la maille où l'on corrige. */
+    blId: number;
+    /** Un house/dégroupage — déduit de la présence d'un connaissement mère. */
+    groupage: boolean;
+    portChargement: string | null;
+    portChargementNom: string | null;
+    portDechargement: string | null;
+    portDechargementNom: string | null;
+    expediteur: string | null;
+    destinataire: string | null;
+    /** Le n° de boîte — nul sur une ligne de vrac. */
+    conteneur: string | null;
+    /** 20, 40 ou 45 — la taille seule, jamais le code ISO complet. */
+    taille: number | null;
+    description: string | null;
+    poidsKg: number | null;
+    volumeM3: number | null;
+    colis: number | null;
+    /** La qualification, nulle tant que personne n'a dit ce que c'était. */
+    type: string | null;
+    /** En francs CFA — nul tant que la ligne n'a ni type ni assiette. */
+    montant: number | null;
+    /** L'article de barème retenu : « IMP17 », « EXP02B »… */
+    reference: string | null;
+    /** L'assiette qui l'a emporté : « t », « m³ », « TC », « unité ». */
+    unite: string | null;
+};
+
+/** Le pied du tableau — sur TOUT le manifeste, jamais sur la page affichée. */
+export type TotauxManifeste = {
+    lignes: number;
+    bls: number;
+    /** Références de conteneur distinctes, groupage déduit. */
+    conteneurs: number;
+    poidsKg: number;
+    volumeM3: number;
+    montant: number;
+    qualifiees: number;
+    aQualifier: number;
+    /** Pas une ligne en l'air : le manifeste peut partir au CGC. */
+    transmissible: boolean;
+};
+
+/** Le manifeste tel que l'écran le lit — nul tant qu'aucun n'est rattaché. */
+export type ManifesteTableau = {
+    id: number;
+    /** Nul tant que le manifeste n'est pas acquis — e-CDTS l'attribue alors. */
+    numero: string | null;
+    modeSaisie: string;
+    modeLabel: string;
+    etat: string;
+    etatLabel: string;
+    /** Après transmission, plus rien ne bouge côté consignataire. */
+    modifiable: boolean;
+    /** Le nom d'origine de la pièce probante — nul tant qu'elle manque. */
+    pieceJointe: string | null;
+    pieceJointeOctets: number | null;
+    /**
+     * La pièce ne se retire qu'en saisie manuelle : en mode XML, elle EST le
+     * fichier qui a produit le tableau.
+     */
+    pieceRetirable: boolean;
+    transmisLe: string | null;
+    /**
+     * Ce qui empêche encore la transmission, dit en clair. Vide quand la voie
+     * est libre. Le dernier motif possible ne dépend pas du consignataire : la
+     * situation portuaire doit avoir constaté le jalon de son sens (ADR-0009).
+     */
+    obstacles: string[];
+    lignes: LigneManifeste[];
+    page: number;
+    parPage: number;
+    /** Les pas proposés au sélecteur : 25, 50, 100. */
+    pas: number[];
+    /** Lignes du filtrage courant, toutes pages confondues. */
+    total: number;
+    /** Lignes du manifeste entier — sépare « aucune ligne » de « aucun résultat ». */
+    totalLignes: number;
+    filtres: { q: string; type: string };
+    totaux: TotauxManifeste;
+};
+
+/**
+ * Un connaissement ouvert en correction — la maille de SAISIE.
+ *
+ * Elle ne se confond pas avec la ligne du tableau, qui est la maille
+ * d'AFFICHAGE : poids, volume et colis appartiennent au BL et se corrigent ici,
+ * jamais boîte par boîte (MANIFESTE-XML.md, première règle de totaux).
+ */
+export type ConnaissementSaisi = {
+    /** Nul sur une déclaration nouvelle, renseigné sur une correction. */
+    id: number | null;
+    reference: string;
+    master_reference: string | null;
+    port_chargement: string | null;
+    port_chargement_nom: string | null;
+    port_dechargement: string | null;
+    port_dechargement_nom: string | null;
+    expediteur: string | null;
+    destinataire: string | null;
+    description: string | null;
+    poids_brut_kg: number | null;
+    volume_m3: number | null;
+    colis: number | null;
+    /** Le BL porte-t-il de la marchandise hors de toute boîte ? */
+    hors_conteneur: boolean;
+    conteneurs: ConteneurSaisi[];
+};
+
+/** Une boîte en cours de saisie. */
+export type ConteneurSaisi = {
+    reference: string;
+    /** 20, 40 ou 45 — le barème n'en connaît pas d'autres. */
+    taille: number | null;
+    colis: number | null;
+    tare_kg: number | null;
+};
+
 /** Les quatre encres d'une pastille d'état, telles que la charte les fixe. */
 export type Teinte = {
     encre: string;
@@ -260,3 +456,56 @@ export function formatOctets(octets: number | null): string {
         ? `${ko.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} Ko`
         : `${(ko / 1024).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} Mo`;
 }
+
+/*
+ * L'aperçu d'un manifeste XML — miroir de ce que flashe
+ * `ManifesteImportController::apercu`.
+ *
+ * Rien n'est encore enregistré quand cette forme arrive : c'est la lecture du
+ * fichier déposé, pas un manifeste. D'où les champs presque tous nullables —
+ * un profil de transporteur renseigne ce qu'il veut, et l'écran doit pouvoir
+ * dire « non renseigné » plutôt que de combler.
+ */
+
+/** Le `General_segment` : ce que le fichier dit de l'escale. */
+export type EnTeteManifeste = {
+    /** Le bureau de douane émetteur — OW100, OW110, GAPOG. Pas un port. */
+    bureau: string | null;
+    voyage: string | null;
+    navire: string | null;
+    /** Code pays du pavillon, sur deux ou trois lettres selon le profil. */
+    pavillon: string | null;
+    /** N° OMI ou indicatif d'appel, selon le transporteur. */
+    immatriculation: string | null;
+    transporteur: string | null;
+    agent: string | null;
+    /** Dates du fichier, au format ISO court — celle d'arrivée est RÉELLE. */
+    dateDepart: string | null;
+    dateArrivee: string | null;
+    /** UN/LOCODE du port d'où part le navire, et de celui qu'il dessert. */
+    portDepart: string | null;
+    portDestination: string | null;
+};
+
+export type ApercuManifeste = {
+    fichier: { nom: string | null; octets: number | null };
+    enTete: EnTeteManifeste;
+    /** Les totaux que le fichier annonce — nuls s'il n'en porte pas. */
+    annonces: {
+        bls: number | null;
+        colis: number | null;
+        conteneurs: number | null;
+        masseKg: number | null;
+    } | null;
+    /** Ce que le fichier contient vraiment, recompté à la lecture. */
+    contenu: {
+        bls: number;
+        conteneurs: number;
+        poidsKg: number;
+        volumeM3: number;
+        /** Combien de lignes l'import laissera à qualifier. */
+        aQualifier: number;
+    };
+    /** Les écarts relevés qui ne ferment pas la porte. */
+    reserves: string[];
+};

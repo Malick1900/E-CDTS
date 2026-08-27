@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Manifeste AWMDS d'essai — profil gabonais appauvri, tel qu'un transporteur
+  l'émet réellement (et non tel que `Awmds-SVG.xsd` l'exige).
+
+  Il concentre à dessein les six pièges relevés sur les manifestes de
+  référence :
+   1. `Type_of_container` hétérogène — « 40 » et « 20G1 » dans le même fichier ;
+   2. la tare change de nom d'un BL à l'autre (`Empty_weight` / `Goods_weight`) ;
+   3. un conteneur GROUPÉ, répété à l'identique sous deux connaissements ;
+   4. un BL de vrac sans aucun `ctn_segment` ;
+   5. `Bol_type_code` vaut « CNT » y compris sur ce BL de vrac — le champ ment ;
+   6. des quantités en décimal sur des champs typés entiers.
+
+  Comptes attendus : 4 connaissements, 3 boîtes DISTINCTES, 64 000 kg.
+-->
+<Awmds>
+    <General_segment>
+        <General_segment_id>
+            <Customs_office_code>OW100</Customs_office_code>
+            <Voyage_number>26-114S</Voyage_number>
+            <Date_of_arrival>2026-08-20</Date_of_arrival>
+        </General_segment_id>
+        <Totals_segment>
+            <Total_number_of_bols>4</Total_number_of_bols>
+            <Total_number_of_containers>3</Total_number_of_containers>
+            <Total_gross_mass>64000.00</Total_gross_mass>
+        </Totals_segment>
+        <Transport_information>
+            <Identity_of_transporter>MSC LIPSIA III</Identity_of_transporter>
+            <Nationality_of_transporter_code>LBR</Nationality_of_transporter_code>
+        </Transport_information>
+        <Load_unload_place>
+            <Place_of_departure_code>BEANR</Place_of_departure_code>
+            <Place_of_destination_code>GAOWE</Place_of_destination_code>
+        </Load_unload_place>
+    </General_segment>
+
+    <!-- BL 1 — pur conteneur, deux boîtes, signature frigo dans le texte. -->
+    <Bol_segment>
+        <Bol_id>
+            <Bol_reference>MSCUAB123456</Bol_reference>
+            <Line_number>1</Line_number>
+            <Bol_nature>23</Bol_nature>
+            <Bol_type_code>CNT</Bol_type_code>
+            <Master_bol_ref_number></Master_bol_ref_number>
+        </Bol_id>
+        <Load_unload_place>
+            <Place_of_loading_code>BEANR</Place_of_loading_code>
+            <Place_of_unloading_code>GAOWE</Place_of_unloading_code>
+        </Load_unload_place>
+        <Traders_segment>
+            <Exporter>
+                <Exporter_name>EUROFROST NV</Exporter_name>
+            </Exporter>
+            <Consignee>
+                <Consignee_name>SOCIETE GABONAISE DE DISTRIBUTION</Consignee_name>
+            </Consignee>
+        </Traders_segment>
+        <ctn_segment>
+            <Ctn_reference>MSCU1234567</Ctn_reference>
+            <Number_of_packages>500</Number_of_packages>
+            <Type_of_container>40</Type_of_container>
+            <Empty_Full>1</Empty_Full>
+            <Empty_weight>4600.00</Empty_weight>
+        </ctn_segment>
+        <ctn_segment>
+            <Ctn_reference>MSCU7654321</Ctn_reference>
+            <Number_of_packages>300</Number_of_packages>
+            <Type_of_container>20G1</Type_of_container>
+            <Empty_Full>1</Empty_Full>
+            <Goods_weight>2200.00</Goods_weight>
+        </ctn_segment>
+        <Goods_segment>
+            <Gross_mass>40000.00</Gross_mass>
+            <Volume_in_cubic_meters>0.00</Volume_in_cubic_meters>
+            <Goods_description>FROZEN CHICKEN QUARTERS -18C BIETC NO.: 0632858</Goods_description>
+            <Number_of_packages>800</Number_of_packages>
+            <Num_of_ctn_for_this_bol>2</Num_of_ctn_for_this_bol>
+        </Goods_segment>
+    </Bol_segment>
+
+    <!-- BL 2 — house/dégroupage, partage sa boîte avec le BL 3. -->
+    <Bol_segment>
+        <Bol_id>
+            <Bol_reference>MSCUAB223344</Bol_reference>
+            <Line_number>2</Line_number>
+            <Bol_nature>23</Bol_nature>
+            <Bol_type_code>CNT</Bol_type_code>
+            <Master_bol_ref_number>MSCUMASTER0001</Master_bol_ref_number>
+        </Bol_id>
+        <Load_unload_place>
+            <Place_of_loading_code>NLRTM</Place_of_loading_code>
+            <Place_of_unloading_code>GAOWE</Place_of_unloading_code>
+        </Load_unload_place>
+        <Traders_segment>
+            <Exporter>
+                <Exporter_name>ROTTERDAM MACHINERY BV</Exporter_name>
+            </Exporter>
+            <Consignee>
+                <Consignee_name>TO ORDER</Consignee_name>
+            </Consignee>
+        </Traders_segment>
+        <ctn_segment>
+            <Ctn_reference>TCLU9988776</Ctn_reference>
+            <Number_of_packages>180</Number_of_packages>
+            <Type_of_container>40</Type_of_container>
+            <Empty_Full>1</Empty_Full>
+            <Empty_weight>3800.00</Empty_weight>
+        </ctn_segment>
+        <Goods_segment>
+            <Gross_mass>18000.00</Gross_mass>
+            <Volume_in_cubic_meters>52.400</Volume_in_cubic_meters>
+            <Goods_description>MACHINERY PARTS AND SPARES</Goods_description>
+            <Number_of_packages>180</Number_of_packages>
+            <Num_of_ctn_for_this_bol>1</Num_of_ctn_for_this_bol>
+        </Goods_segment>
+    </Bol_segment>
+
+    <!-- BL 3 — la MÊME boîte que le BL 2 : le groupage n'a pas de lien explicite. -->
+    <Bol_segment>
+        <Bol_id>
+            <Bol_reference>MSCUAB334455</Bol_reference>
+            <Line_number>3</Line_number>
+            <Bol_nature>23</Bol_nature>
+            <Bol_type_code>CNT</Bol_type_code>
+            <Master_bol_ref_number>MSCUMASTER0001</Master_bol_ref_number>
+        </Bol_id>
+        <Load_unload_place>
+            <Place_of_loading_code>NLRTM</Place_of_loading_code>
+            <Place_of_unloading_code>GAOWE</Place_of_unloading_code>
+        </Load_unload_place>
+        <Traders_segment>
+            <Exporter>
+                <Exporter_name>AMSTERDAM TEXTILE CO</Exporter_name>
+            </Exporter>
+            <Consignee>
+                <Consignee_name>ETS MBOUMBA ET FILS</Consignee_name>
+            </Consignee>
+        </Traders_segment>
+        <ctn_segment>
+            <Ctn_reference>TCLU9988776</Ctn_reference>
+            <Number_of_packages>120</Number_of_packages>
+            <Type_of_container>40</Type_of_container>
+            <Empty_Full>1</Empty_Full>
+            <Empty_weight>3800.00</Empty_weight>
+        </ctn_segment>
+        <Goods_segment>
+            <Gross_mass>5000.00</Gross_mass>
+            <Volume_in_cubic_meters>18.750</Volume_in_cubic_meters>
+            <Goods_description>TEXTILES AND GARMENTS</Goods_description>
+            <Number_of_packages>120</Number_of_packages>
+            <Num_of_ctn_for_this_bol>1</Num_of_ctn_for_this_bol>
+        </Goods_segment>
+    </Bol_segment>
+
+    <!-- BL 4 — vrac liquide : aucune boîte, et pourtant `Bol_type_code` dit « CNT ». -->
+    <Bol_segment>
+        <Bol_id>
+            <Bol_reference>SAGA00778899</Bol_reference>
+            <Line_number>4</Line_number>
+            <Bol_nature>23</Bol_nature>
+            <Bol_type_code>CNT</Bol_type_code>
+        </Bol_id>
+        <Load_unload_place>
+            <Place_of_loading_code>ESALG</Place_of_loading_code>
+            <Place_of_unloading_code>GAOWE</Place_of_unloading_code>
+        </Load_unload_place>
+        <Traders_segment>
+            <Exporter>
+                <Exporter_name>ALGECIRAS BITUMEN SA</Exporter_name>
+            </Exporter>
+            <Consignee>
+                <Consignee_name>ROUTES DU GABON</Consignee_name>
+            </Consignee>
+        </Traders_segment>
+        <Goods_segment>
+            <Gross_mass>1000.00</Gross_mass>
+            <Volume_in_cubic_meters>12.500</Volume_in_cubic_meters>
+            <Goods_description>BITUMEN BULK UN 1993 IMDG CLASS 3</Goods_description>
+            <Number_of_packages>0</Number_of_packages>
+            <Num_of_ctn_for_this_bol>0</Num_of_ctn_for_this_bol>
+        </Goods_segment>
+    </Bol_segment>
+</Awmds>

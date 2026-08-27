@@ -1,3 +1,4 @@
+import type { ApercuManifeste } from '@/components/dossiers/types';
 import type { Auth } from '@/types/auth';
 
 declare module 'react' {
@@ -28,6 +29,13 @@ declare module '@inertiajs/core' {
         flashDataType: {
             /** Absent tant qu'aucun contrôleur n'a appelé `Inertia::flash()`. */
             toast?: FlashToast;
+            /**
+             * La lecture d'un manifeste XML déposé, avant tout enregistrement.
+             * Le flash convient parce que l'aperçu ne vaut QUE pour la réponse
+             * qui le porte : le fichier n'est pas stocké côté serveur, et une
+             * navigation suivante doit retrouver l'écran de dépôt vierge.
+             */
+            apercuManifeste?: ApercuManifeste;
         };
         sharedPageProps: {
             name: string;

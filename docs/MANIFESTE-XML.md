@@ -87,6 +87,59 @@ Trois cas, dont un seul est difficile :
 
 **Point ouvert (à vérifier sur pièce) :** toujours **aucun BL mixte** ni **aucun groupage** dans l'échantillon. À confirmer sur un manifeste mixte réel : est-ce que le `Goods_segment` **se répète** (une ligne de marchandise par nature → séparable) ou reste **agrégé** (→ qualification manuelle obligatoire) ?
 
+## Le segment général : ce que le fichier dit de l'escale _(2026-08-27, ADR-0048)_
+
+Le `General_segment` n'est pas qu'un en-tête : c'est le seul endroit du fichier où l'on peut vérifier qu'on tient bien le manifeste **de cette escale**. Il est lu d'un bloc (`EnTeteLu`) et **résumé à l'écran avant tout enregistrement** — le consignataire voit ce qu'il s'apprête à importer, et décide.
+
+| Donnée | Balise | Confrontée à | Verdict |
+|---|---|---|---|
+| **Navire** | `Identity_of_transporter` | navire du dossier | **rejet** — préfixe aplati (la balise est bornée à 27 caractères) |
+| **N° de voyage** | `Voyage_number` | `voyage_normalise` | **rejet** — le plus discriminant des deux |
+| **Sens** | `Bol_nature` (niveau BL) | sens du dossier | **rejet** — balise absente = accepté |
+| **Connaissements / conteneurs** | `Totals_segment` | contenu réel | **rejet** — un manifeste tronqué n'est pas facturable |
+| **Masse brute** | `Total_gross_mass` | cumul des BL | réserve au-delà de 100 kg |
+| **Pavillon** | `Nationality_of_transporter_code` | `navires.pays.code` | réserve — **seulement sur 2 lettres** : le schéma admet `LR` comme `LBR`, le référentiel ne connaît que l'alpha-2 |
+| **Immatriculation** | `Registration_number_of_transport_code` | `navires.imo` | réserve — **seulement si 7 chiffres** : le même champ porte l'indicatif d'appel (`5LCQ4` chez MSC) ou l'OMI (`9403360` chez GINA) |
+| **Émetteur** | `Shipping_Agent_name`, sinon `Carrier_name` | consignataire du dossier | réserve — ⚠ la balise nomme l'**agent local** (MSC GABON SA, SAGA LIBREVILLE), jamais l'armement propriétaire |
+| **Date d'arrivée** | `Date_of_arrival` | `mouvements_navire.eta` | réserve — c'est la date **RÉELLE** d'arrivée (CGC, 2026-08-27), donc elle se compare à l'accostage constaté, **jamais** à l'`eta_prevue` du dossier |
+| **Bureau de douane** | `Customs_office_code` | — | **affiché, non contrôlé** : c'est un bureau, pas un port. `OW110` figure sur un fichier à destination `GAPOG` |
+| Dates de départ, ports départ / destination | `Date_of_departure`, `Load_unload_place` | — | affichés |
+
+**Deux niveaux, et un seul ferme la porte.** Ce qui **désigne** le dossier rejette ; ce qui le **décrit** se signale et laisse passer. Le référentiel CGC n'est pas opposable au déclarant : une fiche navire sans OMI est un manque interne, pas une faute du consignataire.
+
+**Rien ne se compare contre du vide.** Une donnée absente d'un côté ou de l'autre n'est pas un écart — c'est une comparaison qui n'a pas lieu.
+
+Le n° de manifeste **n'apparaît pas** dans le résumé : aucune balise ne le porte, e-CDTS l'attribue à l'écriture (ADR-0046).
+
+## État du parseur _(2026-08-27, ADR-0045)_
+
+`LitUnManifesteAwmds` met en œuvre ce document. Ce qu'il tolère et ce qu'il refuse, en un coup d'œil :
+
+| Situation | Comportement |
+|---|---|
+| `Type_of_container` = `20` / `40` / `20G1` | taille seule retenue ; toute autre valeur → boîte **à qualifier**, jamais arrondie |
+| Tare sous `Empty_weight` **ou** `Goods_weight` | les deux lues, jamais confondues avec le poids marchandise |
+| Groupage (même `Ctn_reference` sous N BL) | comptée **une** boîte |
+| `Master_bol_ref_number` **ou** `Master_information` | les deux lues (le XSD dit l'un, les fichiers MSC l'autre) |
+| Écart de BL ou de conteneurs vs `Totals_segment` | **rejet** du fichier |
+| Écart de masse ≤ 100 kg | ignoré ; au-delà → **signalé, jamais rejeté** |
+| `Totals_segment` absent | signalé — les comptes n'ont pas pu être vérifiés |
+| `Bol_nature` divergent du sens du dossier | **rejet** ; balise absente → accepté |
+| `Voyage_number` divergent du dossier | **rejet** ; comparaison sur la forme normalisée (ADR-0009) |
+| `Identity_of_transporter` divergent du navire | **rejet** ; comparaison sur préfixe aplati — la balise est bornée à 27 caractères |
+| Navire **et** voyage divergents | **rejet** en nommant les deux escales : le fichier est celui d'un autre dossier, pas une faute de saisie |
+| BL sans `ctn_segment` | entièrement hors conteneur (`Bol_type_code` ignoré : il ment) |
+| Colis des boîtes tous à 0 | donnée **absente**, pas un résidu |
+| Colis du BL > somme des boîtes déclarantes | résidu → part hors conteneur |
+| Pavillon en 3 lettres (`LBR`) | **non comparé** — le référentiel ne connaît que l'alpha-2 |
+| `Registration_number` qui n'est pas un OMI (`5LCQ4`) | **non comparé** — indicatif d'appel, autre nature |
+| Pavillon / OMI / émetteur / arrivée divergents | **réserve**, jamais rejet (ADR-0048) |
+| Entités XML externes | non résolues (`LIBXML_NONET`) |
+
+**Le fichier est lu deux fois** : une première pour l'aperçu — qui n'écrit rien —, une seconde à la confirmation, pour écrire (ADR-0048). Les mêmes contrôles s'appliquent aux deux passages ; l'aperçu ne les assouplit pas, il les avance.
+
+Le n° de manifeste n'est lu **nulle part** : aucune balise ne le porte — `Port_voyage_id`, seul candidat par sa forme, est **commenté** dans `Awmds-SVG.xsd`. **e-CDTS l'attribue** (ADR-0046).
+
 ## Règles de codage (pas des colonnes)
 - **Sens (import / export)** : lisible dans `Bol_id/Bol_nature` — **`22` = export, `23` = import** (vérifié : voyages export GALBV→étranger tout en `22` ; imports étranger→GALBV/GAPOG tout en `23`). Cohérent avec le sens du voyage (`General_segment/Load_unload_place`) et avec « un dossier par sens ».
 - **Sec / réfrigéré** _(corrigé 2026-07-09)_ : **ne se déduit PAS du type conteneur**. Le profil gabonais ne transmet que la **taille** (`20`/`40`/`45`), jamais le code ISO 6346 frigo. La distinction sec/frigo se fait par **mots-clés de la description** (`FROZEN`, `REEFER`, `RF`, `CONGELÉ`, `HI-CUBE REEFER`, `-18C`…), avec la **tare en indice secondaire** (un 40' frigo pèse ~4 400–4 800 kg à vide contre ~3 700–3 900 pour un 40' sec). Ce n'est **pas** une colonne du tableau.

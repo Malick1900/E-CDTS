@@ -14,6 +14,11 @@ use App\Http\Controllers\Admin\Users\ConsignataireController;
 use App\Http\Controllers\Admin\Users\RoleController;
 use App\Http\Controllers\Admin\Users\TitulaireController;
 use App\Http\Controllers\DossierEscaleController;
+use App\Http\Controllers\ManifesteEscaleController;
+use App\Http\Controllers\ManifesteImportController;
+use App\Http\Controllers\ManifestePieceController;
+use App\Http\Controllers\ManifesteSaisieController;
+use App\Http\Controllers\ManifesteTransmissionController;
 use App\Http\Controllers\MonEspace\AffectationController as MonEspaceAffectationController;
 use App\Http\Controllers\MonEspace\AgentController as MonEspaceAgentController;
 use App\Http\Controllers\MonEspaceController;
@@ -89,6 +94,59 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // traitement, il envoie ici et l'étape décide (`EtapeDossier::ecran`).
         // Déclarée APRÈS `dossiers/nouveau`, que le paramètre avalerait.
         Route::get('dossiers/{escale}', [DossierEscaleController::class, 'show'])->name('dossiers.show');
+
+        // Le manifeste du dossier (WF4, puis WF5). Une seule permission pour
+        // les deux bouts du circuit : c'est le même document, et c'est le
+        // périmètre du compte qui sépare celui qui déclare de celui qui
+        // instruit.
+        Route::get('dossiers/{escale}/manifeste', [ManifesteEscaleController::class, 'index'])->name('dossiers.manifeste');
+
+        // Qualifier une ligne du manifeste : dire ce qu'elle est, donc ce
+        // qu'elle coûte (WF4). Aucune permission propre — c'est d'avoir une
+        // société qui autorise le geste : le consignataire déclare, le CGC
+        // instruit (ADR-0007). La form request et le controller le vérifient
+        // tous deux, comme à l'ouverture.
+        Route::patch('dossiers/{escale}/manifeste/qualification', [ManifesteEscaleController::class, 'qualifier'])
+            ->name('dossiers.manifeste.qualification');
+
+        // Les deux voies de renseignement (WF4). Même garde que la
+        // qualification : c'est d'avoir une société qui autorise le geste.
+        // Regarder avant d'écrire : le fichier est lu et résumé sans rien
+        // enregistrer, puis redéposé sur la route ci-dessus si le
+        // consignataire confirme.
+        Route::post('dossiers/{escale}/manifeste/xml/apercu', [ManifesteImportController::class, 'apercu'])
+            ->name('dossiers.manifeste.xml.apercu');
+        Route::post('dossiers/{escale}/manifeste/xml', [ManifesteImportController::class, 'store'])
+            ->name('dossiers.manifeste.xml');
+        Route::post('dossiers/{escale}/manifeste/saisie', [ManifesteSaisieController::class, 'store'])
+            ->name('dossiers.manifeste.saisie');
+
+        // La saisie au CONNAISSEMENT — jamais à la ligne du tableau : poids,
+        // volume et colis appartiennent au BL (MANIFESTE-XML.md).
+        Route::post('dossiers/{escale}/manifeste/connaissements', [ManifesteSaisieController::class, 'storeConnaissement'])
+            ->name('dossiers.manifeste.connaissements.store');
+        Route::put('dossiers/{escale}/manifeste/connaissements/{connaissement}', [ManifesteSaisieController::class, 'updateConnaissement'])
+            ->name('dossiers.manifeste.connaissements.update');
+        Route::delete('dossiers/{escale}/manifeste/connaissements/{connaissement}', [ManifesteSaisieController::class, 'destroyConnaissement'])
+            ->name('dossiers.manifeste.connaissements.destroy');
+
+        // La pièce probante. Le téléchargement est ouvert aux deux côtés — le
+        // CGC contrôle sur pièce (WF5) —, le dépôt au seul consignataire.
+        Route::get('dossiers/{escale}/manifeste/piece', [ManifestePieceController::class, 'show'])
+            ->name('dossiers.manifeste.piece');
+        Route::post('dossiers/{escale}/manifeste/piece', [ManifestePieceController::class, 'store'])
+            ->name('dossiers.manifeste.piece.store');
+        Route::delete('dossiers/{escale}/manifeste/piece', [ManifestePieceController::class, 'destroy'])
+            ->name('dossiers.manifeste.piece.destroy');
+
+        // Reprendre le manifeste à zéro, tant qu'il n'est pas parti (WF4).
+        Route::delete('dossiers/{escale}/manifeste', [ManifesteEscaleController::class, 'destroy'])
+            ->name('dossiers.manifeste.destroy');
+
+        // La transmission au CGC : sans retour, et sous quatre verrous dont un
+        // ne dépend pas du consignataire (ADR-0009/0013).
+        Route::post('dossiers/{escale}/manifeste/transmission', [ManifesteTransmissionController::class, 'store'])
+            ->name('dossiers.manifeste.transmission');
     });
 
     Route::inertia('devis', 'activite/devis')

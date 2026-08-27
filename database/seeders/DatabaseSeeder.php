@@ -40,5 +40,11 @@ class DatabaseSeeder extends Seeder
         // Armements et navires d'exemple, pour ne pas démarrer sur des écrans
         // vides. Donnée du client en réalité — jamais amorcée en production.
         $this->call(DemoSeeder::class);
+
+        // Un manifeste de démonstration sur les dossiers qui en attendent un.
+        // Il porte les six cas qui font mal — groupage, vrac, RoRo à zéro colis,
+        // BL mixte — pour que l'écran de dépouillement ne se juge pas sur des
+        // lignes trop sages.
+        $this->call(ManifesteDemoSeeder::class);
     }
 }
