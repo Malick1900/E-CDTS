@@ -79,6 +79,14 @@ bois export. Un type ouvre donc jusqu'à quatre lignes selon le sens.
 > ce document : `IMP02` y désigne la sacherie, en base c'est le bois import. Toute lecture de
 > code doit partir du seeder.
 
+> **Depuis le 2026-08-27 (ADR-0044), cette correspondance vit en base**, et non plus
+> seulement ici : `bareme_lignes` porte `type_marchandise`, `unite` et `mode_exploitation`.
+> Le tableau ci-dessous reste la source documentaire, mais c'est la table qui fait foi pour
+> le calcul — et une ligne ajoutée depuis l'écran d'administration n'est facturable qu'une
+> fois qualifiée. **Six lignes restent sans type** parce que la nomenclature ne les réclame
+> pas (`EXP28`, `EXP29`, `IMP27`, `IMP28`, `IMP02`) ou parce que le document ne dit pas leur
+> assiette (`IMP10`) ; elles figurent dans la grille et ne facturent rien.
+
 | # | Type | Import | Export |
 |---|---|---|---|
 | 1 | Sacherie — sucre, farine, céréales | IMP08 | EXP08 |
@@ -119,11 +127,81 @@ bois export. Un type ouvre donc jusqu'à quatre lignes selon le sens.
   variante cubage**. Trois entrées plausibles pour un même chargement — à surveiller à la
   qualification.
 
+## Arbitrages du CGC du 2026-08-27 (ADR-0047)
+
+Quatre zones d'ombre du document ont été posées au CGC et tranchées. Elles
+touchent la qualification des lignes, pas les montants.
+
+### 1. `EXP02` est une erreur de transcription
+Il y manque la mention du mode d'exploitation, et son montant (1 773,70 F/m³) ne
+coïncide avec aucune des deux lignes qui le portent. **Le bois export n'a donc
+pas de tarif par défaut** : sans mode déclaré sur l'escale, la ligne reste
+« à qualifier ». `EXP02` naît **désactivée** — elle demeure dans la grille, où
+l'Administrateur la corrigera ou la supprimera.
+
+> Conséquence pratique : **un dossier d'export de bois exige que l'escale porte
+> son mode d'exploitation**, sans quoi il ne peut pas être transmis.
+
+**Amendement du 2026-08-27 :** l'escale en porte toujours un. À défaut de mode
+sur le navire, elle naît en **ligne régulière** — le mode ordinaire du port, le
+tramping étant l'exception qu'on déclare. Le bois export se liquide donc en
+`EXP02B` sauf mention contraire du CGC, qui peut basculer l'escale en tramping.
+
+### 2. `IMP10` se facture au nombre d'engins
+Le document ne disait pas son assiette ; `IMP14` (cubage) et `IMP15` (métrique)
+ne couvraient que deux des trois. La ligne redevient facturable.
+
+> ⚠ **Point ouvert** : `IMP10` (1 705,48 F/engin) et `IMP16` (2 624 F/engin,
+> pièces détachées) portent désormais la même unité. La règle de l'unité payante
+> retiendra donc **toujours `IMP16`** pour un utilitaire importé. À confirmer si
+> les deux cas doivent se distinguer autrement que par le montant.
+
+### 3. Les hydrocarbures ne se facturent pas
+Huit lignes sortent de l'exploitation : `EXP24`, `EXP25`, `IMP23`, `IMP24`
+(produits dérivés des hydrocarbures) et `EXP28`, `EXP29`, `IMP27`, `IMP28` (les
+mêmes en conditionnement conteneurisé). Le type **« produits dérivés des
+hydrocarbures » disparaît de la liste** proposée à la qualification.
+
+Le **vrac liquide général reste actif** : une huile de palme ou une mélasse n'est
+pas un hydrocarbure, malgré la mention entre parenthèses que portent `EXP22`,
+`EXP23`, `IMP21` et `IMP22`.
+
+Le jour où le CGC les facturera, **réactiver les lignes suffit** : le type revient
+seul dans la liste, sans toucher au code.
+
+### 4. Le bois ne se facture JAMAIS au conteneur
+Même enfermé dans des boîtes, il se paie au mètre cube. Une boîte qualifiée
+« bois » ne génère **pas** de forfait : elle réclame l'assiette de son
+connaissement, et le montant se calcule **une seule fois** sur le volume du BL.
+
+| Cas | Calcul | Montant |
+|---|---|---:|
+| 3 conteneurs 40′ export, 100 m³ de bois débité, tramping | 100 × 1 909 F (`EXP17`) | **190 900 F** |
+| *(ce qu'aurait donné le forfait conteneur)* | *3 × 27 287,81 F* | *81 863 F* |
+
+La ligne porteuse affiche le montant ; ses jumelles sont marquées *déclarées,
+portées par le connaissement* et ne comptent pas parmi les lignes à qualifier.
+
+**Une assiette de connaissement ne se partage pas.** Si deux types différents la
+réclament, on ne facture rien : le manifeste donne un poids et un volume pour
+tout le BL sans dire ce qui revient à quoi, et les répartir serait une devinette.
+
+### État des 58 lignes après arbitrage
+
+| | Nombre |
+|---|---:|
+| Lignes du barème | 58 |
+| En exploitation | 49 |
+| — dont **facturables** (type et unité renseignés) | **48** |
+| — dont sans type (`IMP02`, bois import, à 0,00) | 1 |
+| Hors exploitation (`EXP02` + les 8 hydrocarbures) | 9 |
+| Types proposés à la qualification | **17 à l'export, 16 à l'import** |
+
 ## Notes de gestion
 
 ### Règles confirmées (CGC, 2026-07-03)
 - **Unité payante** : quand une catégorie a les deux variantes métrique/cubage (ex. vrac solide IMP17 tonne / IMP18 m³), on calcule les deux montants et on retient **l'unité payante à l'avantage du CGC** (le montant le plus élevé).
-- **Lignes régulières vs tramping** (bois export uniquement — EXP11/11B, EXP12/12B ; +~13 % en tramping) : le mode d'exploitation est un **attribut par défaut du navire**, renseigné à son enregistrement dans le référentiel (géré par le CGC). Chaque **escale** hérite ce mode par défaut mais porte sa propre **valeur effective** ; **seul le CGC** peut la modifier, sur demande amont du consignataire, avant l'expédition. **La facturation lit le mode de l'escale**, jamais celui du navire directement — ce qui préserve l'historique et autorise l'exception ponctuelle sans altérer les autres escales du même navire.
+- **Lignes régulières vs tramping** (bois export uniquement — EXP11/11B, EXP12/12B ; +~13 % en tramping) : le mode d'exploitation est un **attribut par défaut du navire**, renseigné à son enregistrement dans le référentiel (géré par le CGC). Chaque **escale** hérite ce mode par défaut — **ligne régulière** si le navire n'en porte pas (2026-08-27) — mais porte sa propre **valeur effective** ; **seul le CGC** peut la modifier, sur demande amont du consignataire, avant l'expédition. **La facturation lit le mode de l'escale**, jamais celui du navire directement — ce qui préserve l'historique et autorise l'exception ponctuelle sans altérer les autres escales du même navire.
 - **Exonérations, minimum de perception, arrondis : aucun.** Le barème s'applique tel quel.
 - **Le calcul vit dans e-CDTS** (ADR-0006) : l'app applique ce barème aux quantités réconciliées et produit le **devis** ; la facture officielle est établie par la DAF hors app puis téléversée.
 
