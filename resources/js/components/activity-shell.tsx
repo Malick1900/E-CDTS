@@ -1,6 +1,7 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
+import ClocheNotifications from '@/components/cloche-notifications';
 import { logout } from '@/routes';
 import '../../css/ecdts-admin.css';
 
@@ -79,7 +80,8 @@ export default function ActivityShell({
     const qualite = coquille?.qualite ?? null;
     const contexte = coquille?.contexte ?? null;
 
-    const [openMenu, setOpenMenu] = useState(false);
+    // Menus de l’en-tête : cloche de notifications et puce utilisateur (exclusifs).
+    const [openMenu, setOpenMenu] = useState<'notif' | 'user' | null>(null);
     const menuZone = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -92,12 +94,12 @@ export default function ActivityShell({
                 menuZone.current &&
                 !menuZone.current.contains(e.target as Node)
             ) {
-                setOpenMenu(false);
+                setOpenMenu(null);
             }
         };
         const onKey = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
-                setOpenMenu(false);
+                setOpenMenu(null);
             }
         };
 
@@ -274,22 +276,34 @@ export default function ActivityShell({
                     })}
                 </nav>
 
-                {/* Puce utilisateur. La maquette n'y met pas de menu ; il en faut
+                {/* Zone de droite : cloche de notifications puis puce utilisateur.
+                    La maquette ne met pas de menu sur la puce ; il en faut
                     un, sans quoi la déconnexion n'est atteignable nulle part. */}
                 <div
                     ref={menuZone}
                     style={{
                         display: 'flex',
                         alignItems: 'center',
+                        gap: 8,
                         flex: 'none',
                         position: 'relative',
                     }}
                 >
+                    <ClocheNotifications
+                        ouvert={openMenu === 'notif'}
+                        onToggle={() =>
+                            setOpenMenu((m) => (m === 'notif' ? null : 'notif'))
+                        }
+                        top={52}
+                    />
+
                     <button
                         type="button"
-                        onClick={() => setOpenMenu((o) => !o)}
+                        onClick={() =>
+                            setOpenMenu((m) => (m === 'user' ? null : 'user'))
+                        }
                         aria-label="Menu du compte"
-                        aria-expanded={openMenu}
+                        aria-expanded={openMenu === 'user'}
                         className="ea-chipbtn"
                         style={{
                             display: 'flex',
@@ -298,7 +312,8 @@ export default function ActivityShell({
                             padding: '4px 8px 4px 4px',
                             border: '1px solid transparent',
                             borderRadius: 10,
-                            background: openMenu ? '#EEF2FB' : 'transparent',
+                            background:
+                                openMenu === 'user' ? '#EEF2FB' : 'transparent',
                             cursor: 'pointer',
                         }}
                     >
@@ -359,9 +374,10 @@ export default function ActivityShell({
                             style={{
                                 flex: 'none',
                                 color: '#8A93A6',
-                                transform: openMenu
-                                    ? 'rotate(180deg)'
-                                    : undefined,
+                                transform:
+                                    openMenu === 'user'
+                                        ? 'rotate(180deg)'
+                                        : undefined,
                                 transition: 'transform .15s',
                             }}
                         >
@@ -375,7 +391,7 @@ export default function ActivityShell({
                         </svg>
                     </button>
 
-                    {openMenu ? (
+                    {openMenu === 'user' ? (
                         <div
                             style={{
                                 position: 'absolute',
@@ -423,7 +439,7 @@ export default function ActivityShell({
                             </div>
                             <Link
                                 href="/profil"
-                                onClick={() => setOpenMenu(false)}
+                                onClick={() => setOpenMenu(null)}
                                 className="ea-menuitem"
                                 style={{
                                     display: 'flex',
@@ -464,7 +480,7 @@ export default function ActivityShell({
                                 href={logout()}
                                 as="button"
                                 onClick={() => {
-                                    setOpenMenu(false);
+                                    setOpenMenu(null);
                                     router.flushAll();
                                 }}
                                 className="ea-menuitem ea-menuitem-danger"
