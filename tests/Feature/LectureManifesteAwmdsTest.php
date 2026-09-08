@@ -94,13 +94,31 @@ function lire(?string $xml = null, ?Escale $dossier = null): ManifesteLu
     );
 }
 
+/**
+ * Les réserves d'une lecture, hors le groupage que la fixture porte en propre.
+ *
+ * `TCLU9988776` y figure sous deux connaissements : le parseur le signale à
+ * chaque lecture, et c'est son rôle (test dédié plus bas). Mais cette réserve
+ * n'a rien à voir avec la conformité au référentiel — la laisser dans le champ
+ * ferait dire à chaque test l'inverse de ce qu'il examine.
+ *
+ * @return list<string>
+ */
+function reserves(ManifesteLu $lu): array
+{
+    return array_values(array_filter(
+        $lu->anomalies,
+        static fn (string $reserve): bool => ! str_contains($reserve, 'groupé'),
+    ));
+}
+
 it('déplie l’arbre des connaissements et de leurs boîtes', function () {
     $lu = lire();
 
     expect($lu->bls)->toHaveCount(4)
         ->and($lu->enTete->voyage)->toBe('26-114S')
         ->and($lu->enTete->navire)->toBe('MSC LIPSIA III')
-        ->and($lu->anomalies)->toBe([]);
+        ->and(reserves($lu))->toBe([]);
 });
 
 it('compte les conteneurs en références DISTINCTES, groupage déduit', function () {
@@ -251,16 +269,48 @@ it('refuse un fichier dont le compte de connaissements ne tombe pas juste', func
     lire($xml);
 })->throws(ValidationException::class, 'annonce 5 connaissements');
 
-it('refuse un fichier dont le compte de conteneurs ne tombe pas juste', function () {
-    // Un conteneur manquant n'est pas du bruit : c'est une erreur de comptage.
+// ── Le comptage des boîtes, et le groupage qui le dédouble (ADR-0049) ───────
+//
+// La fixture porte un conteneur groupé : `TCLU9988776` figure sous deux
+// connaissements. Elle décrit donc 4 lignes pour 3 boîtes — et le transporteur
+// peut annoncer l'un OU l'autre chiffre sans être en faute.
+
+it('signale le groupage, qui change le nombre de boîtes réellement manutentionnées', function () {
+    $lu = lire();
+
+    expect($lu->anomalies)->toHaveCount(1)
+        ->and($lu->anomalies[0])->toContain('groupé');
+});
+
+it('accepte un transporteur qui annonce ses boîtes distinctes', function () {
+    // La fixture telle quelle : 3 annoncés, 3 boîtes, 4 lignes.
+    expect(lire()->conteneurs())->toBe(3);
+});
+
+it('accepte un transporteur qui annonce ses lignes plutôt que ses boîtes', function () {
+    // Les deux conventions de comptage cohabitent chez les transporteurs.
+    // Opposer le seul compte dédupliqué à qui compte ses lignes rejetterait un
+    // fichier complet, au motif qu'il groupe.
     $xml = str_replace(
         '<Total_number_of_containers>3</Total_number_of_containers>',
         '<Total_number_of_containers>4</Total_number_of_containers>',
         manifesteXml(),
     );
 
+    expect(lire($xml)->conteneurs())->toBe(3);
+});
+
+it('refuse un fichier dont le compte de conteneurs ne tombe sur aucun des deux', function () {
+    // Ni 3 boîtes ni 4 lignes : là, quelque chose s'est perdu en route, et un
+    // manifeste tronqué ne se facture pas.
+    $xml = str_replace(
+        '<Total_number_of_containers>3</Total_number_of_containers>',
+        '<Total_number_of_containers>5</Total_number_of_containers>',
+        manifesteXml(),
+    );
+
     lire($xml);
-})->throws(ValidationException::class, 'annonce 4 conteneurs');
+})->throws(ValidationException::class, 'annonce 5 conteneurs');
 
 it('ne relève pas un écart de masse dans la tolérance', function () {
     // 100 kg sur un navire qui en porte des millions : du bruit de pesée.
@@ -270,7 +320,7 @@ it('ne relève pas un écart de masse dans la tolérance', function () {
         manifesteXml(),
     );
 
-    expect(lire($xml)->anomalies)->toBe([]);
+    expect(reserves(lire($xml)))->toBe([]);
 });
 
 it('signale un écart de masse hors tolérance sans jamais rejeter le fichier', function () {
@@ -283,14 +333,14 @@ it('signale un écart de masse hors tolérance sans jamais rejeter le fichier', 
     $lu = lire($xml);
 
     expect($lu->bls)->toHaveCount(4)
-        ->and($lu->anomalies)->toHaveCount(1)
-        ->and($lu->anomalies[0])->toContain('6000');
+        ->and(reserves($lu))->toHaveCount(1)
+        ->and(reserves($lu)[0])->toContain('6000');
 });
 
 it('signale l’absence de totaux de contrôle plutôt que de la passer sous silence', function () {
     $xml = preg_replace('#<Totals_segment>.*?</Totals_segment>#s', '', manifesteXml());
 
-    expect(lire($xml)->anomalies)->toHaveCount(1);
+    expect(reserves(lire($xml)))->toHaveCount(1);
 });
 
 // ── Le segment général, et ce qu'il permet de confronter ────────────────────
@@ -315,13 +365,13 @@ it('rend le segment général tel que le fichier l’écrit', function () {
 });
 
 it('ne relève rien quand le fichier et le référentiel s’accordent', function () {
-    expect(lire(dossier: dossierRenseigne())->anomalies)->toBe([]);
+    expect(reserves(lire(dossier: dossierRenseigne())))->toBe([]);
 });
 
 it('signale un pavillon que la fiche du navire dément', function () {
     $xml = str_replace('LBR', 'LR', manifesteXml());
 
-    $anomalies = lire($xml, dossierRenseigne(pavillon: 'PA'))->anomalies;
+    $anomalies = reserves(lire($xml, dossierRenseigne(pavillon: 'PA')));
 
     expect($anomalies)->toHaveCount(1)
         ->and($anomalies[0])->toContain('Pavillon');
@@ -330,11 +380,11 @@ it('signale un pavillon que la fiche du navire dément', function () {
 it('ne compare pas un pavillon écrit en trois lettres', function () {
     // Le schéma autorise « LR » comme « LBR », quand le référentiel ne connaît
     // que l'alpha-2 : les opposer signalerait une notation, pas un désaccord.
-    expect(lire(dossier: dossierRenseigne(pavillon: 'LR'))->anomalies)->toBe([]);
+    expect(reserves(lire(dossier: dossierRenseigne(pavillon: 'LR'))))->toBe([]);
 });
 
 it('signale un n° OMI que la fiche du navire dément', function () {
-    $anomalies = lire(immatricule('9999999'), dossierRenseigne())->anomalies;
+    $anomalies = reserves(lire(immatricule('9999999'), dossierRenseigne()));
 
     expect($anomalies)->toHaveCount(1)
         ->and($anomalies[0])->toContain('OMI');
@@ -344,11 +394,11 @@ it('ne compare pas un indicatif d’appel à un n° OMI', function () {
     // Le même champ porte l'un ou l'autre selon le transporteur : « 5LCQ4 »
     // chez MSC, un OMI à sept chiffres chez GINA. Les confronter ne dirait
     // qu'une différence de nature.
-    expect(lire(immatricule('5LCQ4'), dossierRenseigne())->anomalies)->toBe([]);
+    expect(reserves(lire(immatricule('5LCQ4'), dossierRenseigne())))->toBe([]);
 });
 
 it('signale un manifeste émis par une autre société que celle du dossier', function () {
-    $anomalies = lire(emisPar('SAGA LIBREVILLE'), dossierRenseigne())->anomalies;
+    $anomalies = reserves(lire(emisPar('SAGA LIBREVILLE'), dossierRenseigne()));
 
     expect($anomalies)->toHaveCount(1)
         ->and($anomalies[0])->toContain('SAGA LIBREVILLE');
@@ -357,13 +407,13 @@ it('signale un manifeste émis par une autre société que celle du dossier', fu
 it('accepte une raison sociale abrégée autrement', function () {
     // « MSC GABON SA » et « MSC GABON » sont la même maison : la comparaison
     // porte sur le préfixe aplati, comme pour le nom du navire.
-    expect(lire(emisPar('MSC GABON SA'), dossierRenseigne())->anomalies)->toBe([]);
+    expect(reserves(lire(emisPar('MSC GABON SA'), dossierRenseigne())))->toBe([]);
 });
 
 it('signale une arrivée qui ne tombe pas sur l’accostage constaté', function () {
     // `Date_of_arrival` est la date RÉELLE d'arrivée (CGC, 2026-08-27) : elle
     // se confronte à la situation portuaire, deux faits l'un contre l'autre.
-    $anomalies = lire(dossier: dossierRenseigne(accostage: '2026-08-22'))->anomalies;
+    $anomalies = reserves(lire(dossier: dossierRenseigne(accostage: '2026-08-22')));
 
     expect($anomalies)->toHaveCount(1)
         ->and($anomalies[0])->toContain('22/08/2026');
@@ -373,14 +423,14 @@ it('ne compare pas l’arrivée d’un dossier que rien ne rapproche', function 
     // Sans ligne de situation portuaire, il n'y a pas d'accostage constaté —
     // et l'`eta_prevue` du dossier n'est qu'une annonce : l'écart y serait la
     // règle, pas l'anomalie.
-    expect(lire(dossier: dossierRenseigne(accostage: null))->anomalies)->toBe([]);
+    expect(reserves(lire(dossier: dossierRenseigne(accostage: null))))->toBe([]);
 });
 
 it('ne refuse jamais le fichier sur ces écarts-là', function () {
     $lu = lire(emisPar('SAGA LIBREVILLE'), dossierRenseigne(accostage: '2026-08-22'));
 
     expect($lu->bls)->toHaveCount(4)
-        ->and($lu->anomalies)->toHaveCount(2);
+        ->and(reserves($lu))->toHaveCount(2);
 });
 
 it('refuse un fichier qui n’est pas un XML lisible', function () {

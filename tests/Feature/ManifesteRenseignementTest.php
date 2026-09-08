@@ -179,7 +179,14 @@ class ManifesteRenseignementTest extends TestCase
             ->assertSessionHas($cle.'.enTete.portDestination', 'GAOWE')
             ->assertSessionHas($cle.'.contenu.bls', 4)
             ->assertSessionHas($cle.'.contenu.conteneurs', 3)
-            ->assertSessionHas($cle.'.reserves', []);
+            // La fixture porte un conteneur groupé — 4 lignes pour 3 boîtes.
+            // Le fichier est conforme ; le groupage se dit quand même, parce
+            // qu'il change ce qui sera facturé (ADR-0049).
+            ->assertSessionHas(
+                $cle.'.reserves',
+                fn (array $reserves): bool => count($reserves) === 1
+                    && str_contains($reserves[0], 'groupé'),
+            );
 
         $this->assertNull($escale->fresh()->manifeste);
         $this->assertSame([], Storage::disk('local')->allFiles());
@@ -216,8 +223,10 @@ class ManifesteRenseignementTest extends TestCase
             ->assertSessionHasNoErrors()
             ->assertSessionHas(
                 'inertia.flash_data.apercuManifeste.reserves',
-                fn (array $reserves): bool => count($reserves) === 1
-                    && str_contains($reserves[0], '22/08/2026'),
+                // Deux réserves : le groupage que la fixture porte, et l'écart
+                // d'arrivée que ce test examine.
+                fn (array $reserves): bool => count($reserves) === 2
+                    && str_contains(implode(' ', $reserves), '22/08/2026'),
             );
     }
 

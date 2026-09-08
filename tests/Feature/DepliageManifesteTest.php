@@ -259,7 +259,7 @@ class DepliageManifesteTest extends TestCase
         // Les deux autres boîtes sont déclarées, pas facturées séparément :
         // elles ne comptent pas parmi les lignes à qualifier.
         $this->assertNull($lignes[1]->liquidation);
-        $this->assertTrue($lignes[1]->porteeParLeBl);
+        $this->assertTrue($lignes[1]->porteeAilleurs);
         $this->assertFalse($lignes[1]->aQualifier());
         $this->assertSame(0, $totaux->aQualifier);
         $this->assertSame(3, $totaux->qualifiees);
@@ -322,6 +322,45 @@ class DepliageManifesteTest extends TestCase
         $this->assertSame(2, $totaux->bls);
         $this->assertSame(1, $totaux->conteneurs);
         $this->assertTrue($lignes[0]->groupage);
+    }
+
+    public function test_une_boite_groupee_ne_paie_qu_un_seul_forfait(): void
+    {
+        // Le conteneur partagé n'est manutentionné qu'une fois : il ne paie
+        // qu'un forfait, porté par le premier BL qui le déclare (CGC,
+        // 2026-08-28, ADR-0049). Facturer chaque occurrence doublerait la
+        // recette sur un fait de groupage — et cela ne se verrait qu'au devis.
+        $manifeste = $this->manifeste();
+        $partagee = 'GABU1234567';
+
+        foreach (['GABX-260001', 'GABX-260002'] as $reference) {
+            $bl = $this->bl($manifeste, ['reference' => $reference, 'poids_brut_kg' => 12_000]);
+
+            ManifesteConteneur::factory()->create([
+                'manifeste_bl_id' => $bl->id,
+                'reference' => $partagee,
+                'taille' => 40,
+                'type_marchandise' => TypeMarchandise::Conteneur40S,
+            ]);
+        }
+
+        ['lignes' => $lignes, 'totaux' => $totaux] = $this->deplie->handle($manifeste);
+
+        [$premiere, $seconde] = $lignes;
+
+        // La première porte le forfait ; la seconde s'affiche sans montant.
+        $this->assertNotNull($premiere->liquidation);
+        $this->assertNull($seconde->liquidation);
+        $this->assertTrue($seconde->porteeAilleurs);
+
+        // Et elle n'est pas « à qualifier » pour autant : elle est déclarée,
+        // simplement pas facturée séparément.
+        $this->assertFalse($seconde->aQualifier());
+        $this->assertSame(0, $totaux->aQualifier);
+        $this->assertSame(2, $totaux->qualifiees);
+
+        // Le total ne retient qu'un forfait, celui de la boîte réelle.
+        $this->assertSame($premiere->liquidation->montant, $totaux->montant);
     }
 
     // ── La transmission ──────────────────────────────────────────────────

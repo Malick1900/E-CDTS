@@ -419,6 +419,11 @@ final class LitUnManifesteAwmds
      * serait pire que de le rendre. La masse, elle, ne fait jamais rejeter :
      * elle se signale au-delà de la tolérance et le consignataire tranche.
      *
+     * ⚠ **Un écart n'est pas toujours un manque.** Sur les conteneurs, deux
+     * comptes coexistent — les boîtes distinctes et les lignes qui les portent
+     * — et le groupage les sépare légitimement. Confondre cet écart-là avec une
+     * troncature rejetterait un fichier complet (ADR-0049).
+     *
      * @param  list<BlLu>  $bls
      * @return list<string>
      */
@@ -441,20 +446,51 @@ final class LitUnManifesteAwmds
         }
 
         // Une boîte groupée figure sous plusieurs BL sans valoir plusieurs
-        // boîtes : le compte se fait en références DISTINCTES.
-        $boites = [];
+        // boîtes : le compte des boîtes se fait en références DISTINCTES.
+        // L'écart entre les deux comptes EST le groupage, et rien d'autre.
+        $distinctes = [];
+        $occurrences = 0;
 
         foreach ($bls as $bl) {
             foreach ($bl->conteneurs as $conteneur) {
-                $boites[$conteneur->reference] = true;
+                $distinctes[$conteneur->reference] = true;
+                $occurrences++;
             }
         }
 
-        if ($totalBoites !== null && $totalBoites !== count($boites)) {
-            $this->refuser(__('Le fichier annonce :annonce conteneurs et en contient :reel.', [
-                'annonce' => $totalBoites,
-                'reel' => count($boites),
-            ]));
+        $boites = count($distinctes);
+        $groupees = $occurrences - $boites;
+
+        // **Les deux conventions de comptage sont admises** (ADR-0049). Le
+        // transporteur annonce tantôt ses boîtes, tantôt ses lignes : opposer
+        // le seul compte dédupliqué à qui a compté ses lignes ferait rejeter
+        // un fichier complet, au motif qu'il groupe.
+        //
+        // Ce qui ne retombe sur NI l'un NI l'autre est un manque : là, quelque
+        // chose s'est perdu en route, et un manifeste tronqué ne se facture pas.
+        if ($totalBoites !== null && $totalBoites !== $boites && $totalBoites !== $occurrences) {
+            $this->refuser($groupees > 0
+                ? __('Le fichier annonce :annonce conteneurs ; il en décrit :boites distincts, répartis sur :lignes lignes.', [
+                    'annonce' => $totalBoites,
+                    'boites' => $boites,
+                    'lignes' => $occurrences,
+                ])
+                : __('Le fichier annonce :annonce conteneurs et en décrit :boites.', [
+                    'annonce' => $totalBoites,
+                    'boites' => $boites,
+                ]));
+        }
+
+        // Le groupage se signale toujours, même quand les comptes tombent
+        // juste : il change le nombre de boîtes réellement manutentionnées,
+        // donc ce qui sera facturé.
+        if ($groupees > 0) {
+            $anomalies[] = trans_choice(
+                '{1}Un conteneur est groupé : il figure sous plusieurs connaissements et ne compte que pour une boîte.'
+                    .'|[2,*]:count conteneurs sont groupés : ils figurent sous plusieurs connaissements et ne comptent chacun que pour une boîte.',
+                $groupees,
+                ['count' => $groupees],
+            );
         }
 
         $masse = array_sum(array_map(static fn (BlLu $bl): int => $bl->poidsBrutKg ?? 0, $bls));

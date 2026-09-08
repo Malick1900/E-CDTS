@@ -82,6 +82,11 @@ final class LiquideLeManifeste
 
             foreach ($conteneurs as $index => $conteneur) {
                 $numero++;
+
+                // La boîte a-t-elle déjà été facturée sous un connaissement
+                // précédent ? Le registre sert aux deux : il compte les boîtes
+                // distinctes, et il dit laquelle a déjà payé son forfait.
+                $dejaFacturee = isset($boites[$conteneur->reference]);
                 $boites[$conteneur->reference] = true;
 
                 $lignes[] = $this->ligneConteneur(
@@ -89,6 +94,7 @@ final class LiquideLeManifeste
                     $conteneur,
                     $numero,
                     porte: $index === $porteuse,
+                    dejaFacturee: $dejaFacturee,
                     sens: $sens,
                     mode: $mode,
                     liquidationBl: $liquidationBl,
@@ -145,12 +151,20 @@ final class LiquideLeManifeste
      * connaissement avec ses jumelles, et seule la ligne porteuse l'affiche.
      * Les autres ne sont pas « à qualifier » pour autant : elles sont
      * déclarées, simplement pas facturées séparément.
+     *
+     * **Une boîte groupée ne paie qu'une fois** (CGC, 2026-08-28, ADR-0049).
+     * Le conteneur partagé entre plusieurs connaissements n'est manutentionné
+     * qu'une fois : son forfait est porté par le premier BL qui le déclare, et
+     * ses occurrences suivantes s'affichent sans montant. C'est la même règle
+     * que le « TOTAL TC » compte déjà en références distinctes — le montant la
+     * suit désormais.
      */
     private function ligneConteneur(
         ManifesteBl $bl,
         ManifesteConteneur $conteneur,
         int $numero,
         bool $porte,
+        bool $dejaFacturee,
         SensTrafic $sens,
         ?ModeExploitation $mode,
         ?Liquidation $liquidationBl,
@@ -179,7 +193,9 @@ final class LiquideLeManifeste
             type: $type,
             liquidation: match (true) {
                 $type === null => null,
-                $auForfait => $this->liquideUneLigne->handle(
+                // La boîte déjà facturée sous un BL précédent s'affiche, mais
+                // ne rappelle pas son forfait : une manutention, un montant.
+                $auForfait => $dejaFacturee ? null : $this->liquideUneLigne->handle(
                     type: $type,
                     sens: $sens,
                     conteneurs: 1,
@@ -187,7 +203,9 @@ final class LiquideLeManifeste
                 ),
                 default => $porte ? $liquidationBl : null,
             },
-            porteeParLeBl: ! $auForfait && ! $porte && $liquidationBl !== null,
+            porteeAilleurs: $auForfait
+                ? $dejaFacturee
+                : ! $porte && $liquidationBl !== null,
         );
     }
 

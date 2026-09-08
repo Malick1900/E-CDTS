@@ -29,7 +29,9 @@ Awmds
 
 **Maille du tableau = le BL**, avec ses conteneurs en **sous-lignes dépliables**. Confirmé par la structure : le à-plat « 1 ligne = 1 conteneur » est une vue dérivée qu'on reconstruit en dépliant.
 
-**Groupage (1 conteneur ↔ N BL)** : n'existe pas comme lien explicite ; un conteneur groupé se répète à l'identique dans plusieurs `Bol_segment`. → **comptage des boîtes = n° de conteneur distincts** (déduplication globale), jamais « une boîte par ligne ».
+**Groupage (1 conteneur ↔ N BL)** : n'existe pas comme lien explicite ; un conteneur groupé se répète à l'identique dans plusieurs `Bol_segment`. → **comptage des boîtes = n° de conteneur distincts** (déduplication globale), jamais « une boîte par ligne ». La répétition d'une `Ctn_reference` **est** le marqueur du groupage — il n'y en a pas d'autre à attendre.
+
+> **Deux comptes coexistent, et l'écart entre eux est le groupage** (ADR-0049). Les boîtes distinctes d'un côté, les lignes `ctn_segment` de l'autre. Les transporteurs annoncent tantôt l'un, tantôt l'autre : les **deux sont admis**. Et une boîte groupée **ne paie qu'un forfait**, porté par le premier connaissement qui la déclare — elle n'est manutentionnée qu'une fois.
 
 ## Colonnes du tableau (liste minimale validée)
 
@@ -64,7 +66,7 @@ Mais la **maille de facturation** reste le **BL** pour le poids/volume et le **c
 
 1. **Poids & volume ne se répètent PAS par ligne.** Ils sont au niveau BL : on les porte sur **une seule ligne du BL** (les autres lignes du même BL laissent la case vide). Le total en tonnes/m³ somme **une fois par BL**, jamais une fois par conteneur.
 2. **Le montant dépend du moteur.** Forfait conteneur → **une ligne = un montant** (sommable par ligne). Vrac (tonne/cubage) → montant calculé **une seule fois au niveau BL**, jamais dupliqué.
-3. **« TOTAL TC » = conteneurs distincts, pas lignes.** Un conteneur groupé apparaît sous plusieurs BL → il ne compte **qu'une boîte** (déduplication sur `Ctn_reference`).
+3. **« TOTAL TC » = conteneurs distincts, pas lignes.** Un conteneur groupé apparaît sous plusieurs BL → il ne compte **qu'une boîte** (déduplication sur `Ctn_reference`) **et ne paie qu'un forfait**, porté par le premier BL qui le déclare (ADR-0049). Le montant suit la même déduplication que le compte : une manutention, un montant. C'est la limite de la règle 2 ci-dessus.
 
 ## Typologie des BL et règle d'or _(arrêté 2026-07-14)_
 
@@ -85,7 +87,9 @@ Trois cas, dont un seul est difficile :
 - **Vrac liquide** (navire *BITU RIVER* — bitume, acide, additifs) : 8 BL, pas de `ctn_segment`, `Gross_mass` renseigné, **pas de `Volume_in_cubic_meters`** → seule l'assiette **tonne** est disponible (la règle « unité payante = max(métrique, cubage) » est triviale faute de cubage). Cas net → **auto ✔**.
 - **Véhicules RoRo** (navire *OLYMPIAN HIGHWAY* — Toyota, Kia) : 5 BL, pas de `ctn_segment`, `Gross_mass` **et** `Volume_in_cubic_meters` présents, mais **`Number_of_packages = 0`** alors que les véhicules de tourisme se facturent **à l'unité**. Le seul comptage possible (numéros de châssis dans `Goods_description`) est **partiel** : sur l'échantillon, 2 BL sur 5 ont la liste de châssis **vide**. → ces BL tombent dans **« pur vrac — assiette manquante »** = qualification manuelle.
 
-**Point ouvert (à vérifier sur pièce) :** toujours **aucun BL mixte** ni **aucun groupage** dans l'échantillon. À confirmer sur un manifeste mixte réel : est-ce que le `Goods_segment` **se répète** (une ligne de marchandise par nature → séparable) ou reste **agrégé** (→ qualification manuelle obligatoire) ?
+**Point ouvert (à vérifier sur pièce) :** toujours **aucun BL mixte** dans l'échantillon. À confirmer sur un manifeste mixte réel : est-ce que le `Goods_segment` **se répète** (une ligne de marchandise par nature → séparable) ou reste **agrégé** (→ qualification manuelle obligatoire) ?
+
+**Le groupage, lui, est tranché** (ADR-0049) : il reste absent de l'échantillon de référence, mais les deux questions qu'il posait — comment le compter, comment le facturer — ont reçu leur réponse plutôt que d'attendre le fichier qui les aurait posées en production.
 
 ## Le segment général : ce que le fichier dit de l'escale _(2026-08-27, ADR-0048)_
 
@@ -96,7 +100,9 @@ Le `General_segment` n'est pas qu'un en-tête : c'est le seul endroit du fichier
 | **Navire** | `Identity_of_transporter` | navire du dossier | **rejet** — préfixe aplati (la balise est bornée à 27 caractères) |
 | **N° de voyage** | `Voyage_number` | `voyage_normalise` | **rejet** — le plus discriminant des deux |
 | **Sens** | `Bol_nature` (niveau BL) | sens du dossier | **rejet** — balise absente = accepté |
-| **Connaissements / conteneurs** | `Totals_segment` | contenu réel | **rejet** — un manifeste tronqué n'est pas facturable |
+| **Connaissements** | `Totals_segment` | contenu réel | **rejet** — un manifeste tronqué n'est pas facturable |
+| **Conteneurs** | `Totals_segment` | boîtes distinctes **ou** lignes `ctn_segment` | **rejet** si l'annonce ne tombe sur **aucun** des deux (ADR-0049) — le groupage sépare légitimement ces deux comptes, la troncature non |
+| **Groupage** | `Ctn_reference` répétée | — | réserve — il change le nombre de boîtes manutentionnées, donc le montant |
 | **Masse brute** | `Total_gross_mass` | cumul des BL | réserve au-delà de 100 kg |
 | **Pavillon** | `Nationality_of_transporter_code` | `navires.pays.code` | réserve — **seulement sur 2 lettres** : le schéma admet `LR` comme `LBR`, le référentiel ne connaît que l'alpha-2 |
 | **Immatriculation** | `Registration_number_of_transport_code` | `navires.imo` | réserve — **seulement si 7 chiffres** : le même champ porte l'indicatif d'appel (`5LCQ4` chez MSC) ou l'OMI (`9403360` chez GINA) |

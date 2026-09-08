@@ -47,21 +47,27 @@ final readonly class LigneManifeste
         /** Nulle tant que la ligne n'est pas qualifiée, ou faute d'assiette. */
         public ?Liquidation $liquidation,
         /**
-         * La ligne est qualifiée, mais son montant est porté par une autre ligne
-         * du même connaissement.
+         * La ligne est qualifiée, mais son montant est compté sur une autre
+         * ligne. Deux situations, un seul principe : on ne facture pas deux
+         * fois le même service.
          *
-         * Le cas du bois : il ne se facture jamais au conteneur, même quand il
-         * voyage en conteneurs (CGC, 2026-08-27). Les boîtes d'un même BL
-         * partagent alors UN montant, calculé une fois sur le volume du
-         * connaissement. Les autres lignes ne sont pas « à qualifier » pour
-         * autant : elles sont déclarées, simplement pas facturées séparément.
+         * **Le bois** ne se facture jamais au conteneur, même quand il voyage
+         * en conteneurs (CGC, 2026-08-27). Les boîtes d'un même BL partagent
+         * alors UN montant, calculé une fois sur le volume du connaissement.
+         *
+         * **La boîte groupée** figure sous plusieurs connaissements, mais n'est
+         * manutentionnée qu'une fois : son forfait est porté par le premier BL
+         * qui la déclare (CGC, 2026-08-28, ADR-0049).
+         *
+         * Dans les deux cas la ligne n'est pas « à qualifier » : elle est
+         * déclarée, simplement pas facturée séparément.
          */
-        public bool $porteeParLeBl = false,
+        public bool $porteeAilleurs = false,
     ) {}
 
     /** La ligne attend-elle encore qu'on dise ce qu'elle est ? */
     public function aQualifier(): bool
     {
-        return $this->liquidation === null && ! $this->porteeParLeBl;
+        return $this->liquidation === null && ! $this->porteeAilleurs;
     }
 }
